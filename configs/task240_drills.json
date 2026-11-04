@@ -1,0 +1,473 @@
+{
+ "schema": "pvz-drill-manifest-v1",
+ "task": "task240",
+ "status": "prepared; not deployed",
+ "seed_block": [
+  54000000,
+  54001792
+ ],
+ "future_seed_count": 256,
+ "calibration": {
+  "schema": "pvz-drill-calibration-v1",
+  "task": "task240",
+  "band": [
+   0.25,
+   0.9
+  ],
+  "min_games": 3,
+  "mined": 24,
+  "kept": 7,
+  "dropped": {
+   "all_or_nothing": 17,
+   "level_21": 1,
+   "level_29": 1,
+   "level_22": 2,
+   "level_23": 1,
+   "level_24": 1,
+   "level_26": 1
+  },
+  "by_level": {
+   "21": 1,
+   "22": 2,
+   "23": 1,
+   "24": 1,
+   "26": 1,
+   "29": 1
+  },
+  "by_type": {
+   "upgrade_chain": 7
+  },
+  "by_level_type": {
+   "21|upgrade_chain": 1,
+   "22|upgrade_chain": 2,
+   "23|upgrade_chain": 1,
+   "24|upgrade_chain": 1,
+   "26|upgrade_chain": 1,
+   "29|upgrade_chain": 1
+  },
+  "coverage_only": [],
+  "teacher_rate": {
+   "games": 21,
+   "wins": 12,
+   "mean": 0.5714
+  }
+ },
+ "tasks": [
+  {
+   "task_id": "drill240_l21_upgrade_chain_2b3b9f1b",
+   "level": 21,
+   "seeds": [
+    206000596
+   ],
+   "deck": [
+    1,
+    16,
+    34,
+    5,
+    23,
+    19,
+    17,
+    30,
+    41
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/33213b60866817c3420aa260deabd9a145fa0c79c9854b90252eb4a100fab1f8",
+    "decisions": [
+     55
+    ],
+    "index": 0,
+    "future_seed_start": 54000000,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "llmimport:33213b60866817c3420aa260deabd9a145fa0c79c9854b90252eb4a100fab1f8:upgrade:upgrade_chain:r54",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 41,
+       "base": 1,
+       "bases_at_root": 3
+      }
+     ]
+    },
+    "source_root": "llmimport",
+    "archive": "33213b60866817c3420aa260deabd9a145fa0c79c9854b90252eb4a100fab1f8",
+    "decision": 55,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l29_upgrade_chain_496b58a3",
+   "level": 29,
+   "seeds": [
+    200009357
+   ],
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    18,
+    19,
+    21,
+    22,
+    23,
+    46
+   ],
+   "zombie_count_multiplier": 0.5,
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200009357/c90rd193l29m050_o138_fast_search",
+    "decisions": [
+     56
+    ],
+    "index": 0,
+    "future_seed_start": 54000256,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "framesv2:seed_200009357/c90rd193l29m050_o138_fast_search:upgrade:upgrade_chain:r55",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 46,
+       "base": 21,
+       "bases_at_root": 0
+      }
+     ]
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200009357/c90rd193l29m050_o138_fast_search",
+    "decision": 56,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l22_upgrade_chain_9a8102e7",
+   "level": 22,
+   "seeds": [
+    207000622
+   ],
+   "deck": [
+    1,
+    16,
+    29,
+    43,
+    31,
+    35,
+    23,
+    17
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109",
+    "decisions": [
+     55
+    ],
+    "index": 0,
+    "future_seed_start": 54000512,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "llmimport:ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109:upgrade:upgrade_chain:r54",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 43,
+       "base": 16,
+       "bases_at_root": 0
+      }
+     ]
+    },
+    "source_root": "llmimport",
+    "archive": "ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109",
+    "decision": 55,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l22_upgrade_chain_7add4a6c",
+   "level": 22,
+   "seeds": [
+    139015055
+   ],
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    27,
+    29,
+    40
+   ],
+   "zombie_count_multiplier": 1.0,
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067",
+    "decisions": [
+     36
+    ],
+    "index": 0,
+    "future_seed_start": 54000768,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "llmimport:3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067:upgrade:upgrade_chain:r35",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 40,
+       "base": 7,
+       "bases_at_root": 0
+      }
+     ]
+    },
+    "source_root": "llmimport",
+    "archive": "3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067",
+    "decision": 36,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l23_upgrade_chain_e9dbb837",
+   "level": 23,
+   "seeds": [
+    208000194
+   ],
+   "deck": [
+    1,
+    16,
+    34,
+    39,
+    44,
+    3,
+    19,
+    17
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/4ba72948ff52d3ec87c5f85ded1af006f75762af76613252dc213c4db562f692",
+    "decisions": [
+     56
+    ],
+    "index": 0,
+    "future_seed_start": 54001024,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "llmimport:4ba72948ff52d3ec87c5f85ded1af006f75762af76613252dc213c4db562f692:upgrade:upgrade_chain:r55",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 44,
+       "base": 39,
+       "bases_at_root": 0
+      }
+     ]
+    },
+    "source_root": "llmimport",
+    "archive": "4ba72948ff52d3ec87c5f85ded1af006f75762af76613252dc213c4db562f692",
+    "decision": 56,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l24_upgrade_chain_dbbe3188",
+   "level": 24,
+   "seeds": [
+    200006269
+   ],
+   "deck": [
+    1,
+    41,
+    16,
+    32,
+    23,
+    19,
+    17,
+    20
+   ],
+   "zombie_count_multiplier": 0.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200006269/c84rd193l24m050_o108_fast_search",
+    "decisions": [
+     57
+    ],
+    "index": 0,
+    "future_seed_start": 54001280,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "framesv2:seed_200006269/c84rd193l24m050_o108_fast_search:upgrade:upgrade_chain:r56",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 41,
+       "base": 1,
+       "bases_at_root": 3
+      }
+     ]
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200006269/c84rd193l24m050_o108_fast_search",
+    "decision": 57,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    }
+   }
+  },
+  {
+   "task_id": "drill240_l26_upgrade_chain_eee25241",
+   "level": 26,
+   "seeds": [
+    200006622
+   ],
+   "deck": [
+    1,
+    41,
+    16,
+    32,
+    39,
+    44,
+    3,
+    19,
+    21,
+    17
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search",
+    "decisions": [
+     56
+    ],
+    "index": 0,
+    "future_seed_start": 54001536,
+    "future_seed_count": 256,
+    "horizon": 6000,
+    "criterion": {
+     "scoring": "reference_terminal"
+    },
+    "targets": [],
+    "family": "upgrade",
+    "reference_policy": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+    "reference_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+   },
+   "drill_meta": {
+    "id": "framesv2:seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search:upgrade:upgrade_chain:r55",
+    "terrain": "pool",
+    "trigger": {
+     "name": "upgrade_chain",
+     "chains": [
+      {
+       "upgrade": 44,
+       "base": 39,
+       "bases_at_root": 0
+      },
+      {
+       "upgrade": 41,
+       "base": 1,
+       "bases_at_root": 3
+      }
+     ]
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search",
+    "decision": 56,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    }
+   }
+  }
+ ]
+}

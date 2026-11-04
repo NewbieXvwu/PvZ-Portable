@@ -67,7 +67,8 @@ MARGIN = 0.02
 MARGIN_FLOOR = 0.001
 # Upgrade plant -> the base it must be planted on (Plant::IsUpgradableTo, Plant.cpp). --combo-candidates
 # uses it in reverse: plant the base now, force its upgrade at the next affordable decision.
-COMBO_BASES = {40: 7, 41: 1, 42: 10, 43: 16, 44: 39, 45: 31, 46: 21, 47: 34}
+from pvz_constants import upgrade_bases
+COMBO_BASES = upgrade_bases()
 # Action budget of one game: --max-actions was 3000 in every run configuration that recorded one.
 MAX_ACTIONS = 3000
 
@@ -533,11 +534,26 @@ def _play(job: dict, observer=None) -> dict:
         drill_targets = list((drill or {}).get("targets") or [])
         drill_criterion = dict((drill or {}).get("criterion") or {})
         drill_root_tick = int(obs["tick"])
+        reference_bin, reference_history = None, None
+        if drill_criterion.get('scoring') == 'reference_terminal':
+            from pvz_rollout_policy import load_student, export_student
+            from pvz_student_observation import StudentHistory
+            reference_path = str(Path(drill['reference_policy']).expanduser().resolve())
+            reference = _W.get('drill_reference')
+            if reference is None or reference[0] != reference_path:
+                net = load_student(reference_path)
+                binary = str(Path(_W['rollout_tmp'].name) / 'drill_reference.bin')
+                export_student(net, binary)
+                reference = _W['drill_reference'] = (reference_path, binary, net.obs)
+            reference_bin = reference[1]
+            reference_history = StudentHistory(reference[2])
+            for frame in prefix[:-1]:
+                reference_history.extra(frame)
         planted: dict[int, int] = {}
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None:
+        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None and drill is None:
             if fast_state.get("history") is not None:
                 _W["student_history"] = fast_state["history"]   # a demonstration start has history
             # ENV_SKIP_HEIGHT (bit 4) drops PlantDrawHeightOffset, which only moves a plant's
@@ -557,6 +573,8 @@ def _play(job: dict, observer=None) -> dict:
                 break
             if observer is not None:
                 observer.before(env, obs, fast_state, decisions)
+            if reference_history is not None:
+                reference_history.extra(_frame(obs))
             action = policy_choice = _fast_action(obs, fast_state, env if native_root else None)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
@@ -665,7 +683,11 @@ def _play(job: dict, observer=None) -> dict:
     if drill_horizon is not None:
         from drill_start import judge
         drill_verdict = judge(env, obs, drill_targets, mowers_start, mowers_left,
-                              horizon=drill_horizon, root_tick=drill_root_tick)
+                              horizon=drill_horizon, root_tick=drill_root_tick,
+                              reference_policy=reference_bin, student_history=reference_history,
+                              actor_policy=_W['rollout_file'],
+                              previous_tick=(fast_state.get('frame') or {}).get('tick'),
+                              previous_plant=(fast_state.get('action') or {}).get('type') == 'plant')
     if frames is not None:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
         seed_tag = job["seed"] if future_seed is None else f"{job['seed']}_f{future_seed}"
@@ -722,8 +744,10 @@ def _play(job: dict, observer=None) -> dict:
             "environment_task": asdict(task),
             "frame_count": len(frames), "operations": decisions,
             "context": task_context,
-            **({"drill": dict(horizon=drill_verdict["horizon"],
+            **({"drill": dict(drill_verdict, horizon=drill_verdict["horizon"],
                               criterion=drill_criterion,
+                              **({key: drill[key] for key in ('family', 'reference_policy', 'reference_sha256')}
+                                 if reference_bin is not None else {}),
                               targets=drill_targets,
                               success=drill_verdict["success"],
                               target_count=drill_verdict["target_count"],

@@ -2,8 +2,9 @@
 
 The game rules, replay, search and value nets are the existing ones (AGENTS.md §6.6):
 this file is a thin short-horizon driver around ``human_demo.replay`` and
-``search_play._search``.  It stops at a fixed tick horizon instead of the terminal so
-one drill costs a few decisions, then judges the engine state mechanically.
+``search_play._search``. Task240 adds reset-state questions and the shared
+``drill_start.judge`` frozen-reference terminal scoring mode. Reference play runs
+entirely in C++; the tested actor controls only the question horizon.
 
 Arms:
   student  -- r101 alone (the current student checkpoint)
@@ -176,20 +177,49 @@ def _run_one(job):
     import torch
 
     started = time.time()
-    archive = cfg["roots"][drill["source_root"]] / drill["archive"]
-    frames = read_frames(frame_path(archive))
-    meta = json.loads((archive / "meta.json").read_text())
+    frames, prefix = [], []
+    meta = drill.get('meta') or {}
+    if drill.get('archive'):
+        archive = cfg["roots"][drill["source_root"]] / drill["archive"]
+        frames = read_frames(frame_path(archive))
+        meta = json.loads((archive / "meta.json").read_text())
     # Fog drills are presented to the student the way production does (human_v2 unless
     # the archive recorded storm); the board itself is untouched.
     fog_mode = ((meta.get("environment_task") or {}).get("fog_observation")
                 or (meta.get("task") or {}).get("fog_observation"))
     if fog_mode is None and drill["terrain"] == "fog":
         fog_mode = "human_v2"
-    obs, prefix = restore_prefix(env, archive, int(drill["decision"]), frames, meta,
-                                 fog_observation=fog_mode)
+    if drill.get('archive'):
+        obs, prefix = restore_prefix(env, archive, int(drill["decision"]), frames, meta,
+                                     fog_observation=fog_mode)
+    else:
+        from pvz_env import TaskSpec
+        from pvz_tasks import profile_for_deck
+        from render_episode import training_task_kwargs
+        kw = training_task_kwargs(drill['task_definition'], drill['task_seed'])
+        obs, _ = env.reset(deck=kw['deck'], task=TaskSpec(
+            level=kw['level'], seed=kw['seed'], playthrough=2,
+            profile=profile_for_deck(kw['deck'], kw['first_aid_owned']),
+            **{k: v for k, v in kw['task_extra'].items() if v is not None}))
     if obs.get("terminal"):
         return dict(status="terminal_at_root", drill_id=drill.get("uid", drill["id"]), arm=arm, seed=seed)
     env.reseed(seed)
+    preparation_future = None
+    if drill.get('family') == 'preparation':
+        # RESEED re-picks unstarted waves. Keep the question's counter present
+        # in the next two engine wave lists; never expose these lists to the actor.
+        target_type = int(drill['trigger']['type'])
+        for attempt in range(64):
+            future_seed = (seed + attempt * 104729) & 0xffffffff
+            if attempt:
+                env.reseed(future_seed)
+            waves = [env.critic_inputs(w)['wave_zombies'] for w in
+                     range(int(obs['wave']), min(int(obs['wave']) + 2, int(obs['wave_count'])))]
+            if any(target_type in wave for wave in waves):
+                preparation_future = dict(seed=future_seed, draws=attempt + 1, waves=waves)
+                break
+        if preparation_future is None:
+            return dict(status='no_counter_future', drill_id=drill['id'], arm=arm, seed=seed)
     torch.manual_seed(seed)
     terrain = drill["terrain"]
     prior = "gpt" if (arm in ("teacher", "wide") and terrain in PRIOR_TERRAINS) else "r101"
@@ -199,6 +229,9 @@ def _run_one(job):
     env.load_value_net(cfg["value_bins"]["static"], static=True)
 
     fast_state = {}
+    reference_history = StudentHistory(search_play._W['student_nets']['r101'].obs)
+    for frame in prefix[:-1]:
+        reference_history.extra(frame)
     if prefix:
         fast_state["frame"] = prefix[-2] if len(prefix) > 1 else None
         fast_state["action"] = prefix[-1].get("action")
@@ -223,11 +256,12 @@ def _run_one(job):
     actions, mower_used, house_breach = [], 0, False
     plants_lost = 0
     try:
-        for _ in range(400):
+        for _ in range(10000):
             if obs.get("terminal"):
                 break
             if int(obs["tick"]) - root_tick >= horizon:
                 break
+            reference_history.extra(_frame(obs))
             policy = search_play._fast_action(obs, fast_state, env)
             search_play._W["student_history"] = fast_state.get("history")
             action = policy
@@ -253,16 +287,26 @@ def _run_one(job):
             if action.get("type") == "shovel":
                 stats["shovels"] += 1
             ready = _ready_mowers(obs)
-            if ready < root_ready:
+            if not obs.get('terminal') and ready < root_ready:
                 mower_used = max(mower_used, root_ready - ready)
             if obs.get("result") == 2:
                 house_breach = True
         final_tick = int(obs["tick"])
+        if not obs.get('terminal') and final_tick - root_tick < horizon:
+            raise RuntimeError('drill action limit reached before horizon')
         verdict = judge(env, obs, drill.get("targets") or [], root_ready,
-                        root_ready - mower_used, horizon=horizon, root_tick=root_tick)
+                        root_ready - mower_used, horizon=horizon, root_tick=root_tick,
+                        reference_policy=(search_play._W['student_bins']['r101']
+                                          if drill.get('scoring') == 'reference_terminal' else None),
+                        student_history=reference_history,
+                        actor_policy=search_play._W['student_bins'][prior],
+                        previous_tick=(fast_state.get('frame') or {}).get('tick'),
+                        previous_plant=(fast_state.get('action') or {}).get('type') == 'plant')
         return dict(
             status="ok", drill_id=drill.get("uid", drill["id"]), arm=arm, seed=seed, terrain=terrain,
             level=drill["level"], prior=prior, success=verdict["success"],
+            family=drill.get('family', 'rescue'), verdict=verdict,
+            preparation_future=preparation_future,
             target_count=verdict["target_count"], targets_alive=verdict["targets_alive"],
             alive=verdict["alive"], target_types=sorted({root_targets[t]["type"] for t in targets}),
             mower_used=verdict["mower_used"], house_breach=verdict["house_breach"],
@@ -309,6 +353,71 @@ def select_drills(bank, args):
     return drills
 
 
+def family_statistics(rows):
+    """Paired outcomes and one-way random-effects ICC, clustered by question.
+
+    Seeds within a question share a board. McNemar is descriptive at the game
+    level; the question bootstrap and sign permutation retain that dependence.
+    """
+    import numpy as np
+    from pvz_promotion import summarize as paired_summary
+    result = {}
+    for family in sorted({r.get('family', 'rescue') for r in rows if r.get('status') == 'ok'}):
+        valid = [r for r in rows if r.get('status') == 'ok'
+                 and r.get('family', 'rescue') == family]
+        arms = {}
+        for arm in sorted({r['arm'] for r in valid}):
+            grouped = defaultdict(list)
+            for row in valid:
+                if row['arm'] == arm:
+                    grouped[row['drill_id']].append(row)
+            groups = list(grouped.values())
+            sizes = {len(g) for g in groups}
+            entry = dict(games=sum(map(len, groups)), questions=len(groups),
+                         wins=sum(r['success'] for g in groups for r in g),
+                         mean_mower_used=statistics.mean(r['mower_used'] for g in groups for r in g))
+            entry['rate'] = entry['wins'] / entry['games']
+            if len(groups) > 1 and len(sizes) == 1 and next(iter(sizes)) > 1:
+                k = next(iter(sizes))
+                matrix = np.array([[float(r['success']) for r in g] for g in groups])
+                within = float(matrix.var(axis=1, ddof=1).mean())
+                ms_between = float(k * matrix.mean(axis=1).var(ddof=1))
+                denominator = ms_between + (k - 1) * within
+                entry.update(repeats=k, within_variance=within,
+                             between_variance=max(0.0, (ms_between - within) / k),
+                             icc=(ms_between - within) / denominator if denominator else None,
+                             mixed_questions=int(((matrix.sum(axis=1) > 0)
+                                                  & (matrix.sum(axis=1) < k)).sum()))
+            arms[arm] = entry
+        comparisons = {}
+        indexed = {(r['drill_id'], r['seed'], r['arm']): r for r in valid}
+        for arm in sorted(set(arms) - {'student'}):
+            pairs, differences = [], defaultdict(list)
+            for r in valid:
+                other = indexed.get((r['drill_id'], r['seed'], arm))
+                if r['arm'] != 'student' or other is None:
+                    continue
+                pairs.append(dict(candidate=bool(other['success']), incumbent=bool(r['success'])))
+                differences[r['drill_id']].append(int(other['success']) - int(r['success']))
+            if not pairs:
+                continue
+            entry = paired_summary(pairs)
+            n = entry['gain'] + entry['harm']
+            entry['mcnemar_two_sided_p'] = min(1.0, 2 * sum(
+                math.comb(n, i) for i in range(min(entry['gain'], entry['harm']) + 1)) / 2 ** n)
+            values = np.array([statistics.mean(d) for d in differences.values()])
+            rng = np.random.default_rng(240)
+            boot = values[rng.integers(0, len(values), size=(10000, len(values)))].mean(axis=1)
+            perm = (rng.choice([-1, 1], size=(10000, len(values))) * values).mean(axis=1)
+            entry.update(question_delta=float(values.mean()),
+                         question_bootstrap_ci95=np.quantile(boot, [.025, .975]).tolist(),
+                         question_sign_p=float((1 + (abs(perm) >= abs(values.mean()) - 1e-12).sum()) / 10001),
+                         questions=len(values))
+            comparisons[arm] = entry
+        result[family] = dict(arms=arms, comparisons=comparisons)
+    return result
+
+
 def summarize(rows, drills, arms):
     by_arm = defaultdict(list)
     by_arm_terrain = defaultdict(list)
@@ -340,6 +449,7 @@ def summarize(rows, drills, arms):
         )
 
     summary = dict(games=len(rows), arms={}, by_arm_terrain={}, drills={},
+                   families=family_statistics(rows),
                    statuses=dict(Counter(r.get("status") for r in rows)))
     for arm in arms:
         summary["arms"][arm] = block(by_arm.get(arm, []))
@@ -398,8 +508,8 @@ def main():
     parser.add_argument("--drill-id", action="append", default=[])
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    if not 1 <= args.workers <= 6:
-        parser.error("--workers must be 1..6 (the Mac collector is shared with the user)")
+    if not 1 <= args.workers <= 4:
+        parser.error("--workers must be 1..4 (the Mac collector is shared with the user)")
     if not args.teacher_prior:
         parser.error("--teacher-prior is required for the production teacher")
     if not args.value_roof:
@@ -418,7 +528,8 @@ def main():
             for drill in drills for arm in arms for index in range(args.seeds)]
     args.out.mkdir(parents=True, exist_ok=True)
     import tempfile
-    keep = tempfile.TemporaryDirectory(prefix="task234-values-")
+    tempfile.tempdir = str(args.out.resolve())
+    keep = tempfile.TemporaryDirectory(prefix="values-", dir=args.out)
     value_bins = export_values(args.value, args.value_roof, args.static_value, keep)
     config = dict(roots=roots, student=str(args.student), teacher_prior=str(args.teacher_prior),
                   value_bins=value_bins, sim_skip=61, resource_dir=str(args.resource_dir),

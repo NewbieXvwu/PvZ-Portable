@@ -45,7 +45,8 @@ def parse_roots(values):
 def task_id_for(drill: dict) -> str:
     digest = hashlib.sha1(f"{drill['id']}|{drill['decision']}".encode()).hexdigest()[:8]
     trigger = drill.get("trigger", {}).get("name", "zombie")
-    return f"drill235_l{drill['level']}_{trigger}_{digest}"
+    prefix = 'drill240' if drill.get('scoring') == 'reference_terminal' else 'drill235'
+    return f"{prefix}_l{drill['level']}_{trigger}_{digest}"
 
 
 def task_for(drill: dict, meta: dict, archive: Path, *, future_seed_start: int,
@@ -86,6 +87,8 @@ def task_for(drill: dict, meta: dict, archive: Path, *, future_seed_start: int,
             horizon=int(horizon or drill.get("horizon") or 1200),
             criterion=dict(drill.get("criterion") or {}),
             targets=[dict(target) for target in drill.get("targets") or []],
+            **({key: drill[key] for key in ('family', 'reference_policy', 'reference_sha256')}
+               if drill.get('scoring') == 'reference_terminal' else {}),
         ),
     )
     return definition
@@ -113,6 +116,10 @@ def main() -> None:
         parser.error("no drills selected")
     tasks, counts = [], {}
     for index, drill in enumerate(drills):
+        if drill.get('scoring') == 'reference_terminal':
+            reference = bank.get('reference') or {}
+            drill = dict(drill, reference_policy=drill.get('reference_policy') or reference['checkpoint'],
+                         reference_sha256=drill.get('reference_sha256') or reference['sha256'])
         root = roots.get(drill["source_root"])
         if root is None:
             parser.error(f"unknown source root {drill['source_root']!r}")
@@ -132,7 +139,7 @@ def main() -> None:
         for target in drill.get("targets") or []:
             key = f"{drill['level']}|{target['name']}"
             counts[key] = counts.get(key, 0) + 1
-    document = dict(schema="pvz-drill-manifest-v1", task="task235",
+    document = dict(schema="pvz-drill-manifest-v1", task=bank.get('task', 'task235'),
                     seed_block=[args.future_seed_start,
                                 args.future_seed_start + len(tasks) * args.future_seed_count],
                     future_seed_count=args.future_seed_count,

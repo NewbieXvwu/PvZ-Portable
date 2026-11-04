@@ -89,6 +89,98 @@ def test_local_success_criterion_is_mechanical():
     assert not verdict['success'] and verdict['house_breach'] is True
 
 
+def test_reference_terminal_score_uses_frozen_native_policy_and_restores_horizon():
+    class ReferenceEnv:
+        def __init__(self):
+            self.calls = []
+
+        def snapshot(self):
+            return 7
+
+        def load_rollout_net(self, path):
+            self.calls.append(('load', path))
+
+        def rollout(self, action, until, **kwargs):
+            assert action == {'type': 'wait', 'ticks': 60} and until == 0
+            assert kwargs['student_history'] == 'history'
+            self._last_response = {'mowers_left': 1}
+            return dict(tick=40000, result=1, terminal=True, wave=20, wave_count=20)
+
+        def rollout_predict(self, previous_tick, previous_plant, **kwargs):
+            assert previous_tick == 8940 and previous_plant is True
+            return {'action': {'type': 'wait', 'ticks': 60}}
+
+        def restore(self, snapshot):
+            self.calls.append(('restore', snapshot))
+
+        def release_snapshot(self, snapshot):
+            self.calls.append(('release', snapshot))
+
+    env = ReferenceEnv()
+    obs = dict(tick=9000, result=0, terminal=False)
+    verdict = judge(env, obs, [], 4, 3, horizon=6000, root_tick=3000,
+                    reference_policy='frozen.bin', actor_policy='teacher.bin', student_history='history',
+                    previous_tick=8940, previous_plant=True)
+    assert verdict['success'] and verdict['mower_used'] == 3
+    assert verdict['final_tick'] == obs['tick'] == 9000
+    assert verdict['reference_final_tick'] == 40000 and verdict['scoring'] == 'reference_terminal'
+    assert env.calls == [('load', 'frozen.bin'), ('restore', 7), ('release', 7), ('load', 'teacher.bin')]
+
+
+def test_family_mining_merges_upgrade_chains_at_one_root_and_starts_before_counter(tmp_path, monkeypatch):
+    import drill_mine
+    archive = tmp_path / 'episode'
+    archive.mkdir()
+    (archive / 'meta.json').write_text('{}')
+    frames = [dict(tick=tick, scene={'level': 22}, packets=[[0, 1], [1, 41], [2, 7], [3, 40]],
+                   plants=[[0, 0, 1]], zombies=([[0, 7, 790, 0, 100, True]] if tick == 6000 else []))
+              for tick in [0, 1200, 3000, 4200, 6000]]
+    monkeypatch.setattr(drill_mine, 'frame_path', lambda path: path)
+    monkeypatch.setattr(drill_mine, 'read_frames', lambda path: frames)
+    drills = drill_mine.mine_families(dict(path=archive, archive='episode', source_root='main'))
+    upgrade = [d for d in drills if d['family'] == 'upgrade']
+    prep = [d for d in drills if d['family'] == 'preparation']
+    assert len(upgrade) == 1 and len(upgrade[0]['trigger']['chains']) == 2
+    assert len(prep) == 1 and prep[0]['root_tick'] == 4200
+    assert all(d['scoring'] == 'reference_terminal' and d['targets'] == [] for d in drills)
+
+
+def test_reference_manifest_loads_without_rescue_targets(tmp_path):
+    meta = dict(task=dict(seed=42, level=21, deck=[0, 1, 2, 3, 16, 43]))
+    drill = dict(id='pool_chain', family='upgrade', level=21, decision=50, terrain='pool',
+                 horizon=6000, scoring='reference_terminal', criterion={'scoring': 'reference_terminal'},
+                 reference_policy='/frozen/r112/model.pt', reference_sha256='frozen', targets=[])
+    task = task_for(drill, meta, Path('/archive'), future_seed_start=54000000,
+                    future_seed_count=256, horizon=None)
+    path = tmp_path / 'manifest.json'
+    path.write_text(json.dumps({'tasks': [task]}))
+    cells, _ = load_demo_start_cells(path)
+    assert cells[task['task_id']]['family'] == 'drill_start'
+    assert cells[task['task_id']]['horizon'] == 6000
+    assert task['drill_start']['reference_policy'] == '/frozen/r112/model.pt'
+    assert not cells[task['task_id']]['targets']
+
+
+def test_drill_calibration_uses_teacher_results_only(tmp_path, monkeypatch):
+    import drill_select
+    bank = tmp_path / 'bank.json'
+    results = tmp_path / 'results.jsonl'
+    out = tmp_path / 'selected.json'
+    bank.write_text(json.dumps({'drills': [dict(id=key, level=21) for key in ['zero', 'mixed']]}))
+    rows = [dict(status='ok', drill_id=key, arm=arm, seed=seed, success=win)
+            for key, teacher, student in [('zero', [0, 0, 0], [1, 1, 1]),
+                                          ('mixed', [1, 0, 0], [0, 0, 0])]
+            for arm, wins in [('teacher', teacher), ('student', student)]
+            for seed, win in enumerate(wins)]
+    results.write_text('\n'.join(json.dumps(row) for row in rows))
+    monkeypatch.setattr(sys, 'argv', ['drill_select', '--bank', str(bank), '--results', str(results),
+                                     '--out', str(out)])
+    drill_select.main()
+    selected = json.loads(out.read_text())['drills']
+    assert [d['id'] for d in selected] == ['mixed']
+    assert selected[0]['teacher']['games'] == 3
+
+
 def test_drill_budget_cap_limits_games_per_round():
     # 20 drill cells, a 200-game round, group=5, cap=5% => at most 10 drill games.
     with tempfile.TemporaryDirectory() as tmp:

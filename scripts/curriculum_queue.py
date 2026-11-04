@@ -710,7 +710,10 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
         if not start:
             continue
         if drill:
-            if not isinstance(start.get('targets'), list) or not start['targets']:
+            reference = (start.get('criterion') or {}).get('scoring') == 'reference_terminal'
+            if reference and not start.get('reference_policy'):
+                raise ValueError(f'{task["task_id"]}: reference drill needs reference_policy')
+            if not reference and (not isinstance(start.get('targets'), list) or not start['targets']):
                 raise ValueError(f'{task["task_id"]}: drill_start needs a nonempty targets list')
             if int(start.get('horizon', 1200)) <= 0:
                 raise ValueError(f'{task["task_id"]}: drill_start.horizon must be positive')
@@ -2583,8 +2586,8 @@ def main() -> None:
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
-    parser.add_argument('--drill-manifest', type=Path, default=ROOT / 'configs/task235_drills.json',
-                        help='task manifest whose drill_start entries become short-horizon cells (task235); '
+    parser.add_argument('--drill-manifest', type=Path, action='append',
+                        help='repeatable drill manifest; defaults to task235 and task240; '
                              'missing file = no drill cells')
     parser.add_argument('--drill-share', type=float, default=0.05,
                         help='max share of the round budget for drill cells (task235; default 5%%)')
@@ -2687,11 +2690,15 @@ def main() -> None:
         parser.error(str(error))
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
-                 'promotion_panel', 'teacher_rates', 'demo_start_manifest', 'drill_manifest',
+                 'promotion_panel', 'teacher_rates', 'demo_start_manifest',
                  'gpt_import_dir', 'gpt_archive_root', 'gpt_cold_rates'):
         value = getattr(args, name)
         if value is not None and not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
+    args.drill_manifest = args.drill_manifest or [ROOT / 'configs/task235_drills.json',
+                                                ROOT / 'configs/task240_drills.json']
+    if any(not path.is_absolute() for path in args.drill_manifest):
+        parser.error('all paths must be absolute: drill_manifest')
     if not args.seed_ledger.is_absolute():
         parser.error('seed ledger paths must be absolute')
     if not args.start_seed_ledger.is_absolute():
@@ -2717,7 +2724,7 @@ def main() -> None:
         tasks.update(opening)
         manifests.update({task_id: args.opening_manifest for task_id in opening})
     start_cells, start_manifests = ({}, {})
-    for start_manifest in (args.demo_start_manifest, args.drill_manifest):
+    for start_manifest in (args.demo_start_manifest, *args.drill_manifest):
         if not start_manifest.exists():
             continue
         cells, cell_manifests = load_demo_start_cells(start_manifest)

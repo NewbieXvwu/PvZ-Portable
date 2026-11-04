@@ -1,0 +1,4412 @@
+{
+ "schema": "pvz-drill-bank-v1",
+ "task": "task240",
+ "reference": {
+  "checkpoint": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000112/student/model.pt",
+  "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57",
+  "scoring": "reference_terminal",
+  "handoff": "preserve previous action and StudentHistory; native ROLLOUT_PREDICT then ROLLOUT"
+ },
+ "archive_roots": {
+  "framesv2": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+  "llmimport": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256"
+ },
+ "drills": [
+  {
+   "id": "opening:task222_l01_day_good:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 1,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l01_day_good",
+    "level": 1,
+    "deck": [
+     1,
+     2,
+     3,
+     4,
+     17,
+     21,
+     23,
+     32,
+     39,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l01_day_good:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 1,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l01_day_good",
+    "level": 1,
+    "deck": [
+     1,
+     2,
+     3,
+     4,
+     17,
+     21,
+     23,
+     32,
+     39,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l04_day_good:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 4,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l04_day_good",
+    "level": 4,
+    "deck": [
+     0,
+     1,
+     3,
+     7,
+     22,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l04_day_good:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 4,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l04_day_good",
+    "level": 4,
+    "deck": [
+     0,
+     1,
+     3,
+     7,
+     22,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l07_day_good:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 7,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l07_day_good",
+    "level": 7,
+    "deck": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     17,
+     20,
+     21,
+     23,
+     29
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l07_day_good:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 7,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l07_day_good",
+    "level": 7,
+    "deck": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     17,
+     20,
+     21,
+     23,
+     29
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l09_day_good:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 9,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l09_day_good",
+    "level": 9,
+    "deck": [
+     0,
+     1,
+     6,
+     7,
+     8,
+     15,
+     30,
+     35,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l09_day_good:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 9,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l09_day_good",
+    "level": 9,
+    "deck": [
+     0,
+     1,
+     6,
+     7,
+     8,
+     15,
+     30,
+     35,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l11_night_good:89000100",
+   "family": "opening",
+   "terrain": "night",
+   "level": 11,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l11_night_good",
+    "level": 11,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     12,
+     14,
+     30
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l11_night_good:89000101",
+   "family": "opening",
+   "terrain": "night",
+   "level": 11,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l11_night_good",
+    "level": 11,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     12,
+     14,
+     30
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l14_night_good:89000100",
+   "family": "opening",
+   "terrain": "night",
+   "level": 14,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l14_night_good",
+    "level": 14,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     21,
+     23,
+     46
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l14_night_good:89000101",
+   "family": "opening",
+   "terrain": "night",
+   "level": 14,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l14_night_good",
+    "level": 14,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     21,
+     23,
+     46
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l19_night_good:89000100",
+   "family": "opening",
+   "terrain": "night",
+   "level": 19,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l19_night_good",
+    "level": 19,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     12,
+     14,
+     30,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l19_night_good:89000101",
+   "family": "opening",
+   "terrain": "night",
+   "level": 19,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l19_night_good",
+    "level": 19,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     12,
+     14,
+     30,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l21_pool_good:89000100",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 21,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l21_pool_good",
+    "level": 21,
+    "deck": [
+     0,
+     1,
+     3,
+     7,
+     16,
+     17,
+     22,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l21_pool_good:89000101",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 21,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l21_pool_good",
+    "level": 21,
+    "deck": [
+     0,
+     1,
+     3,
+     7,
+     16,
+     17,
+     22,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 46,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l23_pool_user:89000100",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 23,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l23_pool_user",
+    "level": 23,
+    "deck": [
+     1,
+     16,
+     19,
+     4,
+     5,
+     7,
+     30,
+     3,
+     41,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l23_pool_user:89000101",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 23,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l23_pool_user",
+    "level": 23,
+    "deck": [
+     1,
+     16,
+     19,
+     4,
+     5,
+     7,
+     30,
+     3,
+     41,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l29_pool_user1:89000100",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 29,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l29_pool_user1",
+    "level": 29,
+    "deck": [
+     1,
+     16,
+     35,
+     10,
+     42,
+     39,
+     44,
+     30,
+     21,
+     17
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l29_pool_user1:89000101",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 29,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l29_pool_user1",
+    "level": 29,
+    "deck": [
+     1,
+     16,
+     35,
+     10,
+     42,
+     39,
+     44,
+     30,
+     21,
+     17
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l29_pool_user2:89000100",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 29,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l29_pool_user2",
+    "level": 29,
+    "deck": [
+     1,
+     7,
+     40,
+     22,
+     23,
+     19,
+     16,
+     17,
+     21,
+     46
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l29_pool_user2:89000101",
+   "family": "opening",
+   "terrain": "pool",
+   "level": 29,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l29_pool_user2",
+    "level": 29,
+    "deck": [
+     1,
+     7,
+     40,
+     22,
+     23,
+     19,
+     16,
+     17,
+     21,
+     46
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l31_fog_good:89000100",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 31,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l31_fog_good",
+    "level": 31,
+    "deck": [
+     8,
+     9,
+     10,
+     12,
+     15,
+     16,
+     19,
+     23,
+     25,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l31_fog_good:89000101",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 31,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l31_fog_good",
+    "level": 31,
+    "deck": [
+     8,
+     9,
+     10,
+     12,
+     15,
+     16,
+     19,
+     23,
+     25,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l33_fog_user:89000100",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 33,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l33_fog_user",
+    "level": 33,
+    "deck": [
+     9,
+     8,
+     16,
+     10,
+     42,
+     43,
+     24,
+     36,
+     5,
+     17
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l33_fog_user:89000101",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 33,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l33_fog_user",
+    "level": 33,
+    "deck": [
+     9,
+     8,
+     16,
+     10,
+     42,
+     43,
+     24,
+     36,
+     5,
+     17
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l39_fog_good:89000100",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 39,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l39_fog_good",
+    "level": 39,
+    "deck": [
+     8,
+     9,
+     10,
+     15,
+     16,
+     19,
+     23,
+     25,
+     27,
+     31
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l39_fog_good:89000101",
+   "family": "opening",
+   "terrain": "fog",
+   "level": 39,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l39_fog_good",
+    "level": 39,
+    "deck": [
+     8,
+     9,
+     10,
+     15,
+     16,
+     19,
+     23,
+     25,
+     27,
+     31
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l41_roof_good:89000100",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 41,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l41_roof_good",
+    "level": 41,
+    "deck": [
+     1,
+     2,
+     10,
+     17,
+     30,
+     32,
+     33,
+     35,
+     37,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l41_roof_good:89000101",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 41,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l41_roof_good",
+    "level": 41,
+    "deck": [
+     1,
+     2,
+     10,
+     17,
+     30,
+     32,
+     33,
+     35,
+     37,
+     42
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l44_roof_good:89000100",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 44,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l44_roof_good",
+    "level": 44,
+    "deck": [
+     1,
+     2,
+     3,
+     5,
+     17,
+     20,
+     30,
+     32,
+     33,
+     34
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l44_roof_good:89000101",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 44,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l44_roof_good",
+    "level": 44,
+    "deck": [
+     1,
+     2,
+     3,
+     5,
+     17,
+     20,
+     30,
+     32,
+     33,
+     34
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "task208",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l49_roof_user:89000100",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 49,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "task222_l49_roof_user",
+    "level": 49,
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     4,
+     2,
+     17,
+     35,
+     14,
+     15
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:task222_l49_roof_user:89000101",
+   "family": "opening",
+   "terrain": "roof",
+   "level": 49,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "task222_l49_roof_user",
+    "level": 49,
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     4,
+     2,
+     17,
+     35,
+     14,
+     15
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 45,
+    "deck_source": "user",
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:day_l7_eval_d7p_holdout1:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 7,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "day_l7_eval_d7p_holdout1",
+    "terrain": "day",
+    "level": 7,
+    "deck": [
+     0,
+     1,
+     2,
+     27,
+     5,
+     32,
+     3
+    ],
+    "zombie_count_multiplier": 1.0,
+    "wave_cap": null,
+    "sun_start": 50,
+    "preplanted": [],
+    "playthrough": 2,
+    "split": "heldout_deck",
+    "holdout_semantics": "unordered plant set excluded from every perturbation training family",
+    "pairs": 96,
+    "monitor_only": true,
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:day_l7_eval_d7p_holdout1:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 7,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "day_l7_eval_d7p_holdout1",
+    "terrain": "day",
+    "level": 7,
+    "deck": [
+     0,
+     1,
+     2,
+     27,
+     5,
+     32,
+     3
+    ],
+    "zombie_count_multiplier": 1.0,
+    "wave_cap": null,
+    "sun_start": 50,
+    "preplanted": [],
+    "playthrough": 2,
+    "split": "heldout_deck",
+    "holdout_semantics": "unordered plant set excluded from every perturbation training family",
+    "pairs": 96,
+    "monitor_only": true,
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:day_l9_eval_d7p_holdout2:89000100",
+   "family": "opening",
+   "terrain": "day",
+   "level": 9,
+   "task_seed": 89000100,
+   "task_definition": {
+    "task_id": "day_l9_eval_d7p_holdout2",
+    "terrain": "day",
+    "level": 9,
+    "deck": [
+     7,
+     2,
+     5,
+     38,
+     4,
+     1,
+     3
+    ],
+    "zombie_count_multiplier": 1.0,
+    "wave_cap": null,
+    "sun_start": 50,
+    "preplanted": [],
+    "playthrough": 2,
+    "split": "heldout_deck",
+    "holdout_semantics": "unordered plant set excluded from every perturbation training family",
+    "pairs": 96,
+    "monitor_only": true,
+    "seeds": [
+     89000100
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "opening:day_l9_eval_d7p_holdout2:89000101",
+   "family": "opening",
+   "terrain": "day",
+   "level": 9,
+   "task_seed": 89000101,
+   "task_definition": {
+    "task_id": "day_l9_eval_d7p_holdout2",
+    "terrain": "day",
+    "level": 9,
+    "deck": [
+     7,
+     2,
+     5,
+     38,
+     4,
+     1,
+     3
+    ],
+    "zombie_count_multiplier": 1.0,
+    "wave_cap": null,
+    "sun_start": 50,
+    "preplanted": [],
+    "playthrough": 2,
+    "split": "heldout_deck",
+    "holdout_semantics": "unordered plant set excluded from every perturbation training family",
+    "pairs": 96,
+    "monitor_only": true,
+    "seeds": [
+     89000101
+    ]
+   },
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "targets": []
+  },
+  {
+   "id": "framesv2:seed_200013361/c75rd193l39m075_o48_fast_search:preparation:balloon:r364",
+   "source_root": "framesv2",
+   "archive": "seed_200013361/c75rd193l39m075_o48_fast_search",
+   "decision": 365,
+   "root_frame": 364,
+   "root_tick": 20760,
+   "level": 39,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 22560,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_210601519/c84opening119l32magnetm100_o1500_b1_fast_search:preparation:football:r536",
+   "source_root": "framesv2",
+   "archive": "seed_210601519/c84opening119l32magnetm100_o1500_b1_fast_search",
+   "decision": 537,
+   "root_frame": 536,
+   "root_tick": 28800,
+   "level": 32,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 30600,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200013144/c80rd193l38m100_o72_fast_search:preparation:pogo:r403",
+   "source_root": "framesv2",
+   "archive": "seed_200013144/c80rd193l38m100_o72_fast_search",
+   "decision": 404,
+   "root_frame": 403,
+   "root_tick": 21182,
+   "level": 38,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "pogo",
+    "type": 18,
+    "arrival_tick": 23024,
+    "lead_ticks": 1842
+   }
+  },
+  {
+   "id": "framesv2:seed_200010368/c85rd193l34m050_o108_fast_search:preparation:balloon:r449",
+   "source_root": "framesv2",
+   "archive": "seed_200010368/c85rd193l34m050_o108_fast_search",
+   "decision": 450,
+   "root_frame": 449,
+   "root_tick": 26160,
+   "level": 34,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 27960,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_211200077/c62rd137l33d01m050_o72_fast_search:preparation:balloon:r305",
+   "source_root": "framesv2",
+   "archive": "seed_211200077/c62rd137l33d01m050_o72_fast_search",
+   "decision": 306,
+   "root_frame": 305,
+   "root_tick": 16923,
+   "level": 33,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 18723,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200013501/c97rd193l39m050_o168_fast_search:preparation:balloon:r397",
+   "source_root": "framesv2",
+   "archive": "seed_200013501/c97rd193l39m050_o168_fast_search",
+   "decision": 398,
+   "root_frame": 397,
+   "root_tick": 20940,
+   "level": 39,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 22740,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:2c404ecdc2a1b299d2157c4ec8cfd725ce1d0055de3464b89390e442fb0049ad:preparation:football:r398",
+   "source_root": "llmimport",
+   "archive": "2c404ecdc2a1b299d2157c4ec8cfd725ce1d0055de3464b89390e442fb0049ad",
+   "decision": 399,
+   "root_frame": 398,
+   "root_tick": 24760,
+   "level": 32,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 26560,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:0a7bbbe1999c3c221b4e1e2f0f860a720197e9bb081bbd2a86aac05d97f96405:preparation:pogo:r304",
+   "source_root": "llmimport",
+   "archive": "0a7bbbe1999c3c221b4e1e2f0f860a720197e9bb081bbd2a86aac05d97f96405",
+   "decision": 305,
+   "root_frame": 304,
+   "root_tick": 17160,
+   "level": 38,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "pogo",
+    "type": 18,
+    "arrival_tick": 18960,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:d0cb1984912ae466a91cc34e157e2b3de4e3dfe4b87f58e134268bd1b0f139dc:preparation:balloon:r143",
+   "source_root": "llmimport",
+   "archive": "d0cb1984912ae466a91cc34e157e2b3de4e3dfe4b87f58e134268bd1b0f139dc",
+   "decision": 144,
+   "root_frame": 143,
+   "root_tick": 8380,
+   "level": 33,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 10180,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200010284/c70rd193l34m075_o24_fast_search:preparation:dolphin:r472",
+   "source_root": "framesv2",
+   "archive": "seed_200010284/c70rd193l34m075_o24_fast_search",
+   "decision": 473,
+   "root_frame": 472,
+   "root_tick": 25161,
+   "level": 34,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "dolphin",
+    "type": 14,
+    "arrival_tick": 26961,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:f90f5a1239840b4e72e5ade11a61caef84e063eba8f27d9e8e0c58c16afc7914:preparation:balloon:r315",
+   "source_root": "llmimport",
+   "archive": "f90f5a1239840b4e72e5ade11a61caef84e063eba8f27d9e8e0c58c16afc7914",
+   "decision": 316,
+   "root_frame": 315,
+   "root_tick": 20105,
+   "level": 39,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "balloon",
+    "type": 16,
+    "arrival_tick": 21930,
+    "lead_ticks": 1825
+   }
+  },
+  {
+   "id": "llmimport:1d9ca40d5f75c95864787b3aef1437b7d009b0108d15d8974540f12f09de9fae:preparation:football:r588",
+   "source_root": "llmimport",
+   "archive": "1d9ca40d5f75c95864787b3aef1437b7d009b0108d15d8974540f12f09de9fae",
+   "decision": 589,
+   "root_frame": 588,
+   "root_tick": 31200,
+   "level": 32,
+   "terrain": "fog",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 33000,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:3380eab27e55cdbce2c3aa8002559c00be074222bb22baf5b2b71d6a4d8efbc7:preparation:football:r184",
+   "source_root": "llmimport",
+   "archive": "3380eab27e55cdbce2c3aa8002559c00be074222bb22baf5b2b71d6a4d8efbc7",
+   "decision": 185,
+   "root_frame": 184,
+   "root_tick": 13380,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 15180,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:06fcb64e66f3653e9911571ee24b2a10ef1c516c8dbd56a354f1ef2af3be0ccb:preparation:football:r353",
+   "source_root": "llmimport",
+   "archive": "06fcb64e66f3653e9911571ee24b2a10ef1c516c8dbd56a354f1ef2af3be0ccb",
+   "decision": 354,
+   "root_frame": 353,
+   "root_tick": 26402,
+   "level": 17,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 28202,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_5862444/c72n16n10m150_o648_fast_search:preparation:football:r545",
+   "source_root": "framesv2",
+   "archive": "seed_5862444/c72n16n10m150_o648_fast_search",
+   "decision": 546,
+   "root_frame": 545,
+   "root_tick": 27540,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 29340,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200019439/c108rd193l17m100_o216_fast_search:preparation:football:r530",
+   "source_root": "framesv2",
+   "archive": "seed_200019439/c108rd193l17m100_o216_fast_search",
+   "decision": 531,
+   "root_frame": 530,
+   "root_tick": 29250,
+   "level": 17,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 31050,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200005547/c92rd193l16m150_o168_fast_search:preparation:football:r363",
+   "source_root": "framesv2",
+   "archive": "seed_200005547/c92rd193l16m150_o168_fast_search",
+   "decision": 364,
+   "root_frame": 363,
+   "root_tick": 20220,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 22020,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_3361092/c88n17n10qm100_o1080_fast_search:preparation:football:r655",
+   "source_root": "framesv2",
+   "archive": "seed_3361092/c88n17n10qm100_o1080_fast_search",
+   "decision": 656,
+   "root_frame": 655,
+   "root_tick": 34260,
+   "level": 17,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 36060,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:a8f265d4c37c659b65d0a9f9174d625c9e8533a8f1041dece9a05f57fa327473:preparation:football:r158",
+   "source_root": "llmimport",
+   "archive": "a8f265d4c37c659b65d0a9f9174d625c9e8533a8f1041dece9a05f57fa327473",
+   "decision": 159,
+   "root_frame": 158,
+   "root_tick": 28389,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 30189,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:499f2eac6af2ee29523928736301f7e3c4e0391aa99f2161f398a7625cb9b9ab:preparation:football:r580",
+   "source_root": "llmimport",
+   "archive": "499f2eac6af2ee29523928736301f7e3c4e0391aa99f2161f398a7625cb9b9ab",
+   "decision": 581,
+   "root_frame": 580,
+   "root_tick": 44260,
+   "level": 17,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 46060,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200005448/c72rd193l16m150_o48_review1_o72_fast_search:preparation:football:r506",
+   "source_root": "framesv2",
+   "archive": "seed_200005448/c72rd193l16m150_o48_review1_o72_fast_search",
+   "decision": 507,
+   "root_frame": 506,
+   "root_tick": 26100,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 27900,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_2261077/c102n17n10m100_o1064_fast_search:preparation:football:r984",
+   "source_root": "framesv2",
+   "archive": "seed_2261077/c102n17n10m100_o1064_fast_search",
+   "decision": 985,
+   "root_frame": 984,
+   "root_tick": 52116,
+   "level": 17,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 53916,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_5490048/c97n16n10qm125_o558_fast_search:preparation:football:r579",
+   "source_root": "framesv2",
+   "archive": "seed_5490048/c97n16n10qm125_o558_fast_search",
+   "decision": 580,
+   "root_frame": 579,
+   "root_tick": 30425,
+   "level": 16,
+   "terrain": "night",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 32254,
+    "lead_ticks": 1829
+   }
+  },
+  {
+   "id": "llmimport:389450cbceffe4ed75db872ae8752a02cfba47894cb4bf5532ec96c22f3a9f45:preparation:zamboni:r679",
+   "source_root": "llmimport",
+   "archive": "389450cbceffe4ed75db872ae8752a02cfba47894cb4bf5532ec96c22f3a9f45",
+   "decision": 680,
+   "root_frame": 679,
+   "root_tick": 40395,
+   "level": 26,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 42195,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200006014/c82rd193l22m050_o108_fast_search:preparation:football:r1064",
+   "source_root": "framesv2",
+   "archive": "seed_200006014/c82rd193l22m050_o108_fast_search",
+   "decision": 1065,
+   "root_frame": 1064,
+   "root_tick": 54900,
+   "level": 22,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 56700,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970022476_fast_search/seed_1970022476/mac197_1970022476_fast_search:preparation:dolphin:r576",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970022476_fast_search/seed_1970022476/mac197_1970022476_fast_search",
+   "decision": 577,
+   "root_frame": 576,
+   "root_tick": 29688,
+   "level": 28,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "dolphin",
+    "type": 14,
+    "arrival_tick": 31488,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200009357/c90rd193l29m050_o138_fast_search:preparation:zamboni:r1007",
+   "source_root": "framesv2",
+   "archive": "seed_200009357/c90rd193l29m050_o138_fast_search",
+   "decision": 1008,
+   "root_frame": 1007,
+   "root_tick": 53567,
+   "level": 29,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 55390,
+    "lead_ticks": 1823
+   }
+  },
+  {
+   "id": "framesv2:seed_200006832/c94rd193l27m050_o168_fast_search:preparation:zamboni:r630",
+   "source_root": "framesv2",
+   "archive": "seed_200006832/c94rd193l27m050_o168_fast_search",
+   "decision": 631,
+   "root_frame": 630,
+   "root_tick": 33348,
+   "level": 27,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 35162,
+    "lead_ticks": 1814
+   }
+  },
+  {
+   "id": "framesv2:seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search:preparation:zamboni:r681",
+   "source_root": "framesv2",
+   "archive": "seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search",
+   "decision": 682,
+   "root_frame": 681,
+   "root_tick": 36024,
+   "level": 26,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 37824,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109:preparation:football:r792",
+   "source_root": "llmimport",
+   "archive": "ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109",
+   "decision": 793,
+   "root_frame": 792,
+   "root_tick": 44281,
+   "level": 22,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 46081,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:e86df46b5f4afe99d9df7674201a9c97f1ec13cea1d524f072790c4258554cc1:preparation:dolphin:r199",
+   "source_root": "llmimport",
+   "archive": "e86df46b5f4afe99d9df7674201a9c97f1ec13cea1d524f072790c4258554cc1",
+   "decision": 200,
+   "root_frame": 199,
+   "root_tick": 23580,
+   "level": 29,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "dolphin",
+    "type": 14,
+    "arrival_tick": 25380,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:1e93a58e259b318b8cffef585511fbc2c7b4e62e060292ef79d36ce59583ff1a:preparation:dolphin:r396",
+   "source_root": "llmimport",
+   "archive": "1e93a58e259b318b8cffef585511fbc2c7b4e62e060292ef79d36ce59583ff1a",
+   "decision": 397,
+   "root_frame": 396,
+   "root_tick": 30930,
+   "level": 28,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "dolphin",
+    "type": 14,
+    "arrival_tick": 32730,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:a36cea0095faaf40b42c516f1fb2530faa33710ce51127eefdc59d40792296f7:preparation:zamboni:r529",
+   "source_root": "llmimport",
+   "archive": "a36cea0095faaf40b42c516f1fb2530faa33710ce51127eefdc59d40792296f7",
+   "decision": 530,
+   "root_frame": 529,
+   "root_tick": 28860,
+   "level": 27,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 30660,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067:preparation:football:r386",
+   "source_root": "llmimport",
+   "archive": "3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067",
+   "decision": 387,
+   "root_frame": 386,
+   "root_tick": 31220,
+   "level": 22,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "football",
+    "type": 7,
+    "arrival_tick": 33100,
+    "lead_ticks": 1880
+   }
+  },
+  {
+   "id": "framesv2:seed_210301463/c82opening119l26scoreboardm100_o1440_b1_fast_search:preparation:zamboni:r615",
+   "source_root": "framesv2",
+   "archive": "seed_210301463/c82opening119l26scoreboardm100_o1440_b1_fast_search",
+   "decision": 616,
+   "root_frame": 615,
+   "root_tick": 31708,
+   "level": 26,
+   "terrain": "pool",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "zamboni",
+    "type": 12,
+    "arrival_tick": 33508,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:c3d0e07ecfcffc533ddbedb60312b950b92ceb3615670a09aa37218833629464:preparation:bungee:r435",
+   "source_root": "llmimport",
+   "archive": "c3d0e07ecfcffc533ddbedb60312b950b92ceb3615670a09aa37218833629464",
+   "decision": 436,
+   "root_frame": 435,
+   "root_tick": 36960,
+   "level": 47,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 38760,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200017361/c107rd193l49m050_o204_fast_search:preparation:bungee:r586",
+   "source_root": "framesv2",
+   "archive": "seed_200017361/c107rd193l49m050_o204_fast_search",
+   "decision": 587,
+   "root_frame": 586,
+   "root_tick": 31980,
+   "level": 49,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 33837,
+    "lead_ticks": 1857
+   }
+  },
+  {
+   "id": "llmimport:0f499eaffd28baa60597a862b1cb92670b8694689422d549387e0b6ae179bffb:preparation:bungee:r403",
+   "source_root": "llmimport",
+   "archive": "0f499eaffd28baa60597a862b1cb92670b8694689422d549387e0b6ae179bffb",
+   "decision": 404,
+   "root_frame": 403,
+   "root_tick": 21960,
+   "level": 42,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 23760,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200016614/c106rd193l46m050_o204_review1_o228_fast_search:preparation:catapult:r441",
+   "source_root": "framesv2",
+   "archive": "seed_200016614/c106rd193l46m050_o204_review1_o228_fast_search",
+   "decision": 442,
+   "root_frame": 441,
+   "root_tick": 24060,
+   "level": 46,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "catapult",
+    "type": 22,
+    "arrival_tick": 25860,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:081d939877a67fbe60d4830aa4c772e4b1e4daeafa8b19880e2f950d70e17971:preparation:ladder:r633",
+   "source_root": "llmimport",
+   "archive": "081d939877a67fbe60d4830aa4c772e4b1e4daeafa8b19880e2f950d70e17971",
+   "decision": 634,
+   "root_frame": 633,
+   "root_tick": 56860,
+   "level": 44,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "ladder",
+    "type": 21,
+    "arrival_tick": 58660,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200014504/c93rd193l43m050_o144_review1_o168_fast_search:preparation:ladder:r463",
+   "source_root": "framesv2",
+   "archive": "seed_200014504/c93rd193l43m050_o144_review1_o168_fast_search",
+   "decision": 464,
+   "root_frame": 463,
+   "root_tick": 26700,
+   "level": 43,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "ladder",
+    "type": 21,
+    "arrival_tick": 28543,
+    "lead_ticks": 1843
+   }
+  },
+  {
+   "id": "framesv2:seed_200014053/c110rd193l41m050_o228_fast_search:preparation:bungee:r474",
+   "source_root": "framesv2",
+   "archive": "seed_200014053/c110rd193l41m050_o228_fast_search",
+   "decision": 475,
+   "root_frame": 474,
+   "root_tick": 26426,
+   "level": 41,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 28250,
+    "lead_ticks": 1824
+   }
+  },
+  {
+   "id": "framesv2:seed_200016864/c106rd193l47m050_o204_fast_search:preparation:catapult:r667",
+   "source_root": "framesv2",
+   "archive": "seed_200016864/c106rd193l47m050_o204_fast_search",
+   "decision": 668,
+   "root_frame": 667,
+   "root_tick": 36600,
+   "level": 47,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "catapult",
+    "type": 22,
+    "arrival_tick": 38400,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:89351b31e7025603ba060b54866b229d237a28b95cae2cbf4fbc56495ab20ca6:preparation:bungee:r646",
+   "source_root": "llmimport",
+   "archive": "89351b31e7025603ba060b54866b229d237a28b95cae2cbf4fbc56495ab20ca6",
+   "decision": 647,
+   "root_frame": 646,
+   "root_tick": 52245,
+   "level": 43,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 54045,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:d83d65f0db0a3a6b2abf6b55f1910ef406d3e99d549eafaf33aa31391e577fe9:preparation:catapult:r333",
+   "source_root": "llmimport",
+   "archive": "d83d65f0db0a3a6b2abf6b55f1910ef406d3e99d549eafaf33aa31391e577fe9",
+   "decision": 334,
+   "root_frame": 333,
+   "root_tick": 29420,
+   "level": 46,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "catapult",
+    "type": 22,
+    "arrival_tick": 31220,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200014715/c87rd193l44m050_o114_fast_search:preparation:pogo:r436",
+   "source_root": "framesv2",
+   "archive": "seed_200014715/c87rd193l44m050_o114_fast_search",
+   "decision": 437,
+   "root_frame": 436,
+   "root_tick": 24180,
+   "level": 44,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "pogo",
+    "type": 18,
+    "arrival_tick": 25980,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "framesv2:seed_200017343/c101rd193l49m050_o174_fast_search:preparation:bungee:r1021",
+   "source_root": "framesv2",
+   "archive": "seed_200017343/c101rd193l49m050_o174_fast_search",
+   "decision": 1022,
+   "root_frame": 1021,
+   "root_tick": 57120,
+   "level": 49,
+   "terrain": "roof",
+   "family": "preparation",
+   "horizon": 3000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "bungee",
+    "type": 20,
+    "arrival_tick": 58920,
+    "lead_ticks": 1800
+   }
+  },
+  {
+   "id": "llmimport:8e80c5174187a908597fb277bd3cb1afd8049412d3d0c00a14439f7cbd03f912:upgrade:upgrade_chain:r38",
+   "source_root": "llmimport",
+   "archive": "8e80c5174187a908597fb277bd3cb1afd8049412d3d0c00a14439f7cbd03f912",
+   "decision": 39,
+   "root_frame": 38,
+   "root_tick": 3030,
+   "level": 9,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970073812_fast_search/seed_1970073820/mac197_1970073812_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970073812_fast_search/seed_1970073820/mac197_1970073812_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 2,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:ba9c8fb9622ab09e62772a80632a1a9d2c0526ea6445ffb1dcc283d01968c7b0:upgrade:upgrade_chain:r55",
+   "source_root": "llmimport",
+   "archive": "ba9c8fb9622ab09e62772a80632a1a9d2c0526ea6445ffb1dcc283d01968c7b0",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 3,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:176af521b3e5d6cd15547f94fb5d2b2142a32479333deafe501978f1bffe1d00:upgrade:upgrade_chain:r55",
+   "source_root": "llmimport",
+   "archive": "176af521b3e5d6cd15547f94fb5d2b2142a32479333deafe501978f1bffe1d00",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 7,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200017860/c102rd193l6m050_o174_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200017860/c102rd193l6m050_o174_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 6,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200018178/c66rd193l8m100_o0_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200018178/c66rd193l8m100_o0_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 8,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200023071/c75rd193l4m125_o24_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200023071/c75rd193l4m125_o24_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 4,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200019810/c83rd193l1m100_o78_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200019810/c83rd193l1m100_o78_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 1,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:a9bc2dc3af7a91d1758933535cb1526e76bb212e4f6e90dfcf4976b4c373f558:upgrade:upgrade_chain:r35",
+   "source_root": "llmimport",
+   "archive": "a9bc2dc3af7a91d1758933535cb1526e76bb212e4f6e90dfcf4976b4c373f558",
+   "decision": 36,
+   "root_frame": 35,
+   "root_tick": 3015,
+   "level": 2,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200022809/c75rd193l3m125_o24_fast_search:upgrade:upgrade_chain:r53",
+   "source_root": "framesv2",
+   "archive": "seed_200022809/c75rd193l3m125_o24_fast_search",
+   "decision": 54,
+   "root_frame": 53,
+   "root_tick": 3000,
+   "level": 3,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:ffffdc52827947e34d6068905d99ce68cfd426e973c13423d746565f2551dfa1:upgrade:upgrade_chain:r39",
+   "source_root": "llmimport",
+   "archive": "ffffdc52827947e34d6068905d99ce68cfd426e973c13423d746565f2551dfa1",
+   "decision": 40,
+   "root_frame": 39,
+   "root_tick": 3030,
+   "level": 4,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200019732/c68rd193l1m100_o0_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200019732/c68rd193l1m100_o0_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 1,
+   "terrain": "day",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200009773/c69rd193l32m075_o24_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200009773/c69rd193l32m075_o24_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 32,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200010563/c75rd193l36m100_o48_fast_search:upgrade:upgrade_chain:r57",
+   "source_root": "framesv2",
+   "archive": "seed_200010563/c75rd193l36m100_o48_fast_search",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 36,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200020515/c74rd193l31m075_o24_fast_search:upgrade:upgrade_chain:r35",
+   "source_root": "framesv2",
+   "archive": "seed_200020515/c74rd193l31m075_o24_fast_search",
+   "decision": 36,
+   "root_frame": 35,
+   "root_tick": 3000,
+   "level": 31,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:0a7bbbe1999c3c221b4e1e2f0f860a720197e9bb081bbd2a86aac05d97f96405:upgrade:upgrade_chain:r39",
+   "source_root": "llmimport",
+   "archive": "0a7bbbe1999c3c221b4e1e2f0f860a720197e9bb081bbd2a86aac05d97f96405",
+   "decision": 40,
+   "root_frame": 39,
+   "root_tick": 3060,
+   "level": 38,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:b00ffa8ce4c68c05ec6e74002ab5dec12686bd0d86e2d4ac641bbef63baec948:upgrade:upgrade_chain:r38",
+   "source_root": "llmimport",
+   "archive": "b00ffa8ce4c68c05ec6e74002ab5dec12686bd0d86e2d4ac641bbef63baec948",
+   "decision": 39,
+   "root_frame": 38,
+   "root_tick": 3060,
+   "level": 39,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200010014/c69rd193l33m075_o24_fast_search:upgrade:upgrade_chain:r58",
+   "source_root": "framesv2",
+   "archive": "seed_200010014/c69rd193l33m075_o24_fast_search",
+   "decision": 59,
+   "root_frame": 58,
+   "root_tick": 3000,
+   "level": 33,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200010964/c101rd193l37m050_o198_fast_search:upgrade:upgrade_chain:r57",
+   "source_root": "framesv2",
+   "archive": "seed_200010964/c101rd193l37m050_o198_fast_search",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 37,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200010284/c70rd193l34m075_o24_fast_search:upgrade:upgrade_chain:r57",
+   "source_root": "framesv2",
+   "archive": "seed_200010284/c70rd193l34m075_o24_fast_search",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 34,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:2c404ecdc2a1b299d2157c4ec8cfd725ce1d0055de3464b89390e442fb0049ad:upgrade:upgrade_chain:r53",
+   "source_root": "llmimport",
+   "archive": "2c404ecdc2a1b299d2157c4ec8cfd725ce1d0055de3464b89390e442fb0049ad",
+   "decision": 54,
+   "root_frame": 53,
+   "root_tick": 3060,
+   "level": 32,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200013455/c91rd193l39m050_o138_fast_search:upgrade:upgrade_chain:r58",
+   "source_root": "framesv2",
+   "archive": "seed_200013455/c91rd193l39m050_o138_fast_search",
+   "decision": 59,
+   "root_frame": 58,
+   "root_tick": 3000,
+   "level": 39,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200010303/c75rd193l34m075_o48_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200010303/c75rd193l34m075_o48_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 34,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200013089/c70rd193l38m125_o24_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200013089/c70rd193l38m125_o24_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 38,
+   "terrain": "fog",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970081828_fast_search/seed_1970081843/mac197_1970081828_fast_search:upgrade:upgrade_chain:r58",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970081828_fast_search/seed_1970081843/mac197_1970081828_fast_search",
+   "decision": 59,
+   "root_frame": 58,
+   "root_tick": 3000,
+   "level": 13,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200035601/c107rd193l18m075_o258_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200035601/c107rd193l18m075_o258_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 18,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_210700080/c61rd137l14d02m050_o72_fast_search:upgrade:upgrade_chain:r52",
+   "source_root": "framesv2",
+   "archive": "seed_210700080/c61rd137l14d02m050_o72_fast_search",
+   "decision": 53,
+   "root_frame": 52,
+   "root_tick": 3000,
+   "level": 14,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200004984/c87rd193l12m100_o120_fast_search:upgrade:upgrade_chain:r57",
+   "source_root": "framesv2",
+   "archive": "seed_200004984/c87rd193l12m100_o120_fast_search",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 12,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:630aec12ab90c2d7c8f55925dde534a0b988e3409124e66e6f88bc428a8ccbd5:upgrade:upgrade_chain:r0",
+   "source_root": "llmimport",
+   "archive": "630aec12ab90c2d7c8f55925dde534a0b988e3409124e66e6f88bc428a8ccbd5",
+   "decision": 1,
+   "root_frame": 0,
+   "root_tick": 14040,
+   "level": 19,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200019439/c108rd193l17m100_o216_fast_search:upgrade:upgrade_chain:r57",
+   "source_root": "framesv2",
+   "archive": "seed_200019439/c108rd193l17m100_o216_fast_search",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 17,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:9c1442fbea2410928a4bdfc3afd8b8754c27eb005d6a6a3e30b45b36434dc911:upgrade:upgrade_chain:r57",
+   "source_root": "llmimport",
+   "archive": "9c1442fbea2410928a4bdfc3afd8b8754c27eb005d6a6a3e30b45b36434dc911",
+   "decision": 58,
+   "root_frame": 57,
+   "root_tick": 3000,
+   "level": 12,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200019640/c98rd193l19m075_o168_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200019640/c98rd193l19m075_o168_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 19,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:68da11379e20edbbffbe56eccd1cce4faad7b37005429781d585e47a4f336b51:upgrade:upgrade_chain:r41",
+   "source_root": "llmimport",
+   "archive": "68da11379e20edbbffbe56eccd1cce4faad7b37005429781d585e47a4f336b51",
+   "decision": 42,
+   "root_frame": 41,
+   "root_tick": 3030,
+   "level": 18,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200005881/c102rd193l18m075_o228_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200005881/c102rd193l18m075_o228_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 18,
+   "terrain": "night",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200006832/c94rd193l27m050_o168_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200006832/c94rd193l27m050_o168_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 27,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970088908_fast_search/seed_1970088930/mac197_1970088908_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970088908_fast_search/seed_1970088930/mac197_1970088908_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 24,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     },
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200006465/c73rd193l26m075_o48_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200006465/c73rd193l26m075_o48_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 26,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:33213b60866817c3420aa260deabd9a145fa0c79c9854b90252eb4a100fab1f8:upgrade:upgrade_chain:r54",
+   "source_root": "llmimport",
+   "archive": "33213b60866817c3420aa260deabd9a145fa0c79c9854b90252eb4a100fab1f8",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 21,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200006014/c82rd193l22m050_o108_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200006014/c82rd193l22m050_o108_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 22,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200009357/c90rd193l29m050_o138_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200009357/c90rd193l29m050_o138_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 29,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200020440/c104rd193l23m050_o204_fast_search:upgrade:upgrade_chain:r53",
+   "source_root": "framesv2",
+   "archive": "seed_200020440/c104rd193l23m050_o204_fast_search",
+   "decision": 54,
+   "root_frame": 53,
+   "root_tick": 3000,
+   "level": 23,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200008978/c64rd193l28m100_o0_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200008978/c64rd193l28m100_o0_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 28,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     },
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:f20b4fea4e8a882829ac1c741c7d60189be3374d157da5f9bcbfccbb0fcb19e5:upgrade:upgrade_chain:r38",
+   "source_root": "llmimport",
+   "archive": "f20b4fea4e8a882829ac1c741c7d60189be3374d157da5f9bcbfccbb0fcb19e5",
+   "decision": 39,
+   "root_frame": 38,
+   "root_tick": 3030,
+   "level": 27,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200020102/c89rd193l21m050_o114_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200020102/c89rd193l21m050_o114_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 21,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109:upgrade:upgrade_chain:r54",
+   "source_root": "llmimport",
+   "archive": "ece6acd44f9b95fa6f06b75879aed8d411854f73fc36dcdb905c0ca46b076109",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 22,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970072996_fast_search/seed_1970072998/mac197_1970072996_fast_search:upgrade:upgrade_chain:r53",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970072996_fast_search/seed_1970072998/mac197_1970072996_fast_search",
+   "decision": 54,
+   "root_frame": 53,
+   "root_tick": 3000,
+   "level": 29,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200016789/c94rd193l47m050_o144_fast_search:upgrade:upgrade_chain:r53",
+   "source_root": "framesv2",
+   "archive": "seed_200016789/c94rd193l47m050_o144_fast_search",
+   "decision": 54,
+   "root_frame": 53,
+   "root_tick": 3000,
+   "level": 47,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 2
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200017257/c83rd193l49m075_o84_fast_search:upgrade:upgrade_chain:r50",
+   "source_root": "framesv2",
+   "archive": "seed_200017257/c83rd193l49m075_o84_fast_search",
+   "decision": 51,
+   "root_frame": 50,
+   "root_tick": 3000,
+   "level": 49,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:0f499eaffd28baa60597a862b1cb92670b8694689422d549387e0b6ae179bffb:upgrade:upgrade_chain:r54",
+   "source_root": "llmimport",
+   "archive": "0f499eaffd28baa60597a862b1cb92670b8694689422d549387e0b6ae179bffb",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 42,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_128000051/c79demoroof48doomm300s81016006a05540174ee38s946_o24_review1_o48_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_128000051/c79demoroof48doomm300s81016006a05540174ee38s946_o24_review1_o48_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 48,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200014798/c105rd193l44m050_o204_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200014798/c105rd193l44m050_o204_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 44,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:89351b31e7025603ba060b54866b229d237a28b95cae2cbf4fbc56495ab20ca6:upgrade:upgrade_chain:r37",
+   "source_root": "llmimport",
+   "archive": "89351b31e7025603ba060b54866b229d237a28b95cae2cbf4fbc56495ab20ca6",
+   "decision": 38,
+   "root_frame": 37,
+   "root_tick": 3015,
+   "level": 43,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:e9403e114d3417440c5f8331b9d7e65203c304834eb50899ef5af2206e321500:upgrade:upgrade_chain:r44",
+   "source_root": "llmimport",
+   "archive": "e9403e114d3417440c5f8331b9d7e65203c304834eb50899ef5af2206e321500",
+   "decision": 45,
+   "root_frame": 44,
+   "root_tick": 3001,
+   "level": 41,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200016586/c100rd193l46m050_o174_review1_o198_fast_search:upgrade:upgrade_chain:r51",
+   "source_root": "framesv2",
+   "archive": "seed_200016586/c100rd193l46m050_o174_review1_o198_fast_search",
+   "decision": 52,
+   "root_frame": 51,
+   "root_tick": 3000,
+   "level": 46,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200011060/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200011060/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 42,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:081d939877a67fbe60d4830aa4c772e4b1e4daeafa8b19880e2f950d70e17971:upgrade:upgrade_chain:r34",
+   "source_root": "llmimport",
+   "archive": "081d939877a67fbe60d4830aa4c772e4b1e4daeafa8b19880e2f950d70e17971",
+   "decision": 35,
+   "root_frame": 34,
+   "root_tick": 3000,
+   "level": 44,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   }
+  },
+  {
+   "id": "llmimport:7f068c289fa4b009d6ae5b26a715d36129b3d576c9848f466f4082c39df85749:upgrade:upgrade_chain:r48",
+   "source_root": "llmimport",
+   "archive": "7f068c289fa4b009d6ae5b26a715d36129b3d576c9848f466f4082c39df85749",
+   "decision": 49,
+   "root_frame": 48,
+   "root_tick": 3045,
+   "level": 49,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_46400245/c89demoroof47doomm200s20261048s1118_o216_review1_o240_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_46400245/c89demoroof47doomm200s20261048s1118_o216_review1_o240_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 47,
+   "terrain": "roof",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   }
+  },
+  {
+   "id": "framesv2:seed_200006039/c87rd193l22m050_o138_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200006039/c87rd193l22m050_o138_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 22,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 1
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067:upgrade:upgrade_chain:r35",
+   "source_root": "llmimport",
+   "archive": "3f6dd43ffe03d4b51a3aa14ddde98f0b15b601fd20801993296aa8a3d8143067",
+   "decision": 36,
+   "root_frame": 35,
+   "root_tick": 3060,
+   "level": 22,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:4ba72948ff52d3ec87c5f85ded1af006f75762af76613252dc213c4db562f692:upgrade:upgrade_chain:r55",
+   "source_root": "llmimport",
+   "archive": "4ba72948ff52d3ec87c5f85ded1af006f75762af76613252dc213c4db562f692",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 23,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "framesv2:seed_200006371/c99rd193l24m050_o198_review1_o222_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200006371/c99rd193l24m050_o198_review1_o222_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 24,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 1
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "framesv2:seed_200006269/c84rd193l24m050_o108_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "seed_200006269/c84rd193l24m050_o108_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 24,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "framesv2:seed_200006633/c104rd193l26m050_o228_fast_search:upgrade:upgrade_chain:r54",
+   "source_root": "framesv2",
+   "archive": "seed_200006633/c104rd193l26m050_o228_fast_search",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 26,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 1
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "framesv2:seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search:upgrade:upgrade_chain:r55",
+   "source_root": "framesv2",
+   "archive": "seed_200006622/c99rd193l26m050_o198_review1_o222_fast_search",
+   "decision": 56,
+   "root_frame": 55,
+   "root_tick": 3000,
+   "level": 26,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 3
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:389450cbceffe4ed75db872ae8752a02cfba47894cb4bf5532ec96c22f3a9f45:upgrade:upgrade_chain:r0",
+   "source_root": "llmimport",
+   "archive": "389450cbceffe4ed75db872ae8752a02cfba47894cb4bf5532ec96c22f3a9f45",
+   "decision": 1,
+   "root_frame": 0,
+   "root_tick": 3180,
+   "level": 26,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 46,
+      "base": 21,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 42,
+      "base": 10,
+      "bases_at_root": 1
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:a36cea0095faaf40b42c516f1fb2530faa33710ce51127eefdc59d40792296f7:upgrade:upgrade_chain:r54",
+   "source_root": "llmimport",
+   "archive": "a36cea0095faaf40b42c516f1fb2530faa33710ce51127eefdc59d40792296f7",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 27,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 43,
+      "base": 16,
+      "bases_at_root": 0
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:b584068fb005aceea9a38c13dee4f16f2c39a2a6f60ccc2c42fbfbdee33b0dcf:upgrade:upgrade_chain:r54",
+   "source_root": "llmimport",
+   "archive": "b584068fb005aceea9a38c13dee4f16f2c39a2a6f60ccc2c42fbfbdee33b0dcf",
+   "decision": 55,
+   "root_frame": 54,
+   "root_tick": 3000,
+   "level": 27,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 40,
+      "base": 7,
+      "bases_at_root": 0
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "llmimport:1e93a58e259b318b8cffef585511fbc2c7b4e62e060292ef79d36ce59583ff1a:upgrade:upgrade_chain:r39",
+   "source_root": "llmimport",
+   "archive": "1e93a58e259b318b8cffef585511fbc2c7b4e62e060292ef79d36ce59583ff1a",
+   "decision": 40,
+   "root_frame": 39,
+   "root_tick": 3030,
+   "level": 28,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 4
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  },
+  {
+   "id": "framesv2:mac197/mac197_1970016068_fast_search/seed_1970016072/mac197_1970016068_fast_search:upgrade:upgrade_chain:r56",
+   "source_root": "framesv2",
+   "archive": "mac197/mac197_1970016068_fast_search/seed_1970016072/mac197_1970016068_fast_search",
+   "decision": 57,
+   "root_frame": 56,
+   "root_tick": 3000,
+   "level": 29,
+   "terrain": "pool",
+   "family": "upgrade",
+   "horizon": 6000,
+   "scoring": "reference_terminal",
+   "criterion": {
+    "scoring": "reference_terminal"
+   },
+   "targets": [],
+   "trigger": {
+    "name": "upgrade_chain",
+    "chains": [
+     {
+      "upgrade": 44,
+      "base": 39,
+      "bases_at_root": 0
+     },
+     {
+      "upgrade": 41,
+      "base": 1,
+      "bases_at_root": 1
+     }
+    ]
+   },
+   "phase": "pool_followup"
+  }
+ ]
+}

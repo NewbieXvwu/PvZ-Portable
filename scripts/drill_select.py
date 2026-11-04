@@ -37,7 +37,7 @@ def main() -> None:
             if not line.strip():
                 continue
             row = json.loads(line)
-            if row.get("status") != "ok":
+            if row.get("status") != "ok" or row.get('arm') != 'teacher':
                 continue
             entry = grouped.setdefault(row["drill_id"], {"games": 0, "wins": 0})
             entry["games"] += 1
@@ -109,7 +109,7 @@ def main() -> None:
     by_type = Counter(drill.get("trigger", {}).get("name") for drill in kept)
     by_level_type = Counter(f"{drill['level']}|{drill.get('trigger', {}).get('name')}"
                             for drill in kept)
-    report = dict(schema="pvz-drill-calibration-v1", task="task235",
+    report = dict(schema="pvz-drill-calibration-v1", task=bank.get('task', 'task235'),
                   band=[args.low, args.high], min_games=args.min_games,
                   mined=len(bank.get("drills") or []), kept=len(kept),
                   dropped=dict(stats), by_level=dict(sorted(by_level.items())),
