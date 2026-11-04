@@ -16,6 +16,7 @@ def batch_sources(frames):
 
 def receive(repo, package, frames):
     from huggingface_hub import HfApi, hf_hub_download
+    from huggingface_hub.utils import EntryNotFoundError
     root = Path(frames) / 'mac197'
     root.mkdir(parents=True, exist_ok=True)
     label = PurePosixPath(package).name.removesuffix('.tar.gz')
@@ -27,7 +28,10 @@ def receive(repo, package, frames):
             with tarfile.open(archive) as bundle:
                 bundle.extractall(temporary / 'frames', filter='data')
             (temporary / 'frames').rename(target)
-    HfApi().delete_file(repo_id=repo, path_in_repo=package)
+    try:
+        HfApi().delete_file(repo_id=repo, path_in_repo=package)
+    except EntryNotFoundError:
+        pass  # A completed receive may be retried after its SSH reply was lost.
     print(target, flush=True)
     return target
 

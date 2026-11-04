@@ -1202,15 +1202,21 @@ def main(*, step_observer=None) -> None:
                 nxt = next(iterator, None)
                 if nxt is not None:
                     parts = load_batch(source, nxt, args.device, side_stream, loaded_event)
-                value = float(loss.detach())          # the only per-batch sync, after this step is queued
+                if teacher is None:
+                    value = bc_value = float(loss.detach())
+                    distill_value = 0.0
+                else:
+                    value, bc_value, distill_value = torch.stack(
+                        (loss.detach(), bc_loss.detach(), distill_loss.detach())).tolist()
+                # The only per-batch sync is above, after this step is queued.
                 # The pinned host buffers must outlive their non_blocking copies; the sync above is
                 # what proves those copies landed, so the previous batch's buffers go only now.
                 prepared = nxt
                 if step_observer is not None:
                     step_observer(completed_steps + 1, value)
                 train_loss += value * count
-                train_bc_loss += float(bc_loss.detach()) * count
-                train_distill_loss += float(distill_loss.detach()) * count
+                train_bc_loss += bc_value * count
+                train_distill_loss += distill_value * count
                 completed_steps+=1
                 completed_rows += count
                 metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from curriculum_queue import load_demo_start_cells, plan_round
+import drill_mine
 from drill_manifest import task_for
 from drill_start import horizon_reached, judge
 from pvz_recipe import training_row_options, validate
@@ -158,3 +159,32 @@ def test_manifest_task_reproduces_the_archive_environment():
     assert task['drill_start']['archive'] == '/archive'
     assert task['drill_start']['horizon'] == 1200
     assert task['drill_start']['future_seed_start'] == 53000000
+
+
+@pytest.mark.parametrize('include_human', [False, True])
+def test_mined_drill_ids_distinguish_seeds_with_the_same_archive_name(tmp_path, monkeypatch,
+                                                                   include_human):
+    frames = [dict(tick=index * 60, scene={'level': 31}, lanes=[0],
+                   plants=[[0, 1, 1]], zombies=[[0, 18, 250., 0, 200, True, 0, 0, 0, 7]],
+                   mowers=[[0, 1]]) for index in range(12)]
+    monkeypatch.setattr(drill_mine, 'read_frames', lambda _path: frames)
+    sequence = dict(root_frame=0, decision=1, row=0, removed_type=1,
+                    replanted={'type': 1}, complete=True)
+    monkeypatch.setattr(drill_mine, 'mine_human_sequences', lambda *_args: [sequence.copy()])
+    mined = []
+    for seed in (1, 2):
+        relative = f'seed_{seed}/same_label'
+        archive = tmp_path / relative
+        archive.mkdir(parents=True)
+        (archive / 'meta.json').write_text(json.dumps({'label_source': 'human'}))
+        drills, _, _ = drill_mine.mine_archive(
+            dict(path=str(archive), source_root='framesv2', archive=relative),
+            max_per_archive=1, horizon=1200, lookback=0, min_gap=0,
+            include_human=include_human)
+        assert len(drills) == (2 if include_human else 1)
+        mined.extend(drills)
+    assert len({drill['id'] for drill in mined}) == len(mined)
+    tasks = [task_for(drill, {'task': {'seed': 42, 'deck': [1, 8, 16, 10, 42, 30]}},
+                      Path(drill['archive']), future_seed_start=53000000,
+                      future_seed_count=256, horizon=None) for drill in mined]
+    assert len({task['task_id'] for task in tasks}) == len(tasks)
