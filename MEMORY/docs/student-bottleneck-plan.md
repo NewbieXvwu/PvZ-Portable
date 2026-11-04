@@ -1400,3 +1400,10 @@
   - 派 **task233**（dshjob，distill 工作树）：B 加向现任蒸馏（LwF），`distill_weight × KL(现任 ‖ 学生)` 与 BC 损失相加，B 配方 `distill_weight = 1.0`，A 不动；`distill_weight = 0` 时逐位等同旧行为。
 - 11-04 13:55 Mac 电源看门狗：`~/pvz-mac-collect/power_watch.sh`（pid 见 power_watch.pid）每 20 s 查 `pmset`，切到电池就 `kill -STOP` 采集进程组（`collector.pgid`），回到 AC 自动 `CONT`；手动 `~/pvz-mac-collect/freeze.sh stop|cont`，日志 power_watch.log。实测冻结 / 恢复正常。
 - 11-04 14:35 r109 否（A −12.2pp 雾 / 夜间，B −6.1pp）。**task233 上线**（distill 3baf82b1，deploy26 exit 0）：B 训练加 `distill_weight 1.0 × KL(现任 ‖ 学生)`，在 plant / aux / packet / cell 各头上计算，行权重与 BC 一致；验证集仍是纯 BC；教师 = 排轮时冻结的现任（B 的 init）；`distill_weight = 0` 时逐位等同旧路径。Mac 上用独立 torch venv 跑了 5 个定向测试，全部通过。预计 B 训练时间 +33–65%。r110 起生效；首轮若 B 训练报错，立即 `deploy26.py --rollback`。实验名记 `+b-from-incumbent+distill1`。
+- 11-04 16:45 **r110 否（首轮蒸馏 B）**：look 1 一度 +1.2pp（多轮来首次为正），look 3 收在 −1.1pp（白天显著退步）。
+  - look 3 每区约 560 对，B / r101：白天 247 / 318、夜间 312 / 333、泳池 292 / 217、雾 134 / 147、屋顶 244 / 231。
+  - 白天逐关（35 对）B / r101：L1 23 / 13、L3 13 / 22、L6 6 / 17、L7 11 / 19、L8 17 / 23、L9 5 / 16。
+  - A −12.0pp。
+  - B 训练正常：蒸馏损失 0.036–0.044，BC 3.9，val 3.41（A 3.52），每 epoch 约 280 s。
+  - 结论：蒸馏把总差距从 −3.6 / −2.8 缩到 −1.1，方向对，但 KL 约束太弱，白天关键决策仍被 BC 拉偏。单变量：distill_weight 1 → 5（distill de06a175，deploy26 exit 0），r111 起生效。
+- 11-04 15:35 用户带走 Mac：电源看门狗 02:35（Mac 时间）检测到电池，自动冻结采集进程组 61182。
