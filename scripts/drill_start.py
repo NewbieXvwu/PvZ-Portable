@@ -121,7 +121,12 @@ def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fo
 
 
 def horizon_reached(obs, root_tick: int, horizon: int | None) -> bool:
-    """The short horizon is measured from the restored root, not from tick zero."""
+    """The short horizon is measured from the restored root, not from tick zero.
+
+    A terminal board (lost or won before the horizon) cannot advance any further, so it
+    counts as reached; otherwise a failed drill could never be exported (GPT Pro 11-05)."""
+    if obs.get("terminal"):
+        return True
     return horizon is not None and int(obs.get("tick") or 0) - int(root_tick) >= int(horizon)
 
 

@@ -280,3 +280,8 @@ def test_mined_drill_ids_distinguish_seeds_with_the_same_archive_name(tmp_path, 
                       Path(drill['archive']), future_seed_start=53000000,
                       future_seed_count=256, horizon=None) for drill in mined]
     assert len({task['task_id'] for task in tasks}) == len(tasks)
+
+
+def test_terminal_board_counts_as_horizon_reached():
+    # A lost drill cannot advance time, so export must not demand the full horizon (GPT Pro 11-05).
+    assert horizon_reached({'tick': 1000, 'terminal': True}, root_tick=900, horizon=1200)

@@ -712,8 +712,10 @@ class Game:
         self._start()
         if not self.drill_meta:
             raise ValueError("这不是 drill 项；请用 next_task() 返回的 layer=drill 项")
+        from drill_start import horizon_reached
         result = self._judge(self.drill_meta)
-        result.update(reached=result["tick_delta"] >= int(self.drill_meta.get("horizon") or 900),
+        result.update(reached=horizon_reached(self.obs, result["root_tick"],
+                                              int(self.drill_meta.get("horizon") or 900)),
                       knowledge=self.drill_meta.get("knowledge"))
         return result
 
@@ -1226,8 +1228,10 @@ class Game:
         elif self.workflow_layer == "scenario":
             if not self.scenario_meta:
                 raise ValueError("scenario 导出前先调用 declare_scenario(knowledge, horizon, targets)")
+            from drill_start import horizon_reached
             judged = self._judge(self.scenario_meta)
-            if judged["tick_delta"] < int(self.scenario_meta.get("horizon") or 900):
+            if not horizon_reached(self.obs, judged["root_tick"],
+                                   int(self.scenario_meta.get("horizon") or 900)):
                 raise ValueError("还没到 scenario 视界（%d ticks）：先 wait 到视界再导出"
                                  % int(self.scenario_meta.get("horizon") or 900))
             baseline = self.scenario_meta.get("baseline") or {}
