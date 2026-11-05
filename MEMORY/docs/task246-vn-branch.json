@@ -23,7 +23,9 @@
   "sampling": "首两个开局经济植物落子前状态，无经济植物时取首两个落子，另取中盘落子前状态。候选完全由现有C++搜索给出。",
   "training": "编码2，宽64；生产v5热启动与从头训练；轨迹终局行和分支行各占1/2",
   "offline_gate": "留出候选排序一致率较task244至少提高5个百分点，泳池同方向，按局配对自举的95%差值下界大于0，才跑整局面板",
-  "panel": "6关新种子每关32对，加L21/L24/L27/L29各32对，保持生产叶值/屋顶路由作对照"
+  "panel": "6关新种子每关32对，加L21/L24/L27/L29各32对，保持生产叶值/屋顶路由作对照",
+  "ranking": "所有候选全部共同未来均参与排序，完全终局候选使用真实结果。按原局编号分组。",
+  "l23": "11个独立初始翻转根，每候选12个共同未来，不进入训练。"
  },
  "resources": {
   "workers_max": 4,
@@ -39,5 +41,29 @@
   "training": "task239_train.run_arm",
   "packing": "task243_train.pack",
   "paired": "task243_teacher.paired"
+ },
+ "cost_estimate": {
+  "measured_at": "2026-11-05 07:49:37",
+  "mean_terminal_continuation_seconds": {
+   "day": 21.837491120866375,
+   "night": 48.17017459411457,
+   "pool": 123.41555847746181,
+   "fog": 30.430480710611945,
+   "roof": 74.68870100000112
+  },
+  "formal": {
+   "games": 96,
+   "root_max": 3,
+   "candidate_assumption": 6,
+   "futures": 4,
+   "workers": 4,
+   "estimated_hours": 40.12734488012647
+  },
+  "l23": {
+   "roots": 11,
+   "futures": 12,
+   "estimated_hours": 6.7878557162604
+  },
+  "notes": "Estimate includes real teacher continuations with concurrent production load; replay/search overhead and AC pauses are additional. Actual candidates are usually fewer than six."
  }
 }

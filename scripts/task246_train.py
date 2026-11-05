@@ -1,5 +1,6 @@
 """Task246 mixed episode/decision training through task239's existing trainer."""
 import argparse
+from collections import defaultdict
 import gc
 import json
 from pathlib import Path
@@ -20,10 +21,62 @@ from task244_experiment import tempered_model
 
 
 def rank(prob, data, mask):
-    d={"seed":torch.from_numpy(data['seed']),"position":torch.from_numpy(data['op']),
+    d={"seed":torch.from_numpy(data['game']),"position":torch.from_numpy(data['op']),
        "candidate":torch.from_numpy(data['candidate']),"won":torch.from_numpy(data['truth'])}
-    score=prob*data['live_fraction']+data['terminal_win_fraction']
-    return pair_accuracy(torch.from_numpy(score),d,torch.from_numpy(np.flatnonzero(mask)),.25)
+    return pair_accuracy(torch.from_numpy(prob),d,torch.from_numpy(np.flatnonzero(mask)),.25)
+
+
+def candidate_rows(base, jobs, columns, predictions):
+    """Aggregate all common futures, including candidates with only terminal leaves."""
+    indices=defaultdict(list)
+    for i in np.flatnonzero(columns['source']==1):
+        indices[int(columns['game'][i]),int(columns['op'][i]),int(columns['candidate'][i])].append(i)
+    records=[]
+    scores={name:[] for name in predictions}
+    for job in jobs:
+        directory=base/'branches'/f"game_{job['game']:04d}"
+        selection=json.loads((directory/'selection.json').read_text())
+        for point in selection['decisions']:
+            root=directory/f'root_{point}'
+            labels=json.loads((root/'labels.json').read_text())
+            grouped=defaultdict(list)
+            for row in labels:grouped[row['candidate']].append(row)
+            for candidate,rows in grouped.items():
+                ix=indices[job['game'],point,candidate]
+                terminal_wins=sum(r['won'] and r['leaf_terminal'] for r in rows)
+                if len(ix)!=sum(not r['leaf_terminal'] for r in rows):
+                    raise ValueError(f'{root}: missing candidate {candidate} features')
+                records.append(dict(game=job['game'],op=point,candidate=candidate,terrain=job['terrain'],
+                    seed=selection.get('probe_seed',json.loads((directory/'complete.json').read_text())['seed']),
+                    truth=sum(r['won'] for r in rows)/len(rows),samples=len(rows),
+                    action=rows[0]['action']))
+                for name,prob in predictions.items():
+                    scores[name].append((float(prob[ix].sum())+terminal_wins)/len(rows))
+    data={key:np.asarray([r[key] for r in records]) for key in ('game','op','candidate','terrain','seed','truth')}
+    return data,{name:np.asarray(value,dtype=np.float32) for name,value in scores.items()},records
+
+
+def l23_report(base, paths, device):
+    jobs=json.loads((base/'l23-plan.json').read_text())['jobs']
+    shards=[]
+    for job in jobs:
+        with np.load(base/'branches'/f"game_{job['game']:04d}"/'rows.npz') as stored:
+            shards.append({key:stored[key] for key in stored.files})
+    data={key:np.concatenate([shard[key] for shard in shards]) for key in shards[0]}
+    prob={name:predict({'pool':data},{'pool':path},device) for name,path in paths.items()}
+    _,scores,records=candidate_rows(base,jobs,data,prob)
+    for i,record in enumerate(records):
+        record['prediction']={name:float(value[i]) for name,value in scores.items()}
+    decisions=[]
+    for job in jobs:
+        rows=[r for r in records if r['game']==job['game']]
+        bottom=next((r for r in rows if (r['action'].get('row'),r['action'].get('col'))==(4,4)),None)
+        top=next((r for r in rows if (r['action'].get('row'),r['action'].get('col'))==(0,0)),None)
+        decisions.append(dict(seed=job['probe_seed'],game=job['game'],candidates=rows,
+            r4c4_minus_r0c0=(dict(truth=bottom['truth']-top['truth'],
+                prediction={name:bottom['prediction'][name]-top['prediction'][name] for name in paths})
+                if bottom and top else None)))
+    return decisions
 
 
 def main():
@@ -33,7 +86,8 @@ def main():
     args=p.parse_args();base=args.data.resolve();started=time.time()
     torch.set_num_threads(1)
     features=base/'features'
-    selected={j['game'] for j in json.loads((base/'plan.json').read_text())['jobs']}
+    jobs=json.loads((base/'plan.json').read_text())['jobs']
+    selected={j['game'] for j in jobs}
     for path in (base/'branches').glob('game_*/rows.npz'):
         meta=json.loads((path.parent/'complete.json').read_text())
         if meta['game'] not in selected:continue
@@ -69,20 +123,22 @@ def main():
     for name in ('finetune','scratch'):
         path=tempered_model(base/'models'/f'{name}.pt',base/'models'/f'{name}-t3.pt',3)
         predictions[f'{name}-t3']=predict(data,{t:path for t in TERRAINS},device)
+    ranking,rank_predictions,_=candidate_rows(base,jobs,columns,predictions)
+    rank_test=np.array([(t,int(s)) in test for t,s in zip(ranking['terrain'],ranking['seed'])])
     report=dict(task='task246',device=str(device),training=training,episode={},ranking={},seconds=time.time()-started)
     for scope in ('all',*TERRAINS):
         scope_mask=np.ones(len(terrain),bool) if scope=='all' else terrain==scope
         episode=test_mask&scope_mask&(columns['source']==0)
-        branch=test_mask&scope_mask&(columns['source']==1)
+        branch=rank_test&((ranking['terrain']==scope) if scope!='all' else True)
         report['episode'][scope]={n:metrics(v[episode],columns['y'][episode]) for n,v in predictions.items()}
-        report['ranking'][scope]={n:rank(v,columns,branch) for n,v in predictions.items()}
+        report['ranking'][scope]={n:rank(v,ranking,branch) for n,v in rank_predictions.items()}
     rng=np.random.default_rng(246)
     report['ranking_bootstrap']={}
     for scope in ('all','pool'):
-        mask=test_mask&(columns['source']==1)&((terrain==scope) if scope!='all' else True)
-        games=np.unique(columns['game'][mask])
-        values={name:[rank(prob,columns,mask&(columns['game']==game)) for game in games]
-                for name,prob in predictions.items()}
+        mask=rank_test&((ranking['terrain']==scope) if scope!='all' else True)
+        games=np.unique(ranking['game'][mask])
+        values={name:[rank(prob,ranking,mask&(ranking['game']==game)) for game in games]
+                for name,prob in rank_predictions.items()}
         draws=rng.integers(len(games),size=(2000,len(games)))
         intervals={}
         for name in ('finetune','scratch','finetune-t3','scratch-t3'):
@@ -96,6 +152,9 @@ def main():
         report['ranking']['all'][name]['pair_accuracy']-report['ranking']['all']['task244']['pair_accuracy']>=.05 and
         report['ranking']['pool'][name]['pair_accuracy']>report['ranking']['pool']['task244']['pair_accuracy'] and
         report['ranking_bootstrap']['all'][name]['low']>0) for name in ('finetune-t3','scratch-t3')}
+    report['l23']=l23_report(base,{name:base/'models'/filename for name,filename in
+        [('production','production.pt'),('task244','v5-t3.pt'),('finetune','finetune.pt'),
+         ('scratch','scratch.pt'),('finetune-t3','finetune-t3.pt'),('scratch-t3','scratch-t3.pt')]},device)
     write_json(base/'offline.json',report)
     np.savez_compressed(base/'predictions.npz',**predictions,**columns,terrain=terrain,test=test_mask)
     print(json.dumps(report,ensure_ascii=False),flush=True)

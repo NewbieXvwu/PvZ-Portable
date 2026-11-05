@@ -1,7 +1,7 @@
 """Task246 selection/label driver; replay, search, rollouts and labels use existing paths."""
 import argparse
 from collections import Counter
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
 import json
 import multiprocessing as mp
 import os
@@ -127,6 +127,8 @@ def main():
     p.add_argument("--workers",type=int,default=4)
     p.add_argument("--limit",type=int,default=0)
     p.add_argument("--plan",type=Path)
+    p.add_argument("--external-pids",type=int,nargs='*',default=[],
+        help="already running single-game workers; their slots open when they exit")
     args=p.parse_args()
     base=args.data.resolve()
     os.environ.update(PVZ_NO_POPUP="1",TMPDIR=str(base/"work"),OMP_NUM_THREADS="1",
@@ -137,12 +139,28 @@ def main():
     if args.limit: jobs=jobs[:args.limit]
     started=time.monotonic()
     results=[]
+    external=set(args.external_pids)
     with ProcessPoolExecutor(max_workers=min(4,args.workers),mp_context=mp.get_context("spawn")) as pool:
-        futures=[pool.submit(run_one,job) for job in jobs]
-        for f in as_completed(futures):
-            result=f.result()
-            results.append(result)
-            print(json.dumps(result),flush=True)
+        futures=set()
+        remaining=iter(jobs)
+        exhausted=False
+        while futures or not exhausted:
+            for pid in tuple(external):
+                try:os.kill(pid,0)
+                except ProcessLookupError:external.remove(pid)
+            capacity=min(4,args.workers)-len(external)
+            while not exhausted and len(futures)<capacity:
+                job=next(remaining,None)
+                if job is None:exhausted=True
+                else:futures.add(pool.submit(run_one,job))
+            if not futures:
+                if not exhausted:time.sleep(10)
+                continue
+            done,futures=wait(futures,timeout=30,return_when=FIRST_COMPLETED)
+            for f in done:
+                result=f.result()
+                results.append(result)
+                print(json.dumps(result),flush=True)
     from value_teacher_feasibility import write_json
     name = args.plan.stem if args.plan else "collection"
     write_json(base/(f"{name}-report.json"),dict(
