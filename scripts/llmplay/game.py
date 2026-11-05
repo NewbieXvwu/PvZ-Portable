@@ -696,10 +696,16 @@ class Game:
         from drill_start import judge
         if self._root_mowers is None:
             self._root_mowers = self._mower_count()
+        # 11-05: _start() re-reads root mowers/tick every time the sandbox recycles the engine
+        # process and Game.load replays to the *current* tick, so a mower spent before the
+        # restart vanished from mower_used (72 balloon drills judged success here, failure in
+        # the importer).  The item block persists the true root; the importer judges with it.
+        root_mowers = block.get("mowers_start")
+        root_tick = block.get("root_tick")
         return judge(self.env, self.obs, list(block.get("targets") or []),
-                     int(self._root_mowers), self._mower_count(),
+                     int(self._root_mowers if root_mowers is None else root_mowers), self._mower_count(),
                      horizon=int(block.get("horizon") or 900),
-                     root_tick=int(self._root_tick))
+                     root_tick=int(self._root_tick if root_tick is None else root_tick))
 
     def drill_result(self) -> dict:
         """按 drill_start 的机械判据算这道必刷题；不写盘，随时可查。"""
