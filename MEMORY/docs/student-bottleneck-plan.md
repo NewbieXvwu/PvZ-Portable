@@ -1612,3 +1612,16 @@
   - **手打**：不是当前瓶颈。可选的是老师最弱、又还没有用户录像的 L44 屋顶（老师原难度 3/8）。之前清单上的 L38 / L44 都没录，L38 老师已够强。
   - 每轮采在零胜格子上的局只占 7–10%，不算浪费。
 - 11-05 20:40 CST 用户在 Mac 上录人类示范（imitater 工作树 human_demo.py，`pvz-portable -env-visible`）。发现看门狗的 `pkill -f "pvz-portable -env"` 也会匹配 `-env-visible`：用电池时会冻结用户自己正在录的局。已改成正则 `pvz-portable -env( |$)`，确认不匹配可见进程，重启后 pid 54542。r123 训练中；task245 跑到 L40；task246 / 247 进行中。
+- 11-05 21:35 CST **GPT 包 238/238b 交付事故**（用户：“堪称灾难”）。
+  - **引擎**：238 包里的 `build/pvz-portable` 是 Mac arm64（dsh task238 在 Mac 上打包时传了 Mac 构建）；238b 只换了 game.py，沿用了它。226 / 226b 是对的，静态 x86-64。
+  - **处理**：
+    - `build_package.copy_engine` 只收静态 x86-64 ELF（pkg238 bf1c7b82）；
+    - 台式机重建静态引擎：`~/pvz-logs/llmplay-build/build_static.sh`，SDL2 2.32.10 源码构建，后端运行时 dlopen，才能全静态链接；原来的 `~/llmplay-build` 已在 10-29 清理中删掉。
+    - 引擎经 HF `transfer/llmplay/` 传到 Mac（md5 99103f25…），取回后已删远端。
+  - **GPT 在沙箱里报的两个 bug**（并发导出后进度回退、队列重派已完成题；drill 起点目标 ID 不存在）→ 派 **task248**（llmfix，Codex）。修完后主控打 238c，并在台式机做一次端到端验收再交付。
+  - **共同原因**：交付前没有在“沙箱同类环境”（Linux x86-64、进程回收、并发子代理、多次导出）里跑过实际交付的包。以后每个包交付前做一次端到端验收（记忆 gpt-package-acceptance）。
+- 11-05 21:30 CST **台式机 wsl.exe 窗口**：计划任务 `PvZWSLKeeper` 每 5 分钟跑一次 `wsl.exe -d Ubuntu -e ~/.pvz-keeper.sh`，交互式登录，每次弹一个控制台窗口并停留 290 s。用户要求不再弹。动作已改为 `conhost.exe --headless wsl.exe ...`，原任务导出备份在 `C:\Users\NewbieXvwu\PvZWSLKeeper.backup.xml`；21:30 那次已经按无窗口方式运行。
+- 11-05 21:35 CST 其他：
+  - task245 结题（雾关单独换叶值不成立，不加 `--value-fog`）；
+  - task246 在后台生成分支标签，预计约 47 小时，完成后自动训练、比较、推送；
+  - task247 结题（gatecover ec6279b9：L22 / L29 用户卡组与 4 个雾关门禁卡组原来都没有整局训练格，已补；屋顶用户格阶梯下探到 0.5），待部署。
