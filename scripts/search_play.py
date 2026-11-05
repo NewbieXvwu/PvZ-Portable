@@ -427,10 +427,13 @@ def _play(job: dict, observer=None) -> dict:
              "combo_candidate_added": 0, "combo_upgrades": 0, "pending_upgrade": None,
              "last_combo_tick": -10 ** 9}
     try:
+        continuation = job.get("continuation")
         demo_archive = getattr(args, 'demo_archive', None)
         prefix = []
         _W['demo_actions'] = []
-        if demo_archive:
+        if continuation is not None:
+            obs = continuation["observation"]
+        elif demo_archive:
             from dataclasses import asdict
             from human_demo import replay
             demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
@@ -501,7 +504,7 @@ def _play(job: dict, observer=None) -> dict:
         # rather than as parsed dicts, so the archive costs 2.8 MB instead of ~18 MB of Python
         # objects for the whole game (task18).
         frames = [_frame_json(capture_frame(obs, token_writer))] if args.frames else None
-        fast_state = {}
+        fast_state = continuation["state"] if continuation is not None else {}
         if prefix:
             fast_state['frame'] = prefix[-2] if len(prefix) > 1 else None
             fast_state['action'] = prefix[-1].get('action')

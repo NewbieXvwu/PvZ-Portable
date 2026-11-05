@@ -13,6 +13,16 @@ sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "python")]
 from task243_teacher import paired
 
 
+def tempered_model(model, target, temperature):
+    import torch
+    checkpoint = torch.load(model, map_location="cpu", weights_only=False)
+    for key in ("head.2.weight", "head.2.bias"):
+        checkpoint["state_dict"][key] /= temperature
+    checkpoint["task244_temperature"] = temperature
+    torch.save(checkpoint, target)
+    return target
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", required=True)
@@ -20,6 +30,8 @@ def main():
     parser.add_argument("--temperature", type=float, default=1)
     parser.add_argument("--margin-relative", type=float, default=0)
     parser.add_argument("--phase", choices=("l22", "panel"), default="l22")
+    parser.add_argument("--seed-start", type=int, default=244100000)
+    parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--data", type=Path, default=ROOT / "artifacts/task244")
     args = parser.parse_args()
     base = args.data.resolve()
@@ -29,19 +41,13 @@ def main():
                VECLIB_MAXIMUM_THREADS="1", TMPDIR=str(base / "work"))
     model = args.model.resolve()
     if args.temperature != 1:
-        import torch
-        checkpoint = torch.load(model, map_location="cpu", weights_only=False)
-        for key in ("head.2.weight", "head.2.bias"):
-            checkpoint["state_dict"][key] /= args.temperature
-        checkpoint["task244_temperature"] = args.temperature
-        model = models / f"{args.label}.pt"
-        torch.save(checkpoint, model)
+        model = tempered_model(model, models / f"{args.label}.pt", args.temperature)
     panel = json.loads((base / "panel-original.json").read_text())
     if args.phase == "l22":
         panel["tasks"] = [t for t in panel["tasks"] if t["level"] == 22]
     else:
         for i, task in enumerate(panel["tasks"]):
-            task["seeds"] = [244100000 + i * 1000 + k for k in range(32)]
+            task["seeds"] = [args.seed_start + i * 1000 + k for k in range(32)]
     panel_path = base / f"panel-{args.phase}.json"
     panel_path.write_text(json.dumps(panel, indent=1))
     out = base / f"{args.phase}-{args.label}"
@@ -53,7 +59,7 @@ def main():
             "--rollout-policy", str(models / "student.pt"), "--rollout-policy-gpt", str(models / "gptbc.pt"),
             "--value", str(model), "--value-roof", str(model if args.label != "production" else models / "roof.pt"),
             "--static-value", str(models / "static.pt"), "--manifest", str(panel_path),
-            "--task-id", task["task_id"], "--seeds", "32", "--arms", "fast_search", "--workers", "3",
+            "--task-id", task["task_id"], "--seeds", "32", "--arms", "fast_search", "--workers", str(args.workers),
             "--verify-samples", "9", "--student-candidates", "2", "--native-games",
             "--margin-relative", str(args.margin_relative),
             "--executable", str(Path.home() / "pvz-mac-collect/build-vn6/pvz-portable"), "--out", str(target)]

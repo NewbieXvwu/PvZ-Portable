@@ -107,6 +107,12 @@ def save_features(results, out, channels, scalars, suffix=""):
                    for name, key, dtype in (("seed", "seed", np.int64), ("level", "level", np.int16),
                                             ("y", "won", np.int8), ("game", "index", np.int32))}
         columns["op"] = np.asarray([op for game in games for op, _ in game["rows"]], dtype=np.int32)
+        columns["source"] = np.zeros(len(features), dtype=np.int8)
+        columns["candidate"] = np.full(len(features), -1, dtype=np.int16)
+        columns["future"] = np.full(len(features), -1, dtype=np.int16)
+        columns["truth"] = columns["y"].astype(np.float32)
+        columns["live_fraction"] = np.ones(len(features), dtype=np.float32)
+        columns["terminal_win_fraction"] = np.zeros(len(features), dtype=np.float32)
         np.savez_compressed(out / f"{terrain}{suffix}.npz",
                             board=features[:, :channels * 60].reshape(-1, channels, 60).astype(np.float16),
                             scalars=features[:, channels * 60:channels * 60 + scalars],

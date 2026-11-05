@@ -187,6 +187,30 @@ class CppRolloutTest(unittest.TestCase):
     def test_v2lite_continuation_features_and_root_history(self):
         self._continuation_features("v2lite")
 
+    def test_returned_history_continues_the_native_leaf(self):
+        from value_teacher_feasibility import continuation_state
+        net = RolloutNet(width=13, obs="v2lite").eval()
+        export_student(net, self.path)
+        self.env.load_rollout_net(self.path)
+        self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000,
+                                                  preplanted=((1, 0, 0),)))
+        search_play._W["fast"] = net
+        self.addCleanup(search_play._W.clear)
+        root = self.env.snapshot_fast()
+        self.addCleanup(self.env.release_snapshot, root)
+        trace = Path(self.directory.name) / "uninterrupted.jsonl"
+        self.env.rollout(None, 1200, snapshot_id=root, seed=12345, trace_path=trace)
+        records = [json.loads(line) for line in trace.read_text().splitlines()]
+        leaf = self.env.rollout(None, 600, snapshot_id=root, seed=12345)
+        state = continuation_state(leaf)
+        resumed = Path(self.directory.name) / "continued.json"
+        self.env.rollout_predict(state["frame"]["tick"], state["action"]["type"] == "plant",
+                                 student_history=state["history"], trace_path=resumed)
+        actual = json.loads(resumed.read_text())
+        expected = next(row for row in records if row["observation"]["tick"] == leaf["tick"])
+        for key in ("board", "scalars", "previous_tick", "previous_plant"):
+            self.assertEqual(actual[key], expected[key])
+
     def test_v2_continuation_features_and_root_history(self):
         self._continuation_features("v2")
 

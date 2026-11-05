@@ -1,0 +1,43 @@
+{
+ "task": "task246",
+ "status": "先导采样中，训练与验收尚未完成",
+ "branch": "vnbranch",
+ "base_commit": "861e1b2f",
+ "inputs": {
+  "selection": "artifacts/task246/selection.tsv",
+  "split": "artifacts/task246/split.json",
+  "source": "task243原4000局，剔除其已知138个重放失败档案"
+ },
+ "plan": {
+  "games": 96,
+  "by_terrain": {
+   "day": 12,
+   "night": 12,
+   "pool": 48,
+   "fog": 12,
+   "roof": 12
+  },
+  "roots_per_game_max": 3,
+  "shared_futures": 4,
+  "split": "沿用task243整局train/validation/test，分支继承原局划分",
+  "sampling": "首两个开局经济植物落子前状态，无经济植物时取首两个落子，另取中盘落子前状态。候选完全由现有C++搜索给出。",
+  "training": "编码2，宽64；生产v5热启动与从头训练；轨迹终局行和分支行各占1/2",
+  "offline_gate": "留出候选排序一致率较task244至少提高5个百分点，泳池同方向，按局配对自举的95%差值下界大于0，才跑整局面板",
+  "panel": "6关新种子每关32对，加L21/L24/L27/L29各32对，保持生产叶值/屋顶路由作对照"
+ },
+ "resources": {
+  "workers_max": 4,
+  "engine": "~/pvz-mac-collect/build-vnbranch",
+  "readonly_engine": "~/pvz-mac-collect/build-vn6",
+  "disk_limit_gib": 15,
+  "production_deployed": false
+ },
+ "implementation": {
+  "collector": "恢复task43 value_teacher_feasibility.sample_root，短推演与搜索继续调用C++；终局续走调用search_play._play",
+  "ranking": "恢复task43 train_value_branches.pair_accuracy",
+  "export": "task239_export",
+  "training": "task239_train.run_arm",
+  "packing": "task243_train.pack",
+  "paired": "task243_teacher.paired"
+ }
+}

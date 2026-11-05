@@ -161,7 +161,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
-    stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
+    stop = frames[decision - 1].get('operation', decision - 1) if decision is not None else meta['operations']
     obs = reset_archive(env, meta, fog_observation=fog_observation)
     if on_observation is not None:
         on_observation(0, obs)

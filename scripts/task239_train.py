@@ -87,7 +87,7 @@ def torch_view(rows: dict[str, np.ndarray], encoder: int) -> tuple[torch.Tensor,
 def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device: torch.device,
             train_seeds: set, holdout_seeds: set, lr: float = 2e-4,
             dropout: float = 0.3, weight_decay: float = 1e-3, init_state: dict | None = None,
-            batch_size: int = 256) -> tuple[dict, dict]:
+            batch_size: int = 256, decision_fraction: float | None = None) -> tuple[dict, dict]:
     terrain_of, seed_of = [], []
     for terrain in TERRAINS:
         if terrain not in data:
@@ -100,6 +100,8 @@ def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device
     train_mask = np.asarray([(terrain_of[i], seed_of[i]) in train_seeds for i in range(len(seed_of))])
     holdout_mask = np.asarray([(terrain_of[i], seed_of[i]) in holdout_seeds for i in range(len(seed_of))])
     labels = np.concatenate([data[t]["y"] for t in TERRAINS if t in data]).astype(np.float32)
+    source = np.concatenate([data[t].get("source", np.zeros(len(data[t]["y"]), dtype=np.int8))
+                             for t in TERRAINS if t in data])
     offsets, offset = [], 0
     for terrain in TERRAINS:
         if terrain in data:
@@ -140,12 +142,23 @@ def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device
     train_index = np.flatnonzero(train_mask)
     holdout_index = np.flatnonzero(holdout_mask)
     order_generator = torch.Generator().manual_seed(seed)
+    sampling = np.random.default_rng(seed)
+
+    def weights(index):
+        weight = np.ones(len(index), dtype=np.float64)
+        if decision_fraction is not None:
+            for kind, fraction in ((0, 1-decision_fraction), (1, decision_fraction)):
+                mask = source[index] == kind
+                weight[mask] = fraction / max(1, mask.sum())
+        return weight / weight.sum()
 
     best = (float("inf"), -1, None)
     history = []
     for epoch in range(epochs):
         net.train()
-        order = train_index[torch.randperm(len(train_index), generator=order_generator).numpy()]
+        order = (sampling.choice(train_index, size=len(train_index), replace=True, p=weights(train_index))
+                 if decision_fraction is not None else
+                 train_index[torch.randperm(len(train_index), generator=order_generator).numpy()])
         total = 0.0
         for start in range(0, len(order), batch_size):
             index = order[start:start + batch_size]
@@ -159,11 +172,18 @@ def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device
         net.eval()
         with torch.no_grad():
             valid_total = 0.0
+            valid_weight = weights(holdout_index)
             for start in range(0, len(holdout_index), batch_size):
                 index = holdout_index[start:start + batch_size]
                 board_batch, scalar_batch, label_batch = batch(index)
-                valid_total += float(loss_fn(net(board_batch, scalar_batch), label_batch)) * len(index)
-            valid_loss = valid_total / len(holdout_index)
+                logits = net(board_batch, scalar_batch)
+                if decision_fraction is None:
+                    valid_total += float(loss_fn(logits, label_batch)) * len(index)
+                else:
+                    losses = nn.functional.binary_cross_entropy_with_logits(
+                        logits, label_batch, reduction="none").cpu().numpy()
+                    valid_total += float(np.dot(losses, valid_weight[start:start+len(index)]))
+            valid_loss = valid_total / len(holdout_index) if decision_fraction is None else valid_total
         history.append(dict(epoch=epoch, fit=total / len(train_index), validation=valid_loss))
         print(f"  epoch {epoch:02d} fit {total / len(train_index):.4f} validation {valid_loss:.4f}", flush=True)
         if valid_loss < best[0]:

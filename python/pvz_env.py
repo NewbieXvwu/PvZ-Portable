@@ -995,6 +995,8 @@ class PvZEnv:
                 self._sun_production_history.append((tick, produced))
         self._annotate_observation(observation)
         self._adopt_tick(observation)
+        if "student_history" in response:
+            observation["rollout_history"] = response["student_history"]
         return observation
 
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]], *,

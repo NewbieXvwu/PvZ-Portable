@@ -71,6 +71,8 @@ def split(data, seed, exposed_seeds=()):
 def predict(data, paths, device):
     predictions = []
     for terrain in TERRAINS:
+        if terrain not in data:
+            continue
         rows = data[terrain]
         net = load_value_net(paths[terrain]).to(device)
         prob = np.empty(len(rows["y"]), dtype=np.float32)

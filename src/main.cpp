@@ -595,6 +595,9 @@ struct RolloutOutcome
 	std::vector<std::pair<int, uint32_t>> substeps;
 	double value = 0;
 	bool terminal = false;
+	EnvironmentRollout::History studentHistory;
+	int previousTick = -1;
+	bool previousPlant = false;
 };
 
 // One continuation: restore the root, reseed, play the first action ("A" = let the student pick it)
@@ -746,7 +749,13 @@ static RolloutOutcome RunRollout(LawnApp* app, EnvironmentRollout& rollout, Envi
 	if (trace.is_open()) { trace.flush(); outcome.ok = trace.good(); }
 	outcome.terminal = app->EnvironmentTerminal();
 	outcome.wallSeconds = elapsedSince(rolloutStarted);
-	if (!request.scoreValue) return outcome;
+	if (!request.scoreValue)
+	{
+		outcome.studentHistory = std::move(studentHistory);
+		outcome.previousTick = priorTick;
+		outcome.previousPlant = priorPlant;
+		return outcome;
+	}
 	const int now = app->mBoard->mMainCounter;
 	double produced = 0;
 	for (auto sample : history) if (sample.first >= now - 6000) produced += sample.second;
@@ -2255,7 +2264,17 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << (app->mBoard ? app->mBoard->mMainCounter - outcome.startTick : 0) << ",\"substeps\":[";
 			for (size_t index = 0; index < outcome.substeps.size(); ++index)
 				std::cout << (index ? ",[" : "[") << outcome.substeps[index].first << ',' << outcome.substeps[index].second << ']';
-			std::cout << "]}" << std::endl;
+			std::cout << "],\"student_history\":{\"wave\":" << outcome.studentHistory.wave
+				<< ",\"wave_tick\":" << outcome.studentHistory.waveTick << ",\"plants\":[";
+			bool firstHistoryPlant = true;
+			for (const auto& [cell, born] : outcome.studentHistory.plants)
+			{
+				const auto& [row, col, kind] = cell;
+				std::cout << (firstHistoryPlant ? "" : ",") << '[' << row << ',' << col << ',' << kind << ',' << born << ']';
+				firstHistoryPlant = false;
+			}
+			std::cout << "],\"previous_tick\":" << outcome.previousTick
+				<< ",\"previous_plant\":" << (outcome.previousPlant ? "true" : "false") << "}}" << std::endl;
 			continue;
 		}
 		else if (command == "RANK_PROBE")
