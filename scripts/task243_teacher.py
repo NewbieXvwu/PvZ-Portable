@@ -30,6 +30,8 @@ def main():
     parser.add_argument("--data", type=Path, default=ROOT / "artifacts/task243")
     parser.add_argument("--executable", type=Path, default=Path.home() / "pvz-mac-collect/build-vn6/pvz-portable")
     parser.add_argument("--workers", type=int, default=6)
+    parser.add_argument("--arms", nargs="+", choices=("production", "v5", "v6"),
+                        default=("production", "v5", "v6"))
     args = parser.parse_args()
     directory = args.data.resolve()
     models = directory / "models"
@@ -41,6 +43,7 @@ def main():
                        VECLIB_MAXIMUM_THREADS="1", TMPDIR=str(directory / "work"))
     arms = dict(production=(models / "production_v5.pt", models / "production_v5roof.pt"),
                 v5=(models / "v5.pt", models / "v5.pt"), v6=(models / "v6.pt", models / "v6.pt"))
+    arms = {arm: arms[arm] for arm in args.arms}
     pairs = []
     for task in tasks:
         level = task["level"]
@@ -52,12 +55,12 @@ def main():
                 "--rollout-policy-gpt", str(models / "gptbc.pt"),
                 "--value", str(value), "--value-roof", str(roof),
                 "--static-value", str(models / "static.pt"),
-                "--manifest", str(panel), "--task-id", task["task_id"], "--seeds", "32",
+                "--manifest", str(panel), "--task-id", task["task_id"], "--seeds", str(len(task["seeds"])),
                 "--arms", "fast_search", "--workers", str(args.workers),
                 "--verify-samples", "9", "--student-candidates", "2",
                 "--dagger-beta", "1", "--native-games", "--executable", str(args.executable),
                 "--resource-dir", str(Path.home() / ".cache/pvz-research-resources"), "--out", str(target)]
-            print(f"L{level} {arm}: 32 games, {args.workers} workers", flush=True)
+            print(f"L{level} {arm}: {len(task['seeds'])} games, {args.workers} workers", flush=True)
             with (out / f"l{level}-{arm}.log").open("a") as log:
                 subprocess.run(command, env=environment, stdout=log, stderr=log, check=True)
             games = [json.loads(line) for line in (target / "games.jsonl").read_text().splitlines()]
@@ -68,6 +71,8 @@ def main():
                           **{arm: values[seed] for arm, values in outcomes.items()}) for seed in task["seeds"])
         (out / "pairs.json").write_text(json.dumps(pairs, indent=1))
         print(f"L{level}: " + str({arm: sum(outcomes[arm].values()) for arm in arms}), flush=True)
+    if set(arms) != {"production", "v5", "v6"}:
+        return
     report = dict(pairs=len(pairs), per_level={}, pooled={},
         noninferiority_margin=-2/32,
         protocol="same reset seed, separate seed blocks by level, shared production search/prior/static; only leaf changes",
