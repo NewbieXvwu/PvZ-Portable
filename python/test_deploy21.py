@@ -355,3 +355,17 @@ def test_deploy21_e2e_real_engine_once(monkeypatch):
             print('E2E promotion saved: A/B 1 optimizer step each; look 3/4, 120 adventure pairs; temp removed on exit', flush=True)
         finally:
             pipeline.executor.shutdown(wait=True)
+
+def test_gate_rejects_fewer_wins_hidden_by_wave_credit():
+    """11-05 r117: the wave score may not lift a candidate with fewer wins over the bar."""
+    manifest = dict(monitor=[], groups={})
+    pairs = [dict(task_id='day', zone='day', seed=i, candidate=True, incumbent=True,
+                  candidate_wave=20, incumbent_wave=20, wave_count=20, endpoint='win') for i in range(400)]
+    pairs += [dict(task_id='day', zone='day', seed=400 + i, candidate=False, incumbent=False,
+                   candidate_wave=18, incumbent_wave=4, wave_count=20, endpoint='waves') for i in range(400)]
+    pairs[0].update(candidate=False)
+    pairs[1].update(candidate=False)
+    result = v7.decide(pairs, manifest, 4)
+    assert result['overall']['delta_rate'] > 0 and result['overall']['win_delta_rate'] < 0
+    assert 'overall_win_point_estimate_negative' in result['reasons']
+    assert not result['approved'] and result['status'] == 'reject'

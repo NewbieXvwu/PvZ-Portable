@@ -475,6 +475,12 @@ def decide(pairs, manifest, look):
         reasons.append('overall_ci_lower_not_above_minus_3pp')
     if overall['delta_rate'] < 0:
         reasons.append('overall_point_estimate_negative')
+    # 11-05: r117 passed with fewer wins than its incumbent (774 vs 788 of 1863) because
+    # wave credit on both-lose pairs lifted the score to +0.05pp.  Near-tied candidates
+    # (distilled B sits next to the incumbent) would then be promoted by noise about half
+    # the time; the incumbent must also not be worse on wins alone.
+    if overall['win_delta_rate'] < 0:
+        reasons.append('overall_win_point_estimate_negative')
     for zone, result in zones.items():
         rows = [r for r in scored if r['zone'] == zone]
         win_p = result['mcnemar_worse_p']
