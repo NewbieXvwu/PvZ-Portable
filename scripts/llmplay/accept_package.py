@@ -78,7 +78,7 @@ def worker(mode: str, payload: dict) -> dict:
         catalog = json.loads(Path("configs/llmplay_resume.json").read_text())
         items = catalog["items"] if isinstance(catalog, dict) else catalog
         entry = items[0]
-        game = Game.load_archive(entry.get("archive") or entry["path"])
+        game = Game.load_archive(Path("resume") / entry["archive"])
         game.wait_until(game.tick + 300)
         tick = game.tick
         game.close()
