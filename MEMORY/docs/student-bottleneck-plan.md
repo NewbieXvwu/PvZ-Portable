@@ -1639,3 +1639,7 @@
   - 退出后 GPU 0%，WSL 内存只用 1 GB；看门狗因 stop_curr 不会重启。
   - Mac 采集照常，批次照常投递到台式机 frames。
   - **恢复**：用户说可以时运行 `~/pvz-logs/deploy-gatecover/resume.sh`。它会装 gatecover 的两份清单、删 stop_curr，再 `deploy26.py --revision e91e220b` 拉起 qc，恢复和部署 gatecover 一步完成。
+- 11-05 22:00 CST
+  - **更正**：台式机暂停期间，Mac 采集也会停。`mac_collect.py` 每批都要向生产控制器取计划，控制器不在就报 “production curriculum controller is not running”，每 60 s 重试一次，台式机恢复后自动接上。
+  - **task246 的后台流水线已死**：codex exec 结束时把它带走了，日志停在 Mac 08:12，只完成 1 / 107 局。已在 tmux `task246-exp` 用 nice 10 重启 `task246_experiment.py --data artifacts/task246`，它能从已完成的局续跑。
+  - task248 进展：850 题核对完，145 题的等待时长问题已修。
