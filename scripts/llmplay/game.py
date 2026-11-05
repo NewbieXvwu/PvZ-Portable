@@ -1110,7 +1110,12 @@ class Game:
                     note=self.note, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
                     abandon_reason=self.abandon_reason, attempt_id=self.attempt_id, tick=self.tick, ops=self.ops,
                     frames=self.frames, totals=self.totals,
-                    robustness=self.robustness_report, manual_patch=bool(self.manual_patch))
+                    robustness=self.robustness_report, manual_patch=bool(self.manual_patch),
+                    # drill / scenario / resume 局的任务定义在源存档里，不在任务清单里；
+                    # 记下源存档，load() 走 from_archive 同一条路径恢复（11-05 交付验收发现）。
+                    archive=getattr(self, "_source_archive", None),
+                    archive_decision=getattr(self, "_source_decision", None),
+                    scenario_meta=self.scenario_meta, future_seed=self.future_seed)
 
     def save(self, path) -> Path:
         self._require_primary("save()")
@@ -1127,6 +1132,15 @@ class Game:
         doc = json.loads(Path(path).read_text(encoding="utf-8"))
         if doc.get("schema") != SCHEMA:
             raise ValueError("不是 %s 存档：%s" % (SCHEMA, path))
+        if doc.get("archive"):
+            game = cls.from_archive(doc["archive"], decision=doc.get("archive_decision"),
+                                    strategy=doc.get("strategy", ""), **kwargs)
+            game.ops, game.frames, game.tick = doc.get("ops") or [], doc.get("frames") or [], doc.get("tick")
+            game.scenario_meta = doc.get("scenario_meta") or game.scenario_meta
+            game.future_seed = doc.get("future_seed") or game.future_seed
+            game.note, game.abandon_reason = doc.get("note", game.note), doc.get("abandon_reason")
+            game.terminal = game.abandon_reason is not None
+            return game
         return cls(doc["task_id"], seed=doc["seed"], ops=doc.get("ops") or [],
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
@@ -1181,6 +1195,7 @@ class Game:
                                 'deck': task['deck'], 'seeds': [task['seed']],
                                 'layer': meta.get('workflow_layer', 'A')}, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
+        game._source_archive, game._source_decision = str(archive.resolve()), decision
         # task220：中盘接回项用 resume_id 认领（同一生产任务族下有多条不同起点的存档）。
         game.resume_id = meta.get("resume_id") or None
         game.resume_source = dict(meta.get("resume") or {})
