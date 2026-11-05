@@ -37,7 +37,7 @@ def ensure_run_id():
     root = output_dir()
     with _lock(root):
         document = _read_progress(root)
-        if not document.get("run_id"):
+        if not document.get("run_id") or (root / "progress.json").is_symlink():
             document = _publish(root, document["archives"], budget.session(), run_id=uuid.uuid4().hex)
         return document["run_id"]
 
@@ -118,7 +118,8 @@ def next_task(track=None, *, shard=None, shards=None) -> dict:
     if workflow.decks_mode() and (shard is not None or shards is not None):
         from .decks import configure_shard
         configure_shard(shard, shards)
-    return workflow.next_task(progress(), track=track)
+    ensure_run_id()
+    return workflow.next_task(track=track)
 
 
 def check(task_id, deck, strategy="", seed=None) -> dict:
@@ -159,7 +160,7 @@ def diagnose(task_id, *, waves=None, missing="", note="", deck=None) -> Path:
         path = folder / (task_id + suffix + ".json")
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _publish(root, document["archives"], budget.session())
-        workflow.release(task_id, None)
+    workflow.release(task_id, None)
     return path
 
 
@@ -200,44 +201,42 @@ def _restore_archive(archive, root, relative, *, consume=False):
     return relative.as_posix()
 
 
+def _merge_entries(existing, incoming):
+    """记录取并集；同一存档的旧结论不能冲掉已经完成的结论。"""
+    merged = {entry["archive"]: entry for entry in existing}
+    for entry in incoming:
+        previous = merged.get(entry["archive"])
+        score = lambda row: (bool(row.get("valid", True)), bool(row.get("won")),
+                             bool(row.get("robust")))
+        merged.pop(entry["archive"], None)
+        merged[entry["archive"]] = (entry if previous is None or score(entry) > score(previous)
+                                     else previous)
+    return list(merged.values())
+
+
 def _publish(root, entries, session, *, run_id=None, compresslevel=None):
-    run_id = run_id or _read_progress(root).get("run_id") or uuid.uuid4().hex
-    document = _derive(entries, run_id)
+    # 调用者持有 _lock；每次发布都重新读入口，旧快照只能补记录。
+    previous = _read_progress(root)
+    run_id = previous.get("run_id") or run_id or uuid.uuid4().hex
+    document = _derive(_merge_entries(previous["archives"], entries), run_id)
     document["budget"] = session.snapshot()
     generations = root / ".delivery"
     generations.mkdir(exist_ok=True)
     generation = generations / uuid.uuid4().hex
     generation.mkdir()
-    pending_links = []
     try:
         (generation / "progress.json").write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (generation / "report.md").write_text(_report(document), encoding="utf-8")
         (generation / "budget.json").write_text(json.dumps(document["budget"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         registry = {key: info["registered_decks"] for key, info in document.get("levels", {}).items()}
         (generation / "decks.json").write_text(json.dumps(registry, ensure_ascii=False) + "\n", encoding="utf-8")
-        # 常驻文件入口；此后仅 current 的一次原子 rename 切换整代。
-        for name in ("progress.json", "report.md", "budget.json", "decks.json"):
-            alias = root / name
-            expected = ".delivery/current/" + name
-            if not alias.is_symlink() or os.readlink(alias) != expected:
-                tmp = root / ("." + name + "." + uuid.uuid4().hex + ".link")
-                pending_links.append(tmp)
-                tmp.symlink_to(expected)
-                os.replace(tmp, alias)
-        link = generations / ("current." + uuid.uuid4().hex + ".tmp")
-        pending_links.append(link)
-        link.symlink_to(generation.name)
-        os.replace(link, generations / "current")
-    except BaseException:
-        shutil.rmtree(generation, ignore_errors=True)
-        raise
+        # 移动普通文件，替换旧版软链本身。progress 最后发布，读者每次按入口读盘。
+        for name in ("report.md", "budget.json", "decks.json", "progress.json"):
+            os.replace(generation / name, root / name)
     finally:
-        for link in pending_links:
-            link.unlink(missing_ok=True)
-    # current 只持有小型结论；旧代和旧版压缩包立即清掉。
+        shutil.rmtree(generation, ignore_errors=True)
+    # 清掉旧版快照与软链，历史对局始终保留在 archives。
     for old in generations.iterdir():
-        if old == generation or old.name == "current":
-            continue
         if old.is_dir() and not old.is_symlink():
             shutil.rmtree(old, ignore_errors=True)
         else:
@@ -350,9 +349,21 @@ def record_archive(archive, *, session=None):
     root, archive = output_dir(), Path(archive)
     with _lock(root):
         relative = _store(archive, root)
-        entries = [e for e in _read_progress(root)["archives"] if e["archive"] != relative]
-        entries.append(_entry(archive, relative))
-        return _publish(root, entries, session or budget.session())
+        return _publish(root, [_entry(archive, relative)], session or budget.session())
+
+
+def invalidate_drill(task_id, seed, block, missing):
+    """起点无目标：只记小型结论，不造示范存档，同题的未来种子一并跳过。"""
+    root = output_dir()
+    with _lock(root):
+        entries = [dict(task_id=task_id, seed=int(seed), deck=[], level=0,
+                        archive="invalid/drill/%s/%s" % (task_id, future),
+                        drill_id=task_id, future_seed=int(future), invalid_start=True,
+                        missing_targets=list(missing), valid=False, won=False, robust=False,
+                        result=0, outcome={}, abandoned=True,
+                        invalid_reason="drill 起点无目标", drill_success=False)
+                   for future in block.get("future_seeds") or [block.get("future_seed", seed)]]
+        return _publish(root, entries, budget.session())
 
 
 def _extract(source, target):
@@ -391,10 +402,7 @@ def carry(source=None):
         prior = json.loads(source.read_text(encoding="utf-8"))
         if prior.get("schema") != CARRY_SCHEMA:
             raise ValueError("前次进度不是 %s：%s" % (CARRY_SCHEMA, source))
-        known = workflow.known_tasks()
         entries = [_carry_entry(entry) for entry in prior.get("archives") or []]
-        entries = [entry for entry in entries
-                   if entry["task_id"] in known or entry.get("resume_id")]
         if not workflow.decks_mode():
             _restore_diagnoses(root, prior)
         return _publish(root, entries, budget.session(), run_id=prior.get("run_id"))
@@ -453,7 +461,8 @@ def _restore_diagnoses(root, prior) -> None:
 def resume(source) -> dict:
     """按旧 progress 恢复：只搬存档和结论，不算摘要、不重放、不复验。"""
     root = output_dir()
-    with tempfile.TemporaryDirectory(prefix="llmplay-resume-") as directory:
+    root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".llmplay-resume-", dir=root.parent) as directory:
         source = Path(source).expanduser().resolve()
         if source.is_dir() and (source / "out.zip.001").is_file():
             source = source / "out.zip.001"
@@ -486,7 +495,7 @@ def resume(source) -> dict:
                 archive = path.parent / entry["archive"]
                 prior_entries.setdefault(archive, []).append(entry)
                 if not archive.is_dir():
-                    if workflow.decks_mode() and entry.get("carried"):
+                    if entry.get("invalid_start") or (workflow.decks_mode() and entry.get("carried")):
                         # 随包沿用的结论本来就不含旧存档，续跑继续保留其登记。
                         missing.append(dict(entry))
                     else:

@@ -43,7 +43,9 @@ PROMPT要求利用LLM的PvZ先验知识比较本关各类威胁的不同克制�
 L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支线种子窗口独立，用完按64000000顺延。
 
 进度与报告逐局写入`llmplay.out_dir()`；正式导出成功后删除对应运行目录，只保留`archives/`中的一份。
-`.delivery/`只保留当前小型进度，旧暂存立即清掉，每局不再压整批对局。
+`.delivery/`只作临时写入，旧暂存立即清掉，每局不再压整批对局。
+进度入口均为普通文件，通过临时文件和 `os.replace` 原子更新。派题与记账共用
+`.delivery.lock`，每次在锁内重新读盘，续跑与 carry 合并保留历史记录的并集。
 `llmplay.export_bundle()`生成分卷，输出目录由`llmplay.bundle_dir()`返回：
 位于out同级的`<out目录名>_exports/`，默认是`/mnt/data/out_exports/`。
 每局直接使用生产同款`pvz_frame_store.write_frames`写`frames.npz`，读档走`frame_path/read_frames`，兼容旧JSONL。
@@ -131,3 +133,24 @@ task238重打包：包内新增两类短视界项目，排在所有旧队列之�
 导入器 `import_llm_run.py` 对两类存档走 `verify_short()`，只把起点之后的 plant/wait 记为
 `llm_demo` 行；drill 成功局带 `meta["drill"]`，训练按 ×3 加权；失败局只记录。
 `carry/` 接上 226b 最新交回进度（2026-11-04 18:20 HKT），不需要旧分卷。
+
+task248 修复：采集等待会被事件提前截断，出题前缀改用记录中的实际等待时长，
+防止重放越过题面根 tick。出题时通过 `Game.load_archive()` 一次加载核对目标，
+只对同类型、同行且位置相符的唯一实体修正 ID，无法确认的题从目录剔除。
+已有题库可原地修前缀，保留题号和 future seed，无需重新挖题：
+
+```bash
+python3 scripts/llmplay/make_drill_bank.py check-drills \
+  --catalog configs/llmplay_drills.json --out /path/to/assets \
+  --executable /path/to/pvz-portable --resource-dir /path/to/res \
+  --checked-catalog /path/to/checked-drills.json --report /path/to/drill-check.json
+```
+
+将核对后的目录替换 `configs/llmplay_drills.json`，打包使用修过的 assets。
+沙箱首次加载若目标全部缺失，抛出 `InvalidDrillError`，进度会记录无效起点并跳过
+该题全部未来种子，随后调用 `next_task()`。无效项没有示范存档，carry/resume 保留其结论。
+导入器在原有重放经过起点时核对目标，起点缺失或已放弃的局均不能计为清除成功。
+本次从 918 题保留 903 题（2709 个种子项）：186 题修正等待时长，37 题从源存档恢复
+关卡和卡组上下文，目标 ID 修配 0 题。剔除 13 道缺少上游示范前缀的题和 2 道缺少
+可恢复卡组的题，剔除比例 1.63%。题号与未来种子保持原值，carry 使用最新交回进度，
+合并记录取并集，已完成与无效项均保留，不需要重放旧存档。

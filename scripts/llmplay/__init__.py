@@ -9,7 +9,7 @@
     print(g.observe())
     g.export_archive(llmplay.out_dir() / "x")
 """
-from .game import Game, load_tasks, task_spec, ROOT
+from .game import Game, InvalidDrillError, load_tasks, task_spec, ROOT
 from .delivery import (resume, carry, progress, next_task, ensure_run_id, diagnose,
                        output_dir as out_dir, export_bundle, bundle_dir)
 from .runtime import paths
@@ -24,7 +24,7 @@ if _resources is not None:
 carry()
 ensure_run_id()
 
-__all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
+__all__ = ["Game", "InvalidDrillError", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
            "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard", "roster",
            "export_bundle", "bundle_dir"]
 

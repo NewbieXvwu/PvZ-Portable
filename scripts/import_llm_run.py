@@ -247,7 +247,7 @@ def verify_short(archive: Path, resource_dir: Path, executable: Path | None) -> 
     block = short_horizon(meta)
     if block is None:
         raise ValueError('不是 drill/scenario 存档')
-    game = Game.load_archive(archive, executable=executable, resource_dir=resource_dir)
+    game = Game.load_archive(archive, executable=executable, resource_dir=resource_dir, _internal=True)
     try:
         game._start()
         obs = game.obs
@@ -255,10 +255,13 @@ def verify_short(archive: Path, resource_dir: Path, executable: Path | None) -> 
         for defense in obs.get('defenses') or []:
             state = defense.get('state', 0) if isinstance(defense, dict) else defense[1]
             mowers_left += int(state) == 1
-        outcome = judge(game.env, obs, list(block.get('targets') or []),
+        outcome = (game.drill_result() if meta.get('drill') else
+                   judge(game.env, obs, list(block.get('targets') or []),
                         int(block.get('mowers_start') or 0), mowers_left,
                         horizon=int(block.get('horizon') or 900),
-                        root_tick=int(block.get('root_tick') or 0))
+                        root_tick=int(block.get('root_tick') or 0)))
+        if meta.get('abandoned'):
+            outcome['success'] = False
     finally:
         game.close()
     expected = block.get('success')
@@ -334,7 +337,8 @@ def verification_context(executable: Path, resources: Path) -> dict:
         name: file_sha(resources / name) for name in ('main.pak', 'properties/partner.xml')
         if (resources / name).exists()}, verifier={
         name: file_sha(ROOT / name) for name in
-        ('scripts/human_demo.py', 'python/pvz_env.py', 'python/pvz_event_env.py')})
+        ('scripts/human_demo.py', 'python/pvz_env.py', 'python/pvz_event_env.py',
+         'scripts/llmplay/game.py', 'scripts/drill_start.py')})
 
 
 
@@ -446,7 +450,9 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                     problems = problems + family_problems
                     verified = receipt['verified'] and not problems
                     block = short_horizon(meta)
-                    short_success = bool(block.get('success')) if block else bool(meta['outcome'].get('won'))
+                    short_success = (bool((receipt.get('result') or {}).get('result'))
+                                     and not meta.get('abandoned') if block
+                                     else bool(meta['outcome'].get('won')))
                     if (verified and short_success and llm_demo_data is not None
                             and str(meta.get('label_source', '')).startswith('llm_')):
                         from pvz_llm_demo_rows import import_demo
@@ -465,7 +471,7 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                                result=meta['outcome']['result'], wave=meta['outcome']['final_wave'],
                                operations=meta['operations'], frames=meta['frame_count'],
                                verify='通过' if verified else '失败',
-                               grade=('full' if short_success else 'loss') if block else
+                               grade=('full' if verified and short_success else 'loss') if block else
                                (grade(meta) if verified else 'loss'),
                                robustness=robustness_text(meta), manual_patch=meta.get('manual_patch'),
                                new_family=sha not in previous, archive=relative if verified else '',

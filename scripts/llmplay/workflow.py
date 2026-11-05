@@ -27,11 +27,6 @@ from pathlib import Path
 from .game import ROOT, load_tasks, required_checkpoint
 from .runtime import output_path
 
-try:                                    # 只用来串行化 claims.json 的读改写
-    import fcntl as _FCNTL
-except ImportError:                     # Windows 上退化为无锁（占位记录本身容忍竞争）
-    _FCNTL = None
-
 LAYERS = ("A", "B", "C", "D", "E")
 MAIN_LAYERS = ("A", "B", "D", "E")
 STRATEGIES = ("经济优先", "防线优先", "速攻清场")
@@ -517,16 +512,9 @@ def _slot(task_id, seed) -> str:
 
 @contextmanager
 def _claim_lock():
-    path = _claims_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with (path.parent / ".claims.lock").open("a+b") as handle:
-        if _FCNTL is not None:
-            _FCNTL.flock(handle.fileno(), _FCNTL.LOCK_EX)
-        try:
-            yield
-        finally:
-            if _FCNTL is not None:
-                _FCNTL.flock(handle.fileno(), _FCNTL.LOCK_UN)
+    from .delivery import _lock
+    with _lock(output_path(ROOT)):
+        yield
 
 
 def _claims_path() -> Path:
@@ -580,26 +568,36 @@ def release(task_id, seed) -> None:
 
 def claim_item(document=None, *, track=None, ttl=None) -> dict:
     """领一项还没被领走的任务；全部被领走时返回 action=busy，不阻塞。"""
-    document = document if document is not None else _progress()
+    with _claim_lock():
+        return _claim_item(_claim_progress(document), track=track, ttl=ttl)
+
+
+def _claim_progress(document=None):
+    from .delivery import _read_progress, _derive, _merge_entries
+    current = _read_progress(output_path(ROOT))
+    entries = _merge_entries(current["archives"], (document or {}).get("archives") or [])
+    return _derive(entries, current.get("run_id") or (document or {}).get("run_id"))
+
+
+def _claim_item(document, *, track=None, ttl=None):
     main_items, c_items = _ordered(document)
     # C 轨专职子代理先领 C，C 做完自动接主线；主线子代理反之。
     order = (c_items + main_items) if track == "C" and document.get("mode") != "decks" else (main_items + c_items)
     ttl = float(ttl or os.environ.get("LLMPLAY_CLAIM_TTL") or CLAIM_TTL)
-    with _claim_lock():
-        data = _read_claims()
-        for candidate in order:
-            key = _slot(candidate["task_id"], candidate.get("seed"))
-            if key in data:
-                continue
-            token = uuid.uuid4().hex
-            data[key] = dict(task_id=candidate["task_id"], seed=candidate.get("seed"),
-                             cycle=document["cycle"], layer=candidate["layer"],
-                             action=candidate["action"], token=token,
-                             claimed_at=time.time(), expires=time.time() + ttl, pid=os.getpid())
-            _write_claims(data)
-            return dict(candidate, claim=token)
-        return _busy(main_items + c_items) or _item(document, None, "blocked",
-                                                    note="本圈没有可推进的项")
+    data = _read_claims()
+    for candidate in order:
+        key = _slot(candidate["task_id"], candidate.get("seed"))
+        if key in data:
+            continue
+        token = uuid.uuid4().hex
+        data[key] = dict(task_id=candidate["task_id"], seed=candidate.get("seed"),
+                         cycle=document["cycle"], layer=candidate["layer"],
+                         action=candidate["action"], token=token,
+                         claimed_at=time.time(), expires=time.time() + ttl, pid=os.getpid())
+        _write_claims(data)
+        return dict(candidate, claim=token)
+    return _busy(main_items + c_items) or _item(document, None, "blocked",
+                                                note="本圈没有可推进的项")
 
 
 def _ordered(document) -> tuple:
@@ -778,11 +776,13 @@ def next_task(document=None, *, track=None, claim=True, ttl=None) -> dict:
     主线与 C 轨合成一条队列（主线优先）；全部被领走时 item.action 是 busy，不阻塞。
     claim=False 只查看队列，不占位（报告、测试用）。
     """
-    document = document if document is not None else _progress()
-    view = _view(document)
     if claim:
-        view["item"] = claim_item(document, track=track, ttl=ttl)
-    return view
+        with _claim_lock():
+            document = _claim_progress(document)
+            view = _view(document)
+            view["item"] = _claim_item(document, track=track, ttl=ttl)
+            return view
+    return _view(document if document is not None else _progress())
 
 
 def _progress():

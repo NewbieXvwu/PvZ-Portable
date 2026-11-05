@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from collections import Counter, defaultdict
 from pathlib import Path
 import sys
@@ -116,6 +117,12 @@ def ops_from_frames(frames, stop: int) -> list:
     return out
 
 
+def prefix_ops(ops):
+    """采集 WAIT 会遇事件提前结束，前缀重放只等存档中实际经过的 tick。"""
+    return [dict(op, action=dict(op["action"], ticks=int(op["end_tick"]) - int(op["tick"])))
+            if op["action"].get("type") == "wait" else op for op in ops]
+
+
 def write_prefix(archive: Path, target: Path, *, task_id: str, layer: str, block: dict,
                  knowledge: str, horizon: int, future_seeds, source: dict, decision: int | None = None):
     meta = read_meta(archive)
@@ -131,18 +138,14 @@ def write_prefix(archive: Path, target: Path, *, task_id: str, layer: str, block
         ops = ops[:stop]
     else:
         ops = ops_from_frames(frames, decision - 1)
-    task = dict(meta.get("task") or {})
-    env = dict(meta.get("environment_task") or {})
-    level = int(task.get("level") or env.get("level") or 0)
-    deck = list(task.get("deck") or env.get("deck") or [])
-    seed = int(task.get("seed") or env.get("seed") or 0)
-    multiplier = float(task.get("zombie_count_multiplier") or env.get("zombie_count_multiplier") or 1.0)
+    ops = prefix_ops(ops)
+    from dataclasses import asdict
+    from drill_start import archive_task
+    deck, spec = archive_task(meta, frames)
+    task, env = dict(meta.get("task") or {}), asdict(spec)
+    level, seed, multiplier = spec.level, spec.seed, spec.zombie_count_multiplier
     task.update(id=task_id, level=level, seed=seed, deck=deck,
                 zombie_count_multiplier=multiplier, policy="llm", playthrough=int(env.get("playthrough") or 2))
-    if not env.get("profile"):
-        from dataclasses import asdict
-        from pvz_tasks import profile_for_deck
-        env["profile"] = asdict(profile_for_deck(tuple(deck)))
     task["drill_start"] = dict(block)
     env.update(level=level, seed=seed, playthrough=int(env.get("playthrough") or 2),
                zombie_count_multiplier=multiplier)
@@ -206,6 +209,97 @@ def priority_of(rate: dict) -> int:
     return 1
 
 
+def check_drill_prefix(archive: Path, *, executable=None, resource_dir=None) -> dict:
+    """出题后只加载一次，与沙箱共用 Game 路径，修正可唯一匹配的旧实体 ID。"""
+    from llmplay.game import Game
+    from render_episode import _frame
+    meta = read_meta(archive)
+    block = meta["drill"]
+    ops = load_ops(archive)
+    normalized = prefix_ops(ops)
+    if normalized != ops:
+        with (archive / "ticks.jsonl").open("w", encoding="utf-8") as tape:
+            for op in normalized:
+                tape.write(json.dumps(op, separators=(",", ":")) + "\n")
+    game = Game.load_archive(archive, executable=executable, resource_dir=resource_dir,
+                             _internal=True)
+    try:
+        game._start()
+        alive = {z["id"]: z for z in game.zombies()}
+        missing = [t["id"] for t in block["targets"] if t["id"] not in alive]
+        result = dict(missing=missing, repaired=0, wait_fixed=sum(a != b for a, b in zip(ops, normalized)),
+                      status="ok", tick=game.tick,
+                      recorded_tick=block["root_tick"])
+        if game.tick != int(block["root_tick"]) or game.terminal:
+            return dict(result, status="rejected", reason="起点 tick 不符或已终局")
+        targets, used = [], set()
+        for target in block["targets"]:
+            # 源帧 x 保留一位小数。只修复同类型、同行、同位置的唯一实体，不能猜题。
+            candidates = [z for z in alive.values() if z["id"] not in used
+                          and z["type"] == target["type"] and z["row"] == target["row"]
+                          and abs(z["x"] - target["x"]) <= 1.0]
+            exact = [z for z in candidates if z["id"] == target["id"]]
+            if exact:
+                candidates = exact
+            if len(candidates) != 1:
+                return dict(result, status="rejected", reason="目标无法按类型、行和位置唯一匹配")
+            matched = candidates[0]
+            used.add(matched["id"])
+            result["repaired"] += int(matched["id"] != target["id"])
+            targets.append(dict(target, id=matched["id"], x=round(matched["x"], 1)))
+        if not targets:
+            return dict(result, status="rejected", reason="起点目标为空")
+        block.update(targets=targets, root_tick=game.tick, mowers_start=game._mower_count())
+        meta["task"]["drill_start"]["targets"] = targets
+        # 保存真正加载到的根帧，题面与回放起点使用同一个棋盘。
+        root = _frame(game.env.privileged_state())
+        root["operation"] = len(game.ops)
+        write_frames(archive / "frames.npz", [root], cache=False)
+        write_meta(archive, meta)
+        return dict(result, targets=targets)
+    finally:
+        game.close()
+
+
+def _check_item(item, args, results):
+    archive = Path(args.out) / "drill" / Path(item["archive"]).name
+    try:
+        result = check_drill_prefix(archive, executable=args.executable,
+                                    resource_dir=args.resource_dir)
+    except (OSError, ValueError, RuntimeError) as exc:
+        result = dict(status="rejected", reason=str(exc), missing=[], repaired=0)
+    results.append(dict(task_id=item["task_id"], **result))
+    if result["status"] != "ok":
+        return None
+    return dict(item, targets=result["targets"])
+
+
+def check_summary(results):
+    return dict(checked=len(results), missing=sum(bool(r["missing"]) for r in results),
+                wait_fixed=sum(bool(r.get("wait_fixed")) for r in results),
+                repaired=sum(bool(r["repaired"]) and r["status"] == "ok" for r in results),
+                rejected=sum(r["status"] != "ok" for r in results),
+                rejected_fraction=sum(r["status"] != "ok" for r in results) / max(1, len(results)))
+
+
+def check_drills(args):
+    """核对现成题库，不需要重新挖题，不改变题号及未来种子。"""
+    catalog = json.loads(args.catalog.read_text())
+    results, kept = [], []
+    for item in catalog["items"]:
+        checked = _check_item(item, args, results)
+        if checked is not None:
+            kept.append(checked)
+        if len(results) % 50 == 0:
+            print(json.dumps(check_summary(results)), flush=True)
+    catalog.update(items=kept, item_count=len(kept))
+    args.checked_catalog.write_text(json.dumps(catalog, ensure_ascii=False, indent=1) + "\n")
+    summary = check_summary(results)
+    args.report.write_text(json.dumps(dict(summary=summary, items=results), ensure_ascii=False, indent=1) + "\n")
+    print(json.dumps(summary), flush=True)
+    return 0
+
+
 def build_drills(args) -> int:
     bank = json.loads(args.bank.read_text())
     drills = bank.get("drills") or bank.get("tasks") or []
@@ -216,7 +310,7 @@ def build_drills(args) -> int:
         roots[name] = Path(path).expanduser()
     out = Path(args.out).expanduser()
     out.mkdir(parents=True, exist_ok=True)
-    catalog, seen = [], set()
+    catalog, seen, checks = [], set(), []
     for drill in drills:
         if drill.get("id") in seen:
             continue
@@ -237,7 +331,7 @@ def build_drills(args) -> int:
         if not targets:
             continue
         task_id = "drill238_%s_%s" % (terrain, sha(str(drill.get("id"))))
-        future_seeds = [args.seed_base + len(catalog) * 3 + index for index in range(3)]
+        future_seeds = [args.seed_base + len(checks) * 3 + index for index in range(3)]
         block = dict(targets=targets, terrain=terrain, type=name,
                      criterion=drill.get("criterion") or dict(
                          threats_neutralized=True, mower_unchanged=True, house_unchanged=True),
@@ -254,12 +348,14 @@ def build_drills(args) -> int:
         written["task_id"] = task_id
         written["priority"] = block["priority"]
         written["suits"] = name
-        catalog.append(written)
         seen.add(drill.get("id"))
+        written = _check_item(written, args, checks)
+        if written is not None:
+            catalog.append(written)
     document = dict(schema="llmplay_drill_catalog_v1", task="task238",
                     item_count=len(catalog), items=catalog)
     args.catalog.write_text(json.dumps(document, ensure_ascii=False, indent=1) + "\n")
-    print(json.dumps(dict(items=len(catalog), by_terrain=Counter(x["terrain"] for x in catalog),
+    print(json.dumps(dict(items=len(catalog), check=check_summary(checks), by_terrain=Counter(x["terrain"] for x in catalog),
                           by_type=Counter(x["type"] for x in catalog),
                           by_priority=Counter(x["priority"] for x in catalog)),
                      ensure_ascii=False, indent=1))
@@ -278,7 +374,7 @@ def build_resume_drills(args) -> int:
     out = Path(args.out).expanduser()
     out.mkdir(parents=True, exist_ok=True)
     per_type = Counter()
-    catalog = []
+    catalog, checks = [], []
     for item, archive in _resume_items(args.resume_catalog, args.resume_dir):
         meta = read_meta(archive)
         frames = read_frames(frame_path(archive))
@@ -302,7 +398,7 @@ def build_resume_drills(args) -> int:
                 continue
             per_type[(terrain, name)] += 1
             task_id = "drill238_%s_%s_%02d" % (terrain, name, per_type[(terrain, name)])
-            future_seeds = [args.seed_base + len(catalog) * 3 + index for index in range(3)]
+            future_seeds = [args.seed_base + len(checks) * 3 + index for index in range(3)]
             block = dict(targets=targets[:3], terrain=terrain, type=name,
                          criterion=dict(threats_neutralized=True, mower_unchanged=True,
                                         house_unchanged=True), priority=1,
@@ -313,7 +409,9 @@ def build_resume_drills(args) -> int:
                                    horizon=args.horizon, future_seeds=future_seeds,
                                    source=block["source"], decision=1)
             written["suits"] = name
-            catalog.append(written)
+            written = _check_item(written, args, checks)
+            if written is not None:
+                catalog.append(written)
             if len(catalog) >= args.limit:
                 break
         if len(catalog) >= args.limit:
@@ -321,7 +419,7 @@ def build_resume_drills(args) -> int:
     document = dict(schema="llmplay_drill_catalog_v1", task="task238",
                     item_count=len(catalog), items=catalog)
     args.catalog.write_text(json.dumps(document, ensure_ascii=False, indent=1) + "\n")
-    print(json.dumps(dict(items=len(catalog), by_terrain=Counter(x["terrain"] for x in catalog),
+    print(json.dumps(dict(items=len(catalog), check=check_summary(checks), by_terrain=Counter(x["terrain"] for x in catalog),
                           by_type=Counter(x["type"] for x in catalog)), ensure_ascii=False, indent=1))
     return 0
 
@@ -417,7 +515,19 @@ def main() -> int:
     scenario.add_argument("--horizon", type=int, default=1200)
     scenario.add_argument("--seed-base", type=int, default=239000000)
     scenario.set_defaults(run=build_scenarios)
+    check = sub.add_parser("check-drills")
+    check.add_argument("--catalog", type=Path, required=True)
+    check.add_argument("--out", type=Path, required=True, help="含 drill/ 的前缀根目录")
+    check.add_argument("--checked-catalog", type=Path, required=True)
+    check.add_argument("--report", type=Path, required=True)
+    check.set_defaults(run=check_drills)
+    for command in (drill, resume, check):
+        command.add_argument("--executable", type=Path)
+        command.add_argument("--resource-dir", type=Path)
     args = parser.parse_args()
+    state = args.out.expanduser() / ".drill-check"
+    os.environ.setdefault("LLMPLAY_OUT", str(state / "out"))
+    os.environ.setdefault("PVZ_LLMPLAY_SESSION", str(state / "budget.json"))
     return args.run(args)
 
 

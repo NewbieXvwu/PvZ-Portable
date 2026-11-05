@@ -88,27 +88,8 @@ def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fo
         obs, _meta, prefix = replay(env, archive, decision=decision,
                                     fog_observation=fog_observation)
         return obs, prefix
-    from pvz_env import PlayerProfileContext, TaskSpec
-    from pvz_tasks import profile_for_deck
-    if meta.get("environment_task"):
-        config = dict(meta["environment_task"])
-        if fog_observation is not None:
-            config["fog_observation"] = fog_observation
-        config["profile"] = PlayerProfileContext(**config["profile"])
-        config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted") or ())
-        obs, _ = env.reset(deck=meta["task"]["deck"], task=TaskSpec(**config))
-    else:
-        # Collection frames predate the full environment_task block.  The deck is in
-        # frame 0's seed bank; level/seed/multiplier are in the archive meta.
-        deck = [int(p[1]) for p in frames[0].get("packets") or []]
-        if not deck or any(not 0 <= seed_type < 49 for seed_type in deck):
-            raise ValueError("archive has neither environment_task nor a valid seed bank")
-        level = int((meta.get("context") or {}).get("level") or frames[0]["scene"]["level"])
-        seed = int((meta.get("task") or {}).get("seed"))
-        multiplier = float((meta.get("context") or {}).get("multiplier") or 1.0)
-        obs, _ = env.reset(deck=deck, task=TaskSpec(
-            level=level, seed=seed, playthrough=2,
-            profile=profile_for_deck(deck), zombie_count_multiplier=multiplier))
+    deck, task = archive_task(meta, frames, fog_observation=fog_observation)
+    obs, _ = env.reset(deck=deck, task=task)
     for index in range(1, int(decision)):
         action = frames[index].get("action") or frames[index].get("input_action")
         if action is None:
@@ -118,6 +99,31 @@ def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fo
         if int(obs["tick"]) != int(frames[index]["tick"]):
             raise ValueError(f"prefix differs at frame {index}: {obs['tick']} != {frames[index]['tick']}")
     return obs, frames[:int(decision)]
+
+
+def archive_task(meta, frames, *, fog_observation=None):
+    """存档的 reset 上下文，出题工具与生产前缀恢复共用。"""
+    from pvz_env import PlayerProfileContext, TaskSpec
+    from pvz_tasks import profile_for_deck
+    if meta.get("environment_task"):
+        config = dict(meta["environment_task"])
+        if fog_observation is not None:
+            config["fog_observation"] = fog_observation
+        config["profile"] = PlayerProfileContext(**config["profile"])
+        config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted") or ())
+        return list(meta["task"]["deck"]), TaskSpec(**config)
+    else:
+        # Collection frames predate the full environment_task block.  The deck is in
+        # frame 0's seed bank; level/seed/multiplier are in the archive meta.
+        deck = [int(p[1]) for p in frames[0].get("packets") or []]
+        if not deck or any(not 0 <= seed_type < 49 for seed_type in deck):
+            raise ValueError("archive has neither environment_task nor a valid seed bank")
+        level = int((meta.get("context") or {}).get("level") or frames[0]["scene"]["level"])
+        seed = int((meta.get("task") or {}).get("seed"))
+        multiplier = float((meta.get("context") or {}).get("multiplier") or 1.0)
+        return deck, TaskSpec(
+            level=level, seed=seed, playthrough=2,
+            profile=profile_for_deck(deck), zombie_count_multiplier=multiplier)
 
 
 def horizon_reached(obs, root_tick: int, horizon: int | None) -> bool:
@@ -148,6 +154,12 @@ def on_board(env, obs) -> dict[int, dict]:
             out[int(z[9])] = dict(id=int(z[9]), row=int(z[0]), type=int(z[1]),
                                   x=float(z[2]), hp=int(z[4]))
     return out
+
+
+def missing_targets(env, obs, targets) -> list[int]:
+    """只读当前棋盘，供出题、开局和导入在同一个起点检查目标。"""
+    alive = on_board(env, obs)
+    return [int(target["id"]) for target in targets if int(target["id"]) not in alive]
 
 
 def judge(env, obs, targets, mowers_start: int, mowers_left: int, *, horizon: int,

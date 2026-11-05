@@ -1,7 +1,7 @@
 {
  "schema": "llmplay_drill_catalog_v1",
  "task": "task238",
- "item_count": 918,
+ "item_count": 903,
  "items": [
   {
    "task_id": "drill238_fog_0034c130",
@@ -31031,50 +31031,6 @@
    "suits": "digger"
   },
   {
-   "task_id": "drill238_fog_a300d461",
-   "archive": "drill/drill238_fog_a300d461",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 70647815,
-     "row": 5,
-     "type": 17,
-     "name": "digger",
-     "x": 468.5
-    }
-   ],
-   "future_seeds": [
-    238001335,
-    238001336,
-    238001337
-   ],
-   "priority": 2,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c53llmplay3al36m100s139019022ad6c5badea9e1s778_o0_fast_search:r0",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000016/c53llmplay3al36m100s139019022ad6c5badea9e1s778_o0_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
    "task_id": "drill238_fog_ef0f01e5",
    "archive": "drill/drill238_fog_ef0f01e5",
    "level": 37,
@@ -35533,9 +35489,19 @@
   {
    "task_id": "drill238_night_04973a8a",
    "archive": "drill/drill238_night_04973a8a",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1964290,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35566,9 +35532,20 @@
   {
    "task_id": "drill238_night_171f2037",
    "archive": "drill/drill238_night_171f2037",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264248,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35731,9 +35708,20 @@
   {
    "task_id": "drill238_night_69320da9",
    "archive": "drill/drill238_night_69320da9",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264146,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35762,44 +35750,21 @@
    "suits": "football"
   },
   {
-   "task_id": "drill238_night_718961e7",
-   "archive": "drill/drill238_night_718961e7",
-   "level": 20,
-   "terrain": "night",
-   "deck": [],
-   "multiplier": 1.0,
-   "source_seed": 2294261,
-   "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
-   "horizon": 900,
-   "targets": [
-    {
-     "id": 67567630,
-     "row": 4,
-     "type": 7,
-     "name": "football",
-     "x": 375.1
-    }
-   ],
-   "future_seeds": [
-    238000114,
-    238000115,
-    238000116
-   ],
-   "priority": 2,
-   "type": "football",
-   "source": {
-    "id": "main:n20o4m_fast_search:r262",
-    "root": "main",
-    "archive": "artifacts/hard_mac/frames/seed_2294261/n20o4m_fast_search"
-   },
-   "suits": "football"
-  },
-  {
    "task_id": "drill238_night_7def0deb",
    "archive": "drill/drill238_night_7def0deb",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954396,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35830,9 +35795,20 @@
   {
    "task_id": "drill238_night_7e7a871a",
    "archive": "drill/drill238_night_7e7a871a",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264146,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35863,9 +35839,20 @@
   {
    "task_id": "drill238_night_8df2e620",
    "archive": "drill/drill238_night_8df2e620",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264248,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35896,9 +35883,19 @@
   {
    "task_id": "drill238_night_9410ee37",
    "archive": "drill/drill238_night_9410ee37",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1964496,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -35971,44 +35968,21 @@
    "suits": "football"
   },
   {
-   "task_id": "drill238_night_9edf2d1c",
-   "archive": "drill/drill238_night_9edf2d1c",
-   "level": 20,
-   "terrain": "night",
-   "deck": [],
-   "multiplier": 1.0,
-   "source_seed": 2294136,
-   "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
-   "horizon": 900,
-   "targets": [
-    {
-     "id": 67764239,
-     "row": 2,
-     "type": 7,
-     "name": "football",
-     "x": 362.6
-    }
-   ],
-   "future_seeds": [
-    238000111,
-    238000112,
-    238000113
-   ],
-   "priority": 2,
-   "type": "football",
-   "source": {
-    "id": "main:n20o2m_fast_search:r223",
-    "root": "main",
-    "archive": "artifacts/hard_mac/frames/seed_2294136/n20o2m_fast_search"
-   },
-   "suits": "football"
-  },
-  {
    "task_id": "drill238_night_ab172df7",
    "archive": "drill/drill238_night_ab172df7",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954396,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36039,9 +36013,20 @@
   {
    "task_id": "drill238_night_b02eb8af",
    "archive": "drill/drill238_night_b02eb8af",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264248,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36072,9 +36057,20 @@
   {
    "task_id": "drill238_night_b783a530",
    "archive": "drill/drill238_night_b783a530",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264248,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36105,9 +36101,19 @@
   {
    "task_id": "drill238_night_bf0d71ec",
    "archive": "drill/drill238_night_bf0d71ec",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1964496,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36138,9 +36144,19 @@
   {
    "task_id": "drill238_night_c4ebd7f6",
    "archive": "drill/drill238_night_c4ebd7f6",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954229,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36171,9 +36187,19 @@
   {
    "task_id": "drill238_night_d1340201",
    "archive": "drill/drill238_night_d1340201",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954340,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36204,9 +36230,19 @@
   {
    "task_id": "drill238_night_d5449254",
    "archive": "drill/drill238_night_d5449254",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954229,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36237,9 +36273,19 @@
   {
    "task_id": "drill238_night_e433b806",
    "archive": "drill/drill238_night_e433b806",
-   "level": 0,
+   "level": 16,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1954340,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36270,9 +36316,20 @@
   {
    "task_id": "drill238_night_e5159005",
    "archive": "drill/drill238_night_e5159005",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2264146,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36303,9 +36360,19 @@
   {
    "task_id": "drill238_night_e8d88d1d",
    "archive": "drill/drill238_night_e8d88d1d",
-   "level": 0,
+   "level": 17,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1964496,
    "knowledge": "橄榄球：高坚果/地刺/寒冰拖住，别让它贴脸",
@@ -36336,9 +36403,19 @@
   {
    "task_id": "drill238_night_19facba8",
    "archive": "drill/drill238_night_19facba8",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934606,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36369,9 +36446,19 @@
   {
    "task_id": "drill238_night_1b4be6e1",
    "archive": "drill/drill238_night_1b4be6e1",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934606,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36402,9 +36489,19 @@
   {
    "task_id": "drill238_night_29dade16",
    "archive": "drill/drill238_night_29dade16",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934715,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36435,9 +36532,20 @@
   {
    "task_id": "drill238_night_3835fb86",
    "archive": "drill/drill238_night_3835fb86",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234248,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36468,9 +36576,19 @@
   {
    "task_id": "drill238_night_39c9678b",
    "archive": "drill/drill238_night_39c9678b",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934715,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36501,9 +36619,19 @@
   {
    "task_id": "drill238_night_3ca93b95",
    "archive": "drill/drill238_night_3ca93b95",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934177,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36534,9 +36662,19 @@
   {
    "task_id": "drill238_night_411807ac",
    "archive": "drill/drill238_night_411807ac",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934606,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36567,9 +36705,19 @@
   {
    "task_id": "drill238_night_6c9e3dc8",
    "archive": "drill/drill238_night_6c9e3dc8",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934599,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36600,9 +36748,19 @@
   {
    "task_id": "drill238_night_76185a16",
    "archive": "drill/drill238_night_76185a16",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934599,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36633,9 +36791,20 @@
   {
    "task_id": "drill238_night_865823b9",
    "archive": "drill/drill238_night_865823b9",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234223,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36666,9 +36835,20 @@
   {
    "task_id": "drill238_night_8bc15320",
    "archive": "drill/drill238_night_8bc15320",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234248,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36699,9 +36879,19 @@
   {
    "task_id": "drill238_night_9750c7b0",
    "archive": "drill/drill238_night_9750c7b0",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934715,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36732,9 +36922,19 @@
   {
    "task_id": "drill238_night_9acee6d4",
    "archive": "drill/drill238_night_9acee6d4",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934606,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36765,9 +36965,20 @@
   {
    "task_id": "drill238_night_b903039b",
    "archive": "drill/drill238_night_b903039b",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234248,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36798,9 +37009,20 @@
   {
    "task_id": "drill238_night_c450682f",
    "archive": "drill/drill238_night_c450682f",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234223,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36838,9 +37060,20 @@
   {
    "task_id": "drill238_night_e343410c",
    "archive": "drill/drill238_night_e343410c",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234248,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36871,9 +37104,20 @@
   {
    "task_id": "drill238_night_ea08a4cd",
    "archive": "drill/drill238_night_ea08a4cd",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234223,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36904,9 +37148,20 @@
   {
    "task_id": "drill238_night_ee0cbf20",
    "archive": "drill/drill238_night_ee0cbf20",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ],
    "multiplier": 1.0,
    "source_seed": 2234223,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36937,9 +37192,19 @@
   {
    "task_id": "drill238_night_f4cf082f",
    "archive": "drill/drill238_night_f4cf082f",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934599,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -36970,9 +37235,19 @@
   {
    "task_id": "drill238_night_fb7196b3",
    "archive": "drill/drill238_night_fb7196b3",
-   "level": 0,
+   "level": 14,
    "terrain": "night",
-   "deck": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+   ],
    "multiplier": 1.0,
    "source_seed": 1934599,
    "knowledge": "撑杆：高坚果/地刺，别让它跳过前排",
@@ -39226,534 +39501,6 @@
     "archive": "artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200"
    },
    "suits": "polevaulter"
-  },
-  {
-   "task_id": "drill238_fog_06cad5f6",
-   "archive": "drill/drill238_fog_06cad5f6",
-   "level": 33,
-   "terrain": "fog",
-   "deck": [
-    9,
-    8,
-    16,
-    43,
-    10,
-    31,
-    3,
-    17,
-    19,
-    5
-   ],
-   "multiplier": 2.0,
-   "source_seed": 20261033,
-   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 67567624,
-     "row": 5,
-     "type": 16,
-     "name": "balloon",
-     "x": 745.4
-    }
-   ],
-   "future_seeds": [
-    238000357,
-    238000358,
-    238000359
-   ],
-   "priority": 3,
-   "type": "balloon",
-   "source": {
-    "id": "framesv2:c92demofog33cattailsnowm200hv2s316_o504_fast_search:r11",
-    "root": "framesv2",
-    "archive": "seed_20261033_f200034826/c92demofog33cattailsnowm200hv2s316_o504_fast_search"
-   },
-   "suits": "balloon"
-  },
-  {
-   "task_id": "drill238_fog_225f44db",
-   "archive": "drill/drill238_fog_225f44db",
-   "level": 33,
-   "terrain": "fog",
-   "deck": [
-    9,
-    8,
-    16,
-    43,
-    10,
-    31,
-    3,
-    17,
-    19,
-    5
-   ],
-   "multiplier": 2.0,
-   "source_seed": 20261033,
-   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 69664784,
-     "row": 4,
-     "type": 16,
-     "name": "balloon",
-     "x": 784.6
-    }
-   ],
-   "future_seeds": [
-    238000360,
-    238000361,
-    238000362
-   ],
-   "priority": 3,
-   "type": "balloon",
-   "source": {
-    "id": "framesv2:c92demofog33cattailsnowm200hv2s316_o504_fast_search:r215",
-    "root": "framesv2",
-    "archive": "seed_20261033_f200034826/c92demofog33cattailsnowm200hv2s316_o504_fast_search"
-   },
-   "suits": "balloon"
-  },
-  {
-   "task_id": "drill238_fog_36770fca",
-   "archive": "drill/drill238_fog_36770fca",
-   "level": 33,
-   "terrain": "fog",
-   "deck": [
-    9,
-    8,
-    16,
-    43,
-    10,
-    31,
-    3,
-    17,
-    19,
-    5
-   ],
-   "multiplier": 2.0,
-   "source_seed": 20261033,
-   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 70385667,
-     "row": 1,
-     "type": 16,
-     "name": "balloon",
-     "x": 795.2
-    }
-   ],
-   "future_seeds": [
-    238000363,
-    238000364,
-    238000365
-   ],
-   "priority": 3,
-   "type": "balloon",
-   "source": {
-    "id": "framesv2:c92demofog33cattailsnowm200hv2s316_o504_fast_search:r303",
-    "root": "framesv2",
-    "archive": "seed_20261033_f200034826/c92demofog33cattailsnowm200hv2s316_o504_fast_search"
-   },
-   "suits": "balloon"
-  },
-  {
-   "task_id": "drill238_fog_c067549d",
-   "archive": "drill/drill238_fog_c067549d",
-   "level": 33,
-   "terrain": "fog",
-   "deck": [
-    9,
-    8,
-    16,
-    43,
-    10,
-    31,
-    3,
-    17,
-    19,
-    5
-   ],
-   "multiplier": 2.0,
-   "source_seed": 20261033,
-   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 72876044,
-     "row": 3,
-     "type": 16,
-     "name": "balloon",
-     "x": 513.8
-    }
-   ],
-   "future_seeds": [
-    238000366,
-    238000367,
-    238000368
-   ],
-   "priority": 3,
-   "type": "balloon",
-   "source": {
-    "id": "framesv2:c92demofog33cattailsnowm200hv2s316_o504_fast_search:r489",
-    "root": "framesv2",
-    "archive": "seed_20261033_f200034826/c92demofog33cattailsnowm200hv2s316_o504_fast_search"
-   },
-   "suits": "balloon"
-  },
-  {
-   "task_id": "drill238_fog_d0be0dcc",
-   "archive": "drill/drill238_fog_d0be0dcc",
-   "level": 33,
-   "terrain": "fog",
-   "deck": [
-    9,
-    8,
-    16,
-    43,
-    10,
-    31,
-    3,
-    17,
-    19,
-    5
-   ],
-   "multiplier": 2.0,
-   "source_seed": 20261033,
-   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 73334803,
-     "row": 2,
-     "type": 16,
-     "name": "balloon",
-     "x": 597.3
-    }
-   ],
-   "future_seeds": [
-    238000369,
-    238000370,
-    238000371
-   ],
-   "priority": 3,
-   "type": "balloon",
-   "source": {
-    "id": "framesv2:c92demofog33cattailsnowm200hv2s316_o504_fast_search:r532",
-    "root": "framesv2",
-    "archive": "seed_20261033_f200034826/c92demofog33cattailsnowm200hv2s316_o504_fast_search"
-   },
-   "suits": "balloon"
-  },
-  {
-   "task_id": "drill238_fog_0a2896cd",
-   "archive": "drill/drill238_fog_0a2896cd",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 70451209,
-     "row": 0,
-     "type": 17,
-     "name": "digger",
-     "x": 812.5
-    }
-   ],
-   "future_seeds": [
-    238001410,
-    238001411,
-    238001412
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r323",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000026/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_6584ef54",
-   "archive": "drill/drill238_fog_6584ef54",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 68681732,
-     "row": 0,
-     "type": 17,
-     "name": "digger",
-     "x": 772.4
-    }
-   ],
-   "future_seeds": [
-    238000738,
-    238000739,
-    238000740
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r125",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000028/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_d4a5b2c1",
-   "archive": "drill/drill238_fog_d4a5b2c1",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 69402631,
-     "row": 4,
-     "type": 17,
-     "name": "digger",
-     "x": 805.0
-    }
-   ],
-   "future_seeds": [
-    238001338,
-    238001339,
-    238001340
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r240",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000034/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_d77d67f1",
-   "archive": "drill/drill238_fog_d77d67f1",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 69599237,
-     "row": 4,
-     "type": 17,
-     "name": "digger",
-     "x": 809.7
-    }
-   ],
-   "future_seeds": [
-    238001407,
-    238001408,
-    238001409
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r244",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000026/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_df24379d",
-   "archive": "drill/drill238_fog_df24379d",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 70647811,
-     "row": 5,
-     "type": 17,
-     "name": "digger",
-     "x": 822.4
-    }
-   ],
-   "future_seeds": [
-    238000741,
-    238000742,
-    238000743
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r291",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000028/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_e2a6d482",
-   "archive": "drill/drill238_fog_e2a6d482",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 70647816,
-     "row": 0,
-     "type": 17,
-     "name": "digger",
-     "x": 816.9
-    }
-   ],
-   "future_seeds": [
-    238000735,
-    238000736,
-    238000737
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r295",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000030/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
-  },
-  {
-   "task_id": "drill238_fog_e751963f",
-   "archive": "drill/drill238_fog_e751963f",
-   "level": 36,
-   "terrain": "fog",
-   "deck": [
-    2,
-    3,
-    6,
-    8,
-    9,
-    12,
-    16,
-    20,
-    27,
-    29
-   ],
-   "multiplier": 1.0,
-   "source_seed": 139019022,
-   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
-   "horizon": 1200,
-   "targets": [
-    {
-     "id": 66781194,
-     "row": 1,
-     "type": 17,
-     "name": "digger",
-     "x": 596.7
-    }
-   ],
-   "future_seeds": [
-    238000732,
-    238000733,
-    238000734
-   ],
-   "priority": 3,
-   "type": "digger",
-   "source": {
-    "id": "framesv2:c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search:r14",
-    "root": "framesv2",
-    "archive": "seed_139019022_f338000030/c89llmplay3al36m100s139019022ad6c5badea9e1s495_o24_fast_search"
-   },
-   "suits": "digger"
   }
  ]
 }
