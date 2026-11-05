@@ -130,3 +130,38 @@ def test_distill_queue_freezes_incumbent_as_teacher(tmp_path):
     # The train-time lineage refresh keeps the same frozen teacher.
     assert pipeline._b_recipe(job)['distill_from'] == str(incumbent)
     assert queue.experiment_name(job) == 'task205-clean-b+b-from-incumbent+distill5'
+
+
+def test_production_a_is_a_second_distilled_seed(tmp_path):
+    import curriculum_queue as queue
+    import qc_launch
+    launch = qc_launch.command(SimpleNamespace(
+        repo=tmp_path, worktree=ROOT, python=Path('/python'), review_share=None, logs=tmp_path,
+        rounds=1, workers=1, recipe=None, alternate_recipe=None, b_init=None, b_initial_epochs=None,
+        b_epochs=None, a_restart=False, executable=None))
+    assert '--no-a-restart' in launch
+    incumbent = tmp_path / 'incumbent.pt'
+    pipeline = queue.TrainingPipeline.__new__(queue.TrainingPipeline)
+    pipeline.args = SimpleNamespace(
+        recipe=Path(launch[launch.index('--recipe') + 1]),
+        alternate_recipe=Path(launch[launch.index('--alternate-recipe') + 1]),
+        state=tmp_path / 'state.json', log=tmp_path / 'log', frames=tmp_path / 'frames',
+        b_from_incumbent=True, b_epochs=4, b_initial_epochs=8, a_restart=False,
+        training_parallelism=1)
+    pipeline.directory = tmp_path / 'rounds'
+    pipeline.build_workers = 1
+    pipeline.state = dict(round=52, log=[], training_jobs=[],
+                          student=str(incumbent), student_round=101)
+    pipeline._plan_build = Mock()
+    pipeline._snapshot_selection = Mock()
+    pipeline._seeded = Mock()
+    pipeline.executor = Mock()
+    pipeline.futures = []
+    pipeline.enqueue()
+    job = pipeline.state['training_jobs'][0]
+    a, b = pipeline._a_recipe(job), pipeline._b_recipe(job)
+    for recipe in (a, b):
+        assert recipe['init'] == recipe['distill_from'] == str(incumbent)
+        assert recipe['epochs'] == 4 and recipe['distill_weight'] == 5.0
+        assert recipe['optimizer']['lr'] == 0.0005
+    assert job['training_seeds'] == [1, 2]

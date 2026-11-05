@@ -18,7 +18,9 @@ def command(args):
         '--rounds', str(args.rounds), '--workers', str(args.workers), '--min-eval-units', '4',
         '--python', str(python), '--round-games', '768', '--games-per-group', '48',
         '--manifest', str(worktree / 'artifacts/stage4/multiplier_panel.json'),
-        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer_clean_a.json'),
+        # 11-05: A is a second seed of the distilled incumbent fine-tune. The gptbc restart lost
+        # nine rounds in a row (r111-r119, -1.4 to -12 pp wins) while B passed four times.
+        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer_clean_b.json'),
         '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_clean_b.json'),
         *(['--b-init', str(args.b_init)] if args.b_init is not None else []),
         *(['--b-initial-epochs', str(args.b_initial_epochs)] if args.b_initial_epochs is not None else []),
@@ -56,7 +58,7 @@ def main():
     parser.add_argument('--b-init', type=Path)
     parser.add_argument('--b-initial-epochs', type=int)
     parser.add_argument('--b-epochs', type=int)
-    parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--b-from-incumbent', action=argparse.BooleanOptionalAction, default=True,
                         help='B fine-tunes the incumbent at queue time (production default)')
     args = parser.parse_args()
