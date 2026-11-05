@@ -148,11 +148,9 @@ def _with_diagnoses(document, reports):
 
 def merge_carry(prior: dict, latest: dict) -> dict:
     """合并已完成记录与诊断；不读取存档，不重算进度、不生成中间文件。"""
-    fresh = latest.get("archives") or []
-    keys = {entry["archive"] for entry in fresh}
+    from llmplay.delivery import _merge_entries
     result = dict(prior, **latest)
-    result["archives"] = [entry for entry in prior.get("archives", [])
-                          if entry["archive"] not in keys] + fresh
+    result["archives"] = _merge_entries(prior.get("archives") or [], latest.get("archives") or [])
     reports = {}
     for document in (prior, latest):
         items = list(document.get("carried_diagnoses") or [])

@@ -48,6 +48,8 @@ def mainline_only():
     def assign(*, native=False, frontier=False):
         return [] if (native or frontier) else decks.config()['order']
     with patch.object(decks, 'assigned_tasks', side_effect=assign), \
+            patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
             patch.object(decks, 'resume_catalog', return_value=[]), \
             patch.object(decks, 'upgrade_target', return_value=0):
         yield
@@ -437,9 +439,9 @@ def test_compact_export_removes_finished_run_without_full_bundle():
     restored.close()
     assert not (root / 'out.zip').exists() and not (root / '.out.zip.partial').exists()
     assert not delivery.bundle_dir().exists()
-    generations = [p for p in (root / '.delivery').iterdir() if not p.is_symlink()]
-    assert len(generations) == 1 and not old.exists()
-    assert set(p.name for p in generations[0].iterdir()) == {'progress.json', 'report.md', 'budget.json', 'decks.json'}
+    assert not list((root / '.delivery').iterdir()) and not old.exists()
+    assert all((root / name).is_file() and not (root / name).is_symlink()
+               for name in ('progress.json', 'report.md', 'budget.json', 'decks.json'))
     assert json.loads((root / 'decks.json').read_text())['llmplay_decks_l1_m100']
     g.env = None
     g.close()
@@ -656,3 +658,241 @@ def test_decks_resume_fresh_priority_beats_terrain_order():
     # 先新鲜批次，再按地形（夜先于屋顶）；旧档即使地形更靠前也排在所有新鲜项之后。
     assert item['task_id'] == 'fresh_night'
     assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_night', 'fresh_roof', 'old_pool']
+
+
+@contextmanager
+def _task248_catalog():
+    item = dict(task_id='drill248', archive='drill/drill248', level=1, terrain='day',
+                source_seed=7, deck=D1, targets=[dict(id=9)], future_seeds=[101, 102, 103])
+    with patch.object(decks, 'drill_catalog', return_value=[item]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch.object(decks, 'resume_catalog', return_value=[]):
+        yield item
+
+
+def _task248_finish(base, item):
+    archive = base / ('episode-%s' % item['future_seed'])
+    archive.mkdir()
+    meta = dict(task=dict(id=item['task_id'], level=1, seed=7, deck=D1),
+                outcome=dict(result=0, won=False), workflow_layer='drill',
+                drill=dict(id=item['task_id'], future_seed=item['future_seed'], success=False))
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    (archive / 'ticks.jsonl').write_text('')
+    (archive / 'frames.jsonl').write_text('{}\n')
+    delivery.record_archive(archive)
+    workflow.release(item['task_id'], item['seed'])
+
+
+def _task248_process(out, session_path, base, connection, stale):
+    os.environ['LLMPLAY_OUT'] = out
+    budget.reset_session(session_path)
+    with _task248_catalog():
+        snapshot = delivery.progress()
+        connection.send('ready')
+        connection.recv()
+        item = (workflow.next_task(snapshot) if stale else delivery.next_task())['item']
+        connection.send(item['future_seed'])
+        if stale:
+            connection.recv()
+        _task248_finish(Path(base), item)
+        delivery.export_bundle()
+        connection.send('exported')
+        if not stale:
+            connection.recv()
+            item = delivery.next_task()['item']
+            connection.send(item['future_seed'])
+            _task248_finish(Path(base), item)
+            delivery.export_bundle()
+    connection.close()
+
+
+def test_task248_concurrent_claim_finish_export_uses_fresh_progress(tmp_path):
+    """进程 A 留旧快照，B 完成并导出后 A 再认领，两者继续并发完成和导出。"""
+    import multiprocessing
+    context = multiprocessing.get_context('fork')
+    with _task248_catalog():
+        delivery.ensure_run_id()
+        connections, processes = [], []
+        for stale in (True, False):
+            parent, child = context.Pipe()
+            process = context.Process(target=_task248_process,
+                                      args=(str(delivery.output_dir()), str(tmp_path / 'budget.json'),
+                                            str(tmp_path), child, stale))
+            process.start()
+            child.close()
+            connections.append(parent)
+            processes.append(process)
+        a, b = connections
+
+        def receive(connection):
+            assert connection.poll(10), '子进程超时'
+            return connection.recv()
+
+        try:
+            assert receive(a) == receive(b) == 'ready'
+            b.send('claim')
+            first = receive(b)
+            assert receive(b) == 'exported'
+            a.send('claim with old snapshot')
+            second = receive(a)
+            assert second != first
+            b.send('continue')
+            third = receive(b)
+            a.send('finish')
+            assert receive(a) == 'exported'
+            assert len({first, second, third}) == 3
+            for process in processes:
+                process.join(10)
+                assert process.exitcode == 0
+            document = delivery.progress()
+            assert document['drill']['played'] == 3 and document['drill']['remaining'] == 0
+            assert len(document['archives']) == len(list((delivery.output_dir() / 'archives').iterdir())) == 3
+        finally:
+            for process in processes:
+                if process.is_alive():
+                    process.terminate()
+                process.join(5)
+            for connection in connections:
+                connection.close()
+
+
+def test_task248_stale_publish_resume_and_legacy_symlink_preserve_history(tmp_path):
+    with _task248_catalog() as item:
+        delivery.ensure_run_id()
+        root = delivery.output_dir()
+        legacy = root / '.delivery' / 'old.json'
+        legacy.write_text((root / 'progress.json').read_text())
+        (root / 'progress.json').unlink()
+        (root / 'progress.json').symlink_to(legacy)
+        stale = delivery.progress()
+        _task248_finish(tmp_path, dict(item, seed=101, future_seed=101))
+        with delivery._lock(root):
+            delivery._publish(root, stale['archives'], budget.session())
+        saved = tmp_path / 'old-out'
+        saved.mkdir()
+        old = dict(delivery.progress())
+        old['archives'] = [dict(old['archives'][0], valid=False, won=False, carried=True)]
+        (saved / 'progress.json').write_text(json.dumps(old))
+        delivery.resume(saved)
+        from llmplay.build_package import merge_carry
+        merged = merge_carry(delivery.progress(), old)
+        assert len(merged['archives']) == 1 and merged['archives'][0]['valid']
+        assert not (root / 'progress.json').is_symlink()
+        assert delivery.progress()['drill']['played'] == 1
+        assert delivery.progress()['archives'][0]['valid']
+
+
+def test_task248_invalid_drill_root_skips_queue_and_survives_resume(tmp_path):
+    from llmplay import InvalidDrillError
+    with _task248_catalog() as item:
+        g = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='气球', _gate=False)
+        g.task_id = item['task_id']
+        g.drill_meta = dict(item, prefix_operations=0, root_tick=0, horizon=60)
+        env = SimpleNamespace(close=Mock(), privileged_state=lambda: {'zombies': []})
+
+        def reset():
+            g.obs = dict(tick=0, result=0, defenses=[[0, 1]])
+
+        try:
+            with patch('llmplay.game.PvZEnv', return_value=env), \
+                    patch('llmplay.resources.app_data', return_value=tmp_path), \
+                    patch.object(g, '_reset_engine', reset):
+                with pytest.raises(InvalidDrillError, match='已跳过'):
+                    g._start()
+            assert env.close.call_count == 1
+            doc = delivery.progress()
+            assert doc['drill']['played'] == 3 and doc['drill']['remaining'] == 0
+            assert all(e['invalid_start'] and not e['valid'] for e in doc['archives'])
+            assert delivery.next_task()['item']['layer'] != 'drill'
+            parts = delivery.export_bundle()
+            os.environ['LLMPLAY_OUT'] = str(tmp_path / 'restored-invalid')
+            delivery.resume(parts[0])
+            assert delivery.progress()['drill']['remaining'] == 0
+        finally:
+            g.close()
+
+
+@pytest.mark.parametrize('present,abandoned', [(False, False), (True, False), (True, True)])
+def test_task248_import_short_captures_targets_at_prefix_boundary(tmp_path, present, abandoned):
+    import import_llm_run as importer
+    from pvz_frame_store import write_frames
+    g = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='气球', _gate=False)
+    archive = tmp_path / 'drill'
+    archive.mkdir()
+    block = dict(id='drill248', targets=[dict(id=9)], root_tick=60, prefix_operations=1,
+                 mowers_start=1, horizon=60, success=present and not abandoned)
+    meta = dict(task=dict(id='drill248', level=1, seed=7, deck=D1),
+                environment_task=g._environment_task(), workflow_layer='drill', drill=block,
+                outcome=dict(final_tick=120), operations=2, abandoned=abandoned)
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    ops = [dict(action={'type': 'wait', 'ticks': 60}, tick=t, end_tick=t + 60, ok=True)
+           for t in (0, 60)]
+    (archive / 'ticks.jsonl').write_text(''.join(json.dumps(op) + '\n' for op in ops))
+    write_frames(archive / 'frames.npz', [], cache=False)
+
+    class Env:
+        def __init__(self, **kwargs):
+            self.tick = 0
+
+        def begin_demo(self): pass
+        def set_lean_observation(self, value): pass
+        def close(self): pass
+        def observe(self):
+            return dict(tick=self.tick, wave=1, sun=50, result=0, defenses=[dict(row=0, state=1)])
+        def reset(self, **kwargs):
+            self.tick = 0
+            return self.observe(), {}
+        def privileged_state(self):
+            return dict(zombies=[dict(id=9, row=0, type=16, x=300, on_board=True)]
+                        if present and self.tick == 60 else [])
+        def step(self, action):
+            self.tick += action['ticks']
+            return self.observe(), 0, False, False, dict(events={}, ok=True)
+
+    try:
+        with patch('llmplay.game.PvZEnv', Env), patch('llmplay.resources.app_data', return_value=tmp_path):
+            result = importer.verify_short(archive, tmp_path, tmp_path / 'engine')
+        assert result['result'] == (present and not abandoned)
+        verdict = json.loads((archive / 'meta.json').read_text())['drill']
+        assert verdict['invalid_start'] == (not present)
+    finally:
+        g.close()
+
+
+def test_task248_prefix_wait_uses_recorded_elapsed_time_and_matches_root(tmp_path):
+    from llmplay.make_drill_bank import write_prefix, check_drill_prefix
+    from pvz_frame_store import write_frames
+    source, target = tmp_path / 'source', tmp_path / 'target'
+    source.mkdir()
+    g = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='气球', _gate=False)
+    meta = dict(task=dict(seed=7), context=dict(level=1, multiplier=1.25))
+    (source / 'meta.json').write_text(json.dumps(meta))
+    # WAIT(60) 在 tick 37 遇事件返回，下一次等待在 tick 97 结束。
+    write_frames(source / 'frames.npz', [dict(tick=tick, zombies=[], mowers=[],
+                 packets=[[i, card] for i, card in enumerate(D1)],
+                 action=None if tick == 0 else dict(type='wait', ticks=60))
+                 for tick in (0, 37, 97)], cache=False)
+    write_prefix(source, target, task_id='drill248', layer='drill',
+                 block=dict(targets=[dict(id=9, type=16, row=0, x=300.0)]),
+                 knowledge='气球', horizon=60, future_seeds=[101], source={})
+    ops = [json.loads(line) for line in (target / 'ticks.jsonl').read_text().splitlines()]
+    assert sum(op['action']['ticks'] for op in ops) == 97
+    assert ops[0]['action']['ticks'] == 37
+    restored = json.loads((target / 'meta.json').read_text())
+    assert restored['task']['deck'] == D1 and restored['task']['level'] == 1
+    assert restored['environment_task']['zombie_count_multiplier'] == 1.25
+    fake = SimpleNamespace(_start=Mock(), tick=97, terminal=False, ops=ops, close=Mock(),
+                           zombies=lambda: [dict(id=90, type=16, row=0, x=300.0)],
+                           _mower_count=lambda: 0,
+                           env=SimpleNamespace(privileged_state=lambda: dict(tick=97, wave=1, sun=50,
+                                                                              zombies=[])))
+    try:
+        with patch.object(Game, 'load_archive', return_value=fake):
+            checked = check_drill_prefix(target)
+        assert checked['status'] == 'ok' and checked['repaired'] == 1
+        assert checked['targets'][0]['id'] == 90
+        fake.zombies = lambda: []
+        with patch.object(Game, 'load_archive', return_value=fake):
+            assert check_drill_prefix(target)['status'] == 'rejected'
+    finally:
+        g.close()

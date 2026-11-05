@@ -203,6 +203,10 @@ def _drive_policy(game, policy, *, limit_tick: int, max_calls: int = 100000) -> 
             raise RuntimeError("闭环打法函数调用次数超过 %d，疑似死循环。" % max_calls)
 
 
+class InvalidDrillError(ValueError):
+    """题目起点无目标，已记入进度并跳过，调用 next_task 继续。"""
+
+
 class Game:
     """一局。构造时只读任务，第一次用引擎时才真正 reset + 重放。"""
 
@@ -267,6 +271,7 @@ class Game:
         self.resume_source = {}
         # task238：drill / scenario 的题面与机械判据；普通局为 None。
         self.drill_meta = None
+        self._drill_missing_at_start = None
         self.scenario_meta = None
         self.future_seed = None
         self._root_operations = 0
@@ -311,12 +316,21 @@ class Game:
                           save_dir=app_data(self.executable, self.resource_dir, self.session))
         try:
             self._reset_engine()
+            self._capture_drill_root(0)
             if self.ops or target:
                 self._replay_to(target)
             # task238：drill/scenario 的起点就是重放终点；判据从这一刻算起。
             self._root_operations = len(self.ops)
             self._root_tick = self.tick
             self._root_mowers = self._mower_count()
+            if self.drill_meta and self._drill_missing_at_start is not None:
+                targets = self.drill_meta.get("targets") or []
+                if len(self._drill_missing_at_start) == len(targets) and not self._internal:
+                    from .delivery import invalidate_drill
+                    invalidate_drill(self.task_id, self.seed, self.drill_meta,
+                                     self._drill_missing_at_start)
+                    self._release_claim()
+                    raise InvalidDrillError("drill 起点无目标，已跳过该题全部种子。调用 next_task() 领下一题")
             if self.abandon_reason is not None:
                 self.terminal = True
         except BaseException:
@@ -509,6 +523,7 @@ class Game:
             self._cache = None
 
         start_tick = self.tick
+        self._capture_drill_root(start_ops)
         def replay_step(action):
             before_wave = int(self.obs.get("wave") or 0)
             plants, zombies = self._plants_snapshot, self._zombies_snapshot
@@ -517,11 +532,12 @@ class Game:
             self._note_events(action, ok, plants, zombies, mowers, before_wave)
 
         kept = []
-        for op in self.ops[start_ops:]:
+        for index, op in enumerate(self.ops[start_ops:], start_ops + 1):
             action = op["action"]
             if op["end_tick"] <= target:
                 replay_step(action)
                 kept.append(op)
+                self._capture_drill_root(index)
                 continue
             if action.get("type") == "wait" and op["tick"] < target:
                 partial = target - op["tick"]
@@ -536,6 +552,13 @@ class Game:
                                 "search" if self._internal else self.session.mode(self.budget_key))
         self._plants_snapshot, self._zombies_snapshot = self._snapshot()
         self._mower_snapshot = self._mower_states()
+
+    def _capture_drill_root(self, operation):
+        if (self.drill_meta is not None
+                and operation == int(self.drill_meta.get("prefix_operations") or 0)):
+            from drill_start import missing_targets
+            self._drill_missing_at_start = missing_targets(
+                self.env, self.obs, self.drill_meta.get("targets") or [])
 
     def _step_raw(self, action: dict) -> bool:
         assert self.env is not None
@@ -713,6 +736,11 @@ class Game:
         if not self.drill_meta:
             raise ValueError("这不是 drill 项；请用 next_task() 返回的 layer=drill 项")
         result = self._judge(self.drill_meta)
+        missing = self._drill_missing_at_start
+        invalid = missing is None or bool(missing) or not self.drill_meta.get("targets")
+        result.update(invalid_start=invalid, missing_targets=missing)
+        if invalid or self.abandon_reason is not None:
+            result["success"] = False
         result.update(reached=result["tick_delta"] >= int(self.drill_meta.get("horizon") or 900),
                       knowledge=self.drill_meta.get("knowledge"))
         return result
@@ -1216,7 +1244,7 @@ class Game:
                             deck_attempt_seeds=self.deck_attempt_seeds)
         if self.workflow_layer == "drill":
             judged = self.drill_result()
-            if not judged["reached"]:
+            if not judged["reached"] and self.abandon_reason is None:
                 raise ValueError("还没到 drill 视界（%d ticks）：先 wait 到视界再导出"
                                  % int((self.drill_meta or {}).get("horizon") or 900))
             self.drill_meta = dict(self.drill_meta or {}, **judged)
