@@ -1,0 +1,7151 @@
+{
+ "task": "task244",
+ "title": "重训价值网导致泳池老师崩盘的机制与修复尝试",
+ "status": "完成，修复恢复L22但六关面板未过L23单关门槛，未部署",
+ "branch": "vnfix",
+ "base_commit": "3aa5a8bf",
+ "inputs": {
+  "gptbc": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/gptbc.pt",
+   "bytes": 737326,
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "production": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/production.pt",
+   "bytes": 611739,
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "roof": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/roof.pt",
+   "bytes": 588955,
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "static": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/static.pt",
+   "bytes": 584603,
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "student": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/student.pt",
+   "bytes": 5467950,
+   "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+  },
+  "v5-t3": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/v5-t3.pt",
+   "bytes": 603803,
+   "sha256": "8ccaa0b5cffba778a6530d64056ee5c4fef4fca3aaa9cc21e1345ae981ecc3cd"
+  },
+  "v5": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/v5.pt",
+   "bytes": 603621,
+   "sha256": "42f7be55454b3c653d5a206952af4bba5bf247c33cb63ebba82229d64116af47"
+  },
+  "v6": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/v6.pt",
+   "bytes": 713445,
+   "sha256": "1ce1398f412dfaf516c59fa695131633933ec0f4bc2e26bd557aac808cecfcff"
+  },
+  "engine": {
+   "path": "/Users/newbiexvwu/pvz-mac-collect/build-vn6/pvz-portable",
+   "bytes": 4050784,
+   "sha256": "2f7e814c28ccfe6559cebca6ab033aea19dcfbc129a6d2a5a3b70b27219d85b5"
+  }
+ },
+ "protocol": {
+  "search_implementation": "C++ EnvironmentSearch / RunRollout / EnvironmentValueNet；Python只驱动和整理结果",
+  "diagnostic": "实际执行生产老师，与重训网逐次比较同根 SEARCH，直到第一次不同动作。随后对搜索候选集合沿同根、同学生历史、同12未来续走，以两网评分同一叶子",
+  "first_divergence_cases": 11,
+  "horizon": 2500,
+  "sim_skip": 61,
+  "samples": 3,
+  "verify_samples": 9,
+  "per_card": 1,
+  "student_candidates": 2,
+  "min_gap": 300,
+  "shared_future_formula": "(decision_seed * 1000 + k) mod 2**32；decision_seed = reset_seed * 10000 + decision",
+  "candidate_screen": "固定生产静态候选网；实际搜索仍用原有逐轮淘汰，诊断另给每个候选完整12个共同未来",
+  "old_control": "L22先导复用task243原32对生产结果，冻结模型/先验/引擎与task243哈希一致；六关面板重新跑生产对照",
+  "old_control_source": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vn6full/artifacts/task243/teacher/pairs.json",
+  "panel_seed_start": 244100000,
+  "panel_seeds_per_level": 32,
+  "panel_level_stride": 1000
+ },
+ "mechanism": {
+  "established": [
+   "重训v5/v6在L22早期搜索叶上的值压缩到约0.001–0.005。C++以绝对0.02差值控制是否追加验证，以及最终是否接管。正向候选差值也会被挡住。",
+   "同叶排序同时改变：L22部分睡莲候选低于等待，且向日葵位置排序改变。L23三个v6翻转种子和两个v5翻转种子均在开局改变向日葵位置。",
+   "L23种子243003001的v6在12/12共同未来都把r0c0向日葵排在r4c4前，故任何逐叶严格单调变换都保留这组排序。",
+   "对同数据v5仅做T=3温度变换，即把L22从5胜救回26胜，证明数值尺度对退化有重大影响。再把已有门槛改为相对模式可恢复至29胜。"
+  ],
+  "decision_types": [
+   "提前铺水路底座与继续等待",
+   "向日葵的落点选择"
+  ],
+  "ruled_out_or_limited": [
+   "min_gap是tick搜索间隔，无叶值单位。sim_skip是续走掩码，本轮固定61。两者均没有被修复方法修改。",
+   "v5和v6用不同特征却共享低端门槛失效，额外v6特征无法单独解释共同崩盘。",
+   "C++编码中encoder6的前92个通道和前119个标量，与encoder2共享同一段写入逻辑。新增通道/标量只追加，上下文由导出器单独拆分再拼接，未发现v5取旧特征列的接口错位。"
+  ],
+  "data_facts": [
+   "生产v5含同根候选分支续走数据，检查点元数据decision_fraction=0.5，decision_fit_rows=3404。",
+   "task243从头训练，每局均匀抽约96个实际轨迹状态，共享该局终局胜负标签，未补同根候选反事实分支。",
+   "离线留出按地形与胜负分层，检验的是该抽样分布的终局预测，没有直接检验搜索叶上的动作差值。"
+  ],
+  "inference": "缺少同根分支监督及状态/续走政策分布差异与排序反转相符，但本轮未用分支数据重训来单独确认其因果贡献，不能称为已证实的唯一训练根因。",
+  "sources": [
+   "src/main.cpp:942 SearchMargin",
+   "src/main.cpp:1446 VerifiedChoice验证前门槛",
+   "src/main.cpp:1500 VerifiedChoice接管门槛",
+   "scripts/task239_export.py:57 sample_operations",
+   "scripts/task239_export.py:84 最终胜负标签",
+   "scripts/task239_train.py:125 从头初始化",
+   "scripts/task239_train.py:139 BCEWithLogitsLoss",
+   "src/EnvironmentValueNet.cpp:167 Features共享前缀及追加布局",
+   "MEMORY/docs/task43-value-v5-pool.md:49 同根候选数据"
+  ],
+  "l23_crosscheck": "L23同样出现同叶候选动作排序反转，但开局值约0.3–0.5，未出现L22早期约0.001–0.005的低端压缩。共同的排序问题覆盖两关，低值绝对门槛失效在已查案例中主要见于L22。",
+  "sampling_limit": "本轮是针对既有翻转局选取的首次分歧案例，能够证明这些局部机制存在，未估计它们在全部26个L22翻转局中的占比。温度先导救回20个原翻转配对。"
+ },
+ "first_divergences": [
+  {
+   "level": 22,
+   "seed": 243002000,
+   "candidate": "v5",
+   "decision_zero_based": 27,
+   "tick": 1500,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 1313,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     },
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 0,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 416,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+   },
+   "searches": {
+    "v5": {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.0028018910670652986
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 2
+       },
+       0.0019572044257074594
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.006410815209771196
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.003991239393750827
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 5
+       },
+       0.0031403512693941593
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.15949962039788565
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 2
+       },
+       0.02993370033800602
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.1261559141178926
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.19112390652298927
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 5
+       },
+       0.04467189684510231
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "before_values": [
+       0.1437327116727829,
+       0.2040693610906601
+      ],
+      "after_values": [
+       0.1261559141178926,
+       0.19112390652298927
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020000027,
+      "mode": "reproduced",
+      "seconds": 0.103807667
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.172444806,
+       0.156454772,
+       0.149599284,
+       0.395876676,
+       0.157075927,
+       0.15540126,
+       0.296814203,
+       0.241910875,
+       0.121748254,
+       0.183343083,
+       0.19317387,
+       0.130425483
+      ],
+      "v5": [
+       0.00338840764,
+       0.00221537449,
+       0.00178179774,
+       0.00782816298,
+       0.00215070159,
+       0.00248141028,
+       0.00698310602,
+       0.00416263519,
+       0.00397980865,
+       0.00249004387,
+       0.00337038259,
+       0.00248896494
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.172444806,
+       "v5": 0.00338840764
+      },
+      "3": {
+       "production": 0.15949962066666667,
+       "v5": 0.0024618599566666667
+      },
+      "12": {
+       "production": 0.19618904108333335,
+       "v5": 0.0036100663316666667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 5,
+      "row": 0,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.0299337003,
+       0.0507854372,
+       0.0493066236,
+       0.0515414737,
+       0.0426450372,
+       0.0342711285,
+       0.166285247,
+       0.0645703524,
+       0.0223546121,
+       0.022620216,
+       0.0344078727,
+       0.022620216
+      ],
+      "v5": [
+       0.00195720443,
+       0.00186268112,
+       0.00180520839,
+       0.00145556813,
+       0.00225369609,
+       0.00191199675,
+       0.00171048555,
+       0.00191097066,
+       0.00122074457,
+       0.00136449118,
+       0.00199198443,
+       0.00136449118
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0299337003,
+       "v5": 0.00195720443
+      },
+      "3": {
+       "production": 0.04334192036666667,
+       "v5": 0.0018750313133333333
+      },
+      "12": {
+       "production": 0.04927849305833334,
+       "v5": 0.0017341268733333335
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.186330453,
+       0.101904094,
+       0.142963588,
+       0.141613886,
+       0.0879719928,
+       0.0875116214,
+       0.101788767,
+       0.152344123,
+       0.117757179,
+       0.148048833,
+       0.10781303,
+       0.137823403
+      ],
+      "v5": [
+       0.00509526208,
+       0.00345271942,
+       0.0106844641,
+       0.0032070165,
+       0.00275455019,
+       0.0166953169,
+       0.00338807609,
+       0.00579348858,
+       0.0033574414,
+       0.00763511797,
+       0.00324055436,
+       0.00254288828
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.186330453,
+       "v5": 0.00509526208
+      },
+      "3": {
+       "production": 0.14373271166666668,
+       "v5": 0.0064108152
+      },
+      "12": {
+       "production": 0.12615591418333333,
+       "v5": 0.0056539079891666675
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.2095633,
+       0.221149325,
+       0.181495458,
+       0.179024071,
+       0.227862582,
+       0.193911418,
+       0.178913862,
+       0.14050068,
+       0.210346863,
+       0.196331784,
+       0.193489999,
+       0.160897538
+      ],
+      "v5": [
+       0.00461747497,
+       0.00494458294,
+       0.00241166027,
+       0.00297238445,
+       0.00424479647,
+       0.00337426248,
+       0.00312808692,
+       0.00669978419,
+       0.0042045773,
+       0.002885147,
+       0.00392453605,
+       0.00337615516
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.2095633,
+       "v5": 0.00461747497
+      },
+      "3": {
+       "production": 0.20406936100000003,
+       "v5": 0.0039912393933333335
+      },
+      "12": {
+       "production": 0.19112390666666668,
+       "v5": 0.0038986206833333333
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 5,
+      "row": 0,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.0446718968,
+       0.0808720812,
+       0.107402265,
+       0.0478467233,
+       0.0380453318,
+       0.0510964692,
+       0.0745156705,
+       0.0747956336,
+       0.101698257,
+       0.0998401791,
+       0.0527362041,
+       0.0988312811
+      ],
+      "v5": [
+       0.00314035127,
+       0.00190514978,
+       0.0023615011,
+       0.00305746333,
+       0.00176827668,
+       0.00197226834,
+       0.00268231216,
+       0.00291289808,
+       0.00394369848,
+       0.0031612243,
+       0.00189489708,
+       0.00351732597
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0446718968,
+       "v5": 0.00314035127
+      },
+      "3": {
+       "production": 0.07764874766666667,
+       "v5": 0.0024690007166666664
+      },
+      "12": {
+       "production": 0.07269599939166667,
+       "v5": 0.0026931138808333334
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002000-v5.json"
+  },
+  {
+   "level": 22,
+   "seed": 243002000,
+   "candidate": "v6",
+   "decision_zero_based": 27,
+   "tick": 1500,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 1313,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     },
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 0,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 416,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.0014311812119558454
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 2
+       },
+       0.0014262321637943387
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.0025562094524502754
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.0014679329469799995
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 5
+       },
+       0.0018320185287545125
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.15949962039788565
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 2
+       },
+       0.02993370033800602
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.1261559141178926
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.19112390652298927
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 5
+       },
+       0.04467189684510231
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "before_values": [
+       0.1437327116727829,
+       0.2040693610906601
+      ],
+      "after_values": [
+       0.1261559141178926,
+       0.19112390652298927
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020000027,
+      "mode": "reproduced",
+      "seconds": 0.0924335
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.172444806,
+       0.156454772,
+       0.149599284,
+       0.395876676,
+       0.157075927,
+       0.15540126,
+       0.296814203,
+       0.241910875,
+       0.121748254,
+       0.183343083,
+       0.19317387,
+       0.130425483
+      ],
+      "v6": [
+       0.00143118121,
+       0.000824130198,
+       0.000930465001,
+       0.00278857723,
+       0.000839796267,
+       0.00102354307,
+       0.00408152817,
+       0.00450466434,
+       0.00182480819,
+       0.000895144651,
+       0.00111679058,
+       0.000864572357
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.172444806,
+       "v6": 0.00143118121
+      },
+      "3": {
+       "production": 0.15949962066666667,
+       "v6": 0.0010619254696666667
+      },
+      "12": {
+       "production": 0.19618904108333335,
+       "v6": 0.0017604334386666666
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 5,
+      "row": 0,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.0299337003,
+       0.0507854372,
+       0.0493066236,
+       0.0515414737,
+       0.0426450372,
+       0.0342711285,
+       0.166285247,
+       0.0645703524,
+       0.0223546121,
+       0.022620216,
+       0.0344078727,
+       0.022620216
+      ],
+      "v6": [
+       0.00142623216,
+       0.00194281153,
+       0.000324280933,
+       0.000339097227,
+       0.000503350922,
+       0.00117850699,
+       0.00046058814,
+       0.000401124533,
+       0.000669739093,
+       0.000650193717,
+       0.00121604686,
+       0.000675802585
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0299337003,
+       "v6": 0.00142623216
+      },
+      "3": {
+       "production": 0.04334192036666667,
+       "v6": 0.0012311082076666667
+      },
+      "12": {
+       "production": 0.04927849305833334,
+       "v6": 0.0008156478908333334
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.186330453,
+       0.101904094,
+       0.142963588,
+       0.141613886,
+       0.0879719928,
+       0.0875116214,
+       0.101788767,
+       0.152344123,
+       0.117757179,
+       0.148048833,
+       0.10781303,
+       0.137823403
+      ],
+      "v6": [
+       0.0026886093,
+       0.00216508633,
+       0.00281493273,
+       0.0031710004,
+       0.00213331589,
+       0.0131429918,
+       0.00183769676,
+       0.00245183334,
+       0.00183902332,
+       0.00460905535,
+       0.00168614462,
+       0.00258155586
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.186330453,
+       "v6": 0.0026886093
+      },
+      "3": {
+       "production": 0.14373271166666668,
+       "v6": 0.0025562094533333334
+      },
+      "12": {
+       "production": 0.12615591418333333,
+       "v6": 0.0034267704750000003
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.2095633,
+       0.221149325,
+       0.181495458,
+       0.179024071,
+       0.227862582,
+       0.193911418,
+       0.178913862,
+       0.14050068,
+       0.210346863,
+       0.196331784,
+       0.193489999,
+       0.160897538
+      ],
+      "v6": [
+       0.00158356514,
+       0.00135230075,
+       0.000963932078,
+       0.00097443047,
+       0.00123491546,
+       0.00110110862,
+       0.00120059552,
+       0.00481626671,
+       0.00111751899,
+       0.00108984939,
+       0.00100268482,
+       0.000919222133
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.2095633,
+       "v6": 0.00158356514
+      },
+      "3": {
+       "production": 0.20406936100000003,
+       "v6": 0.001299932656
+      },
+      "12": {
+       "production": 0.19112390666666668,
+       "v6": 0.0014463658400833334
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 5,
+      "row": 0,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.0446718968,
+       0.0808720812,
+       0.107402265,
+       0.0478467233,
+       0.0380453318,
+       0.0510964692,
+       0.0745156705,
+       0.0747956336,
+       0.101698257,
+       0.0998401791,
+       0.0527362041,
+       0.0988312811
+      ],
+      "v6": [
+       0.00256913831,
+       0.00190988777,
+       0.00101702951,
+       0.000470714498,
+       0.000347535766,
+       0.00108863949,
+       0.00137158029,
+       0.00155057095,
+       0.000618087477,
+       0.000525537936,
+       0.000963725499,
+       0.000508524303
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0446718968,
+       "v6": 0.00256913831
+      },
+      "3": {
+       "production": 0.07764874766666667,
+       "v6": 0.00183201853
+      },
+      "12": {
+       "production": 0.07269599939166667,
+       "v6": 0.0010784143165833333
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002000-v6.json"
+  },
+  {
+   "level": 22,
+   "seed": 243002002,
+   "candidate": "v5",
+   "decision_zero_based": 26,
+   "tick": 1440,
+   "root": {
+    "sun": 25,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 1516,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     },
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 0,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 166,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+   },
+   "searches": {
+    "v5": {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.0035333014093339443
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.0033358239646380148
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.004234816646203399
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.004726981899390618
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.15383314822490016
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.10516913048923016
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.1560644879937172
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.11612799018621445
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 1,
+       "row": 3,
+       "col": 2
+      },
+      "before_values": [
+       0.09283694128195445,
+       0.1981286257505417
+      ],
+      "after_values": [
+       0.10516913048923016,
+       0.15383314822490016
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020020026,
+      "mode": "reproduced",
+      "seconds": 0.08690125
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.184356064,
+       0.233968049,
+       0.176061764,
+       0.0352109484,
+       0.16619657,
+       0.138307005,
+       0.242693678,
+       0.265195489,
+       0.174489632,
+       0.0292323027,
+       0.0276565924,
+       0.172629684
+      ],
+      "v5": [
+       0.00353330141,
+       0.00416097883,
+       0.00407143496,
+       0.00259831431,
+       0.00534646073,
+       0.00266426569,
+       0.0048113321,
+       0.0027356213,
+       0.0050640977,
+       0.0022936936,
+       0.00274973176,
+       0.00449185492
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.184356064,
+       "v5": 0.00353330141
+      },
+      "3": {
+       "production": 0.19812862566666667,
+       "v5": 0.003921905066666667
+      },
+      "12": {
+       "production": 0.15383314820833333,
+       "v5": 0.0037100906091666664
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.0798086897,
+       0.101420581,
+       0.0972815529,
+       0.0633651465,
+       0.11366839,
+       0.143216118,
+       0.111393146,
+       0.109559581,
+       0.109282583,
+       0.129854515,
+       0.10589771,
+       0.0972815529
+      ],
+      "v5": [
+       0.00181690778,
+       0.00488266628,
+       0.00330789783,
+       0.00372054195,
+       0.00374071742,
+       0.00599835394,
+       0.00447612954,
+       0.00408875523,
+       0.00402467558,
+       0.00231839949,
+       0.00295654451,
+       0.00330789783
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0798086897,
+       "v5": 0.00181690778
+      },
+      "3": {
+       "production": 0.09283694120000001,
+       "v5": 0.003335823963333333
+      },
+      "12": {
+       "production": 0.1051691305,
+       "v5": 0.003719957281666667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.176162973,
+       0.187798247,
+       0.104232244,
+       0.146701813,
+       0.167508364,
+       0.17563732,
+       0.143528849,
+       0.179090902,
+       0.172396705,
+       0.179627046,
+       0.276459903,
+       0.186735392
+      ],
+      "v5": [
+       0.00579577684,
+       0.0036781528,
+       0.00323052029,
+       0.00220327778,
+       0.00615942245,
+       0.00362056028,
+       0.00535474857,
+       0.00369565072,
+       0.00654257974,
+       0.00389423082,
+       0.00692645833,
+       0.00455348473
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.176162973,
+       "v5": 0.00579577684
+      },
+      "3": {
+       "production": 0.156064488,
+       "v5": 0.004234816643333333
+      },
+      "12": {
+       "production": 0.1746566465,
+       "v5": 0.004637905279166667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.11612799,
+       0.134791747,
+       0.111380398,
+       0.0747460723,
+       0.0967909619,
+       0.172559723,
+       0.135762483,
+       0.13584812,
+       0.0979390368,
+       0.191781744,
+       0.0909019709,
+       0.121798731
+      ],
+      "v5": [
+       0.00474638026,
+       0.00401664805,
+       0.00541791739,
+       0.00159298221,
+       0.00303143868,
+       0.0033959297,
+       0.00461536273,
+       0.00300725806,
+       0.00310183573,
+       0.00575600984,
+       0.00275808154,
+       0.00326441322
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.11612799,
+       "v5": 0.00474638026
+      },
+      "3": {
+       "production": 0.12076671166666668,
+       "v5": 0.0047269819
+      },
+      "12": {
+       "production": 0.12336908149166666,
+       "v5": 0.003725354784166667
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002002-v5.json"
+  },
+  {
+   "level": 22,
+   "seed": 243002002,
+   "candidate": "v6",
+   "decision_zero_based": 26,
+   "tick": 1440,
+   "root": {
+    "sun": 25,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 1516,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     },
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 0,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 166,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.0014975799325232704
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.0018173835705965757
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.0007128497818484902
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.0007169155869632959
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.15383314822490016
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.10516913048923016
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.1560644879937172
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.11612799018621445
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 1,
+       "row": 3,
+       "col": 2
+      },
+      "before_values": [
+       0.09283694128195445,
+       0.1981286257505417
+      ],
+      "after_values": [
+       0.10516913048923016,
+       0.15383314822490016
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020020026,
+      "mode": "reproduced",
+      "seconds": 0.101624542
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.184356064,
+       0.233968049,
+       0.176061764,
+       0.0352109484,
+       0.16619657,
+       0.138307005,
+       0.242693678,
+       0.265195489,
+       0.174489632,
+       0.0292323027,
+       0.0276565924,
+       0.172629684
+      ],
+      "v6": [
+       0.00142896886,
+       0.00151083292,
+       0.00155293802,
+       0.00140172127,
+       0.00273150578,
+       0.000980712939,
+       0.00157246285,
+       0.000888743962,
+       0.00216798903,
+       0.00152458018,
+       0.00175376853,
+       0.00233039958
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.184356064,
+       "v6": 0.00142896886
+      },
+      "3": {
+       "production": 0.19812862566666667,
+       "v6": 0.0014975799333333331
+      },
+      "12": {
+       "production": 0.15383314820833333,
+       "v6": 0.0016537186600833335
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.0798086897,
+       0.101420581,
+       0.0972815529,
+       0.0633651465,
+       0.11366839,
+       0.143216118,
+       0.111393146,
+       0.109559581,
+       0.109282583,
+       0.129854515,
+       0.10589771,
+       0.0972815529
+      ],
+      "v6": [
+       0.000859071617,
+       0.00282731792,
+       0.00176576118,
+       0.000974175171,
+       0.00170940626,
+       0.00199707854,
+       0.0026564002,
+       0.00235098391,
+       0.00181559287,
+       0.000243566334,
+       0.00153897842,
+       0.00220207148
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0798086897,
+       "v6": 0.000859071617
+      },
+      "3": {
+       "production": 0.09283694120000001,
+       "v6": 0.0018173835723333334
+      },
+      "12": {
+       "production": 0.1051691305,
+       "v6": 0.0017450336585
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.176162973,
+       0.187798247,
+       0.104232244,
+       0.146701813,
+       0.167508364,
+       0.17563732,
+       0.143528849,
+       0.179090902,
+       0.172396705,
+       0.179627046,
+       0.276459903,
+       0.186735392
+      ],
+      "v6": [
+       0.000712849782,
+       0.0028788941,
+       0.00120665983,
+       0.00252290582,
+       0.000852858764,
+       0.00107096741,
+       0.0038474407,
+       0.000416002469,
+       0.000787189463,
+       0.00462924968,
+       0.00320497435,
+       0.00188380724
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.176162973,
+       "v6": 0.000712849782
+      },
+      "3": {
+       "production": 0.156064488,
+       "v6": 0.001599467904
+      },
+      "12": {
+       "production": 0.1746566465,
+       "v6": 0.0020011499673333335
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.11612799,
+       0.134791747,
+       0.111380398,
+       0.0747460723,
+       0.0967909619,
+       0.172559723,
+       0.135762483,
+       0.13584812,
+       0.0979390368,
+       0.191781744,
+       0.0909019709,
+       0.121798731
+      ],
+      "v6": [
+       0.000716915587,
+       0.00441768579,
+       0.000748605991,
+       0.00221896754,
+       0.00376188802,
+       0.000950106943,
+       0.00536664436,
+       0.000407187501,
+       0.00311288307,
+       0.00573972752,
+       0.00248663384,
+       0.00153809297
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.11612799,
+       "v6": 0.000716915587
+      },
+      "3": {
+       "production": 0.12076671166666668,
+       "v6": 0.0019610691226666665
+      },
+      "12": {
+       "production": 0.12336908149166666,
+       "v6": 0.002622111594333333
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002002-v6.json"
+  },
+  {
+   "level": 22,
+   "seed": 243002004,
+   "candidate": "v6",
+   "decision_zero_based": 27,
+   "tick": 1500,
+   "root": {
+    "sun": 25,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 1842,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     },
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 0,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 520,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.0011820816434919834
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.0016280025787030656
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.0016762203207084287
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.002448728036445876
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 3,
+        "col": 2
+       },
+       0.15336029728253683
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.11885075829923153
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.17691232884923616
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.10353647917509079
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "before_values": [
+       0.11325887838999431,
+       0.19447125991185507
+      ],
+      "after_values": [
+       0.11885075829923153,
+       0.17691232884923616
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020040027,
+      "mode": "reproduced",
+      "seconds": 0.103970209
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.197459638,
+       0.178379998,
+       0.0842412561,
+       0.159314588,
+       0.227434441,
+       0.0699517354,
+       0.181345105,
+       0.176560447,
+       0.223015934,
+       0.173478991,
+       0.215536878,
+       0.143617168
+      ],
+      "v6": [
+       0.00118208164,
+       0.00232013944,
+       0.00341377151,
+       0.00177607115,
+       0.00175139587,
+       0.00169800024,
+       0.00131007785,
+       0.00152959174,
+       0.00173168129,
+       0.0023540773,
+       0.0012388964,
+       0.00132882828
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.197459638,
+       "v6": 0.00118208164
+      },
+      "3": {
+       "production": 0.15336029736666668,
+       "v6": 0.0023053308633333336
+      },
+      "12": {
+       "production": 0.16919468162499998,
+       "v6": 0.0018028843925
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.0919157043,
+       0.13060604,
+       0.117254891,
+       0.0874132439,
+       0.10162396,
+       0.0856406987,
+       0.18643865,
+       0.130606681,
+       0.11436262,
+       0.174185947,
+       0.0923162326,
+       0.113844432
+      ],
+      "v6": [
+       0.000721058226,
+       0.00135922409,
+       0.00280372542,
+       0.00636614626,
+       0.000474161148,
+       0.00961949956,
+       0.00264571002,
+       0.000521438953,
+       0.00428596092,
+       0.00508443266,
+       0.00160500442,
+       0.00095126644
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0919157043,
+       "v6": 0.000721058226
+      },
+      "3": {
+       "production": 0.11325887843333333,
+       "v6": 0.0016280025786666666
+      },
+      "12": {
+       "production": 0.11885075837499999,
+       "v6": 0.00303646900975
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.147097409,
+       0.214659825,
+       0.221656546,
+       0.152874872,
+       0.170020521,
+       0.186205745,
+       0.085417822,
+       0.171627566,
+       0.258331031,
+       0.192150101,
+       0.131523922,
+       0.191382587
+      ],
+      "v6": [
+       0.00186733215,
+       0.00268273172,
+       0.000478597096,
+       0.000845023489,
+       0.00175495597,
+       0.00111351989,
+       0.00227406085,
+       0.000784444972,
+       0.00355489156,
+       0.00283827423,
+       0.00190395152,
+       0.00148051861
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.147097409,
+       "v6": 0.00186733215
+      },
+      "3": {
+       "production": 0.19447126,
+       "v6": 0.0016762203220000002
+      },
+      "12": {
+       "production": 0.17691232891666667,
+       "v6": 0.0017981918380833332
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.103536479,
+       0.153235257,
+       0.148641571,
+       0.100279897,
+       0.120985545,
+       0.13999337,
+       0.116189025,
+       0.111720718,
+       0.128353104,
+       0.157523811,
+       0.0925210416,
+       0.108355582
+      ],
+      "v6": [
+       0.00181222998,
+       0.00274687354,
+       0.00278708059,
+       0.000802936265,
+       0.00172930805,
+       0.00122353213,
+       0.000693536364,
+       0.000744295248,
+       0.00308780815,
+       0.0026054855,
+       0.00183925789,
+       0.000672591268
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.103536479,
+       "v6": 0.00181222998
+      },
+      "3": {
+       "production": 0.135137769,
+       "v6": 0.0024487280366666665
+      },
+      "12": {
+       "production": 0.12344461671666668,
+       "v6": 0.0017287445812500001
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002004-v6.json"
+  },
+  {
+   "level": 22,
+   "seed": 243002005,
+   "candidate": "v6",
+   "decision_zero_based": 22,
+   "tick": 1260,
+   "root": {
+    "sun": 75,
+    "wave": 0,
+    "plants": [
+     {
+      "type": 1,
+      "imitater_type": -1,
+      "col": 0,
+      "row": 1,
+      "health": 300,
+      "max_health": 300,
+      "state": 0,
+      "state_countdown": 0,
+      "launch_counter": 2372,
+      "launch_rate": 2500,
+      "shooting_counter": 0,
+      "wake_up_counter": 0,
+      "asleep": false,
+      "squished": false,
+      "target_zombie_id": 0,
+      "bungee_state": 0
+     }
+    ]
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 0,
+    "col": 0
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 5
+       },
+       0.0009637585608288646
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.001421178923919797
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 3,
+        "row": 0,
+        "col": 1
+       },
+       0.0015055420226417482
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 1
+       },
+       0.0010811476968228817
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.002586664108093828
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.0016896810460214813
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.0004834880819544196
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 0
+       },
+       0.0027079806119824448
+      ]
+     ],
+     "verification": null
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 5
+       },
+       0.09398570656776428
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 2
+       },
+       0.02800563909113407
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 3,
+        "row": 0,
+        "col": 1
+       },
+       0.07056136429309845
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 5,
+        "row": 0,
+        "col": 1
+       },
+       0.01828828640282154
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.08632843010127544
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.09058560182650884
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.1179218531275789
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 0
+       },
+       0.08364302664995193
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "before_values": [
+       0.08325855061411858,
+       0.1319794828693072
+      ],
+      "after_values": [
+       0.09058560182650884,
+       0.1179218531275789
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430020050022,
+      "mode": "reproduced",
+      "seconds": 0.100174125
+     }
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.0859934539,
+       0.101977959,
+       0.0272125453,
+       0.121693566,
+       0.155317292,
+       0.0251852907,
+       0.0511495769,
+       0.137590706,
+       0.0610601753,
+       0.159329951,
+       0.118966594,
+       0.0888364688
+      ],
+      "v6": [
+       0.000963758561,
+       0.00422490435,
+       0.00450585969,
+       0.00123687659,
+       0.00122174225,
+       0.00270302151,
+       0.000532803067,
+       0.00092537998,
+       0.00160863565,
+       0.00115743931,
+       0.00115172809,
+       0.000535320316
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0859934539,
+       "v6": 0.000963758561
+      },
+      "3": {
+       "production": 0.07172798606666668,
+       "v6": 0.0032315075336666666
+      },
+      "12": {
+       "production": 0.094526131575,
+       "v6": 0.001730622447
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 2
+     },
+     "common_future_values": {
+      "production": [
+       0.0280056391,
+       0.142245397,
+       0.093360737,
+       0.0524280965,
+       0.0584000163,
+       0.0335544422,
+       0.0783178136,
+       0.0849263147,
+       0.0433926694,
+       0.0627178848,
+       0.0352734737,
+       0.0967501253
+      ],
+      "v6": [
+       0.00142117892,
+       0.000749685278,
+       0.00111136807,
+       0.00162968191,
+       0.0012170109,
+       0.00189919025,
+       0.00426605623,
+       0.00100795215,
+       0.00106242322,
+       0.00311657111,
+       0.0015468311,
+       0.00108343805
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0280056391,
+       "v6": 0.00142117892
+      },
+      "3": {
+       "production": 0.08787059103333333,
+       "v6": 0.0010940774226666668
+      },
+      "12": {
+       "production": 0.06744771746666667,
+       "v6": 0.0016759489323333332
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 1
+     },
+     "common_future_values": {
+      "production": [
+       0.0705613643,
+       0.0892976224,
+       0.0828491375,
+       0.0831272155,
+       0.0964554921,
+       0.0608288385,
+       0.0963885114,
+       0.0715020522,
+       0.096581094,
+       0.0879101083,
+       0.0963552296,
+       0.0558811501
+      ],
+      "v6": [
+       0.00171365822,
+       0.00129742583,
+       0.00146787718,
+       0.00124770578,
+       0.00147035974,
+       0.000470592669,
+       0.00149437122,
+       0.0017325544,
+       0.00238630665,
+       0.00119370001,
+       0.00219729706,
+       0.00146200624
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0705613643,
+       "v6": 0.00171365822
+      },
+      "3": {
+       "production": 0.08090270806666666,
+       "v6": 0.0014929870766666666
+      },
+      "12": {
+       "production": 0.08231148465833334,
+       "v6": 0.00151115458325
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 5,
+      "row": 0,
+      "col": 1
+     },
+     "common_future_values": {
+      "production": [
+       0.0182882864,
+       0.0373977348,
+       0.0182882864,
+       0.0372828953,
+       0.0978636146,
+       0.0243152864,
+       0.113030866,
+       0.113030866,
+       0.0143485311,
+       0.135054946,
+       0.0374552645,
+       0.0599942766
+      ],
+      "v6": [
+       0.0010811477,
+       0.000258409156,
+       0.00104684988,
+       0.000275147147,
+       0.000546219177,
+       0.00103428995,
+       0.000563738751,
+       0.000536667067,
+       0.000921976811,
+       0.00281334971,
+       0.000243107876,
+       0.000410309993
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0182882864,
+       "v6": 0.0010811477
+      },
+      "3": {
+       "production": 0.024658102533333334,
+       "v6": 0.000795468912
+      },
+      "12": {
+       "production": 0.058862571174999996,
+       "v6": 0.0008109344348333334
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.116618991,
+       0.113132387,
+       0.029233912,
+       0.134867311,
+       0.171429336,
+       0.114233457,
+       0.170825735,
+       0.0374983363,
+       0.0937992856,
+       0.105860882,
+       0.112855121,
+       0.0753006861
+      ],
+      "v6": [
+       0.00404675305,
+       0.00294344686,
+       0.000769792416,
+       0.00115093461,
+       0.000638447411,
+       0.0024892916,
+       0.000630972208,
+       0.000872063742,
+       0.0003544215,
+       0.00203884626,
+       0.00354317855,
+       0.00591599382
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.116618991,
+       "v6": 0.00404675305
+      },
+      "3": {
+       "production": 0.08632843000000001,
+       "v6": 0.0025866641086666666
+      },
+      "12": {
+       "production": 0.10630462,
+       "v6": 0.00211617850225
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.0924011245,
+       0.112956963,
+       0.0444175638,
+       0.0919666216,
+       0.0719998181,
+       0.034882836,
+       0.04426625,
+       0.12332914,
+       0.0783390477,
+       0.111361951,
+       0.110280171,
+       0.170825735
+      ],
+      "v6": [
+       0.00155198236,
+       0.00280514685,
+       0.000711913919,
+       0.00170414313,
+       0.00160543469,
+       0.0018862033,
+       0.000691452587,
+       0.00162855501,
+       0.000876108126,
+       0.00157825009,
+       0.00223773462,
+       0.000648186018
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0924011245,
+       "v6": 0.00155198236
+      },
+      "3": {
+       "production": 0.08325855043333333,
+       "v6": 0.0016896810430000002
+      },
+      "12": {
+       "production": 0.09058560180833335,
+       "v6": 0.001493759225
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.190809429,
+       0.116753578,
+       0.0883754417,
+       0.156448737,
+       0.0484034754,
+       0.0969237536,
+       0.0783688352,
+       0.10022483,
+       0.15538682,
+       0.142779484,
+       0.157889754,
+       0.0826980993
+      ],
+      "v6": [
+       0.000483488082,
+       0.00073049817,
+       0.00078267802,
+       0.000541115762,
+       0.000494180946,
+       0.00148878153,
+       0.00254060724,
+       0.000497599889,
+       0.000500609924,
+       0.000394986768,
+       0.000512806058,
+       0.000594549929
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.190809429,
+       "v6": 0.000483488082
+      },
+      "3": {
+       "production": 0.1319794829,
+       "v6": 0.0006655547573333334
+      },
+      "12": {
+       "production": 0.11792185309999999,
+       "v6": 0.0007968251931666667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.0836430266,
+       0.065880172,
+       0.0467399769,
+       0.0643555298,
+       0.0527171195,
+       0.0503396168,
+       0.0501363724,
+       0.0736710131,
+       0.0259141959,
+       0.0705544055,
+       0.0643555298,
+       0.0875230506
+      ],
+      "v6": [
+       0.00330788852,
+       0.00173204311,
+       0.00308401021,
+       0.0022888321,
+       0.0014249708,
+       0.00580964144,
+       0.00572909741,
+       0.00153136684,
+       0.00135741173,
+       0.00140160101,
+       0.00216863793,
+       0.0113947112
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.0836430266,
+       "v6": 0.00330788852
+      },
+      "3": {
+       "production": 0.0654210585,
+       "v6": 0.002707980613333333
+      },
+      "12": {
+       "production": 0.06131916740833334,
+       "v6": 0.003435851025
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l22-243002005-v6.json"
+  },
+  {
+   "level": 23,
+   "seed": 243003000,
+   "candidate": "v6",
+   "decision_zero_based": 0,
+   "tick": 0,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": []
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.48556743562221527
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.49685628215471905
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.3371557891368866
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.35639358808596927
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.48294168214003247
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.2855405807495117
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "before_values": [
+       0.35829291741053265,
+       0.5371251106262207
+      ],
+      "after_values": [
+       0.35639358808596927,
+       0.48294168214003247
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430030000000,
+      "mode": "reproduced",
+      "seconds": 0.079654417
+     }
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.12720449268817902
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.12491150945425034
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.28722694019476575
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.3127012848854065
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.14800377190113068
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.265425443649292
+      ]
+     ],
+     "verification": null
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 1,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.127204493,
+       0.127204493,
+       0.120671973,
+       0.126398742,
+       0.130163148,
+       0.120671973,
+       0.126398742,
+       0.0951282904,
+       0.120671973,
+       0.190230235,
+       0.0951282904,
+       0.102845334
+      ],
+      "v6": [
+       0.493822098,
+       0.477312773,
+       0.5353809,
+       0.570420563,
+       0.53986901,
+       0.515862525,
+       0.544909894,
+       0.299261779,
+       0.509185493,
+       0.32468155,
+       0.320263773,
+       0.299027175
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.127204493,
+       "v6": 0.493822098
+      },
+      "3": {
+       "production": 0.12502698633333334,
+       "v6": 0.5021719236666667
+      },
+      "12": {
+       "production": 0.12355980723333333,
+       "v6": 0.45249979441666666
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.124911509,
+       0.116639726,
+       0.115507714,
+       0.124911509,
+       0.115507714,
+       0.115507714,
+       0.115532212,
+       0.0940003097,
+       0.115507714,
+       0.115507714,
+       0.114786044,
+       0.0920228213
+      ],
+      "v6": [
+       0.513323605,
+       0.482733428,
+       0.494511813,
+       0.496004403,
+       0.519537151,
+       0.525044322,
+       0.54467082,
+       0.292102754,
+       0.494808406,
+       0.50781399,
+       0.53661412,
+       0.271029085
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.124911509,
+       "v6": 0.513323605
+      },
+      "3": {
+       "production": 0.11901964966666667,
+       "v6": 0.496856282
+      },
+      "12": {
+       "production": 0.11336189175,
+       "v6": 0.47318282475
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.21350719,
+       0.320277393,
+       0.327896237,
+       0.320334226,
+       0.281189948,
+       0.343470722,
+       0.345405906,
+       0.325396329,
+       0.279231906,
+       0.335404664,
+       0.318236083,
+       0.34864518
+      ],
+      "v6": [
+       0.337155789,
+       0.398561269,
+       0.32941699,
+       0.371766895,
+       0.368185461,
+       0.325143754,
+       0.305603027,
+       0.444935858,
+       0.348774314,
+       0.369963288,
+       0.379814655,
+       0.362055421
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.21350719,
+       "v6": 0.337155789
+      },
+      "3": {
+       "production": 0.28722694,
+       "v6": 0.35504468266666667
+      },
+      "12": {
+       "production": 0.31324964866666666,
+       "v6": 0.36178139341666665
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.335439265,
+       0.321336746,
+       0.281327844,
+       0.327896237,
+       0.347355485,
+       0.306499541,
+       0.317513257,
+       0.314384907,
+       0.331610858,
+       0.298212469,
+       0.347990572,
+       0.274992675
+      ],
+      "v6": [
+       0.308658183,
+       0.350704372,
+       0.415516198,
+       0.327734262,
+       0.379195839,
+       0.393476039,
+       0.386656702,
+       0.338774294,
+       0.311312973,
+       0.327249706,
+       0.311993957,
+       0.425450534
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.335439265,
+       "v6": 0.308658183
+      },
+      "3": {
+       "production": 0.312701285,
+       "v6": 0.35829291766666665
+      },
+      "12": {
+       "production": 0.31704665466666665,
+       "v6": 0.35639358825
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.148003772,
+       0.148003772,
+       0.142200425,
+       0.144628659,
+       0.151567772,
+       0.142200425,
+       0.144628659,
+       0.112683557,
+       0.142200425,
+       0.21344839,
+       0.112683557,
+       0.120379373
+      ],
+      "v6": [
+       0.532477379,
+       0.513380647,
+       0.565517306,
+       0.603089869,
+       0.570567966,
+       0.54553479,
+       0.576878428,
+       0.327859432,
+       0.543730021,
+       0.337095827,
+       0.34942472,
+       0.329743803
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.148003772,
+       "v6": 0.532477379
+      },
+      "3": {
+       "production": 0.146069323,
+       "v6": 0.5371251106666667
+      },
+      "12": {
+       "production": 0.14355239883333334,
+       "v6": 0.4829416823333334
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.259389758,
+       0.271461129,
+       0.215104774,
+       0.26354149,
+       0.135084629,
+       0.122118801,
+       0.261837691,
+       0.258731991,
+       0.256094784,
+       0.224358648,
+       0.284979284,
+       0.206630185
+      ],
+      "v6": [
+       0.285540581,
+       0.326792359,
+       0.40406093,
+       0.321729392,
+       0.499158472,
+       0.464847118,
+       0.364936888,
+       0.315920085,
+       0.287977546,
+       0.294304341,
+       0.305922329,
+       0.406929255
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.259389758,
+       "v6": 0.285540581
+      },
+      "3": {
+       "production": 0.248651887,
+       "v6": 0.3387979566666666
+      },
+      "12": {
+       "production": 0.22994443033333334,
+       "v6": 0.3565099413333333
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l23-243003000-v6.json"
+  },
+  {
+   "level": 23,
+   "seed": 243003001,
+   "candidate": "v6",
+   "decision_zero_based": 0,
+   "tick": 0,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": []
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.5325782696406046
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.5229325890541077
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.39659249782562256
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.38150716324647266
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.5545327166716257
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.3421688675880432
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "before_values": [
+       0.3657124837239583,
+       0.5648535490036011
+      ],
+      "after_values": [
+       0.38150716324647266,
+       0.5545327166716257
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430030010000,
+      "mode": "reproduced",
+      "seconds": 0.107704458
+     }
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.1263987421989441
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.1147860437631607
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.3282468914985657
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.3306390742460887
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.14462865889072418
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.2556978464126587
+      ]
+     ],
+     "verification": null
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 1,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.126398742,
+       0.129606694,
+       0.133904815,
+       0.125951916,
+       0.127204493,
+       0.125951916,
+       0.130163148,
+       0.133904815,
+       0.127204493,
+       0.127204493,
+       0.120671973,
+       0.126398742
+      ],
+      "v6": [
+       0.568646491,
+       0.503246963,
+       0.525841355,
+       0.553057969,
+       0.485320479,
+       0.528054178,
+       0.512489378,
+       0.510938048,
+       0.486822963,
+       0.486641198,
+       0.513395011,
+       0.574038148
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.126398742,
+       "v6": 0.568646491
+      },
+      "3": {
+       "production": 0.12997008366666665,
+       "v6": 0.5325782696666667
+      },
+      "12": {
+       "production": 0.12788052,
+       "v6": 0.5207076817499999
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.114786044,
+       0.124911509,
+       0.115507714,
+       0.121992759,
+       0.115507714,
+       0.115532212,
+       0.114786044,
+       0.115507714,
+       0.115507714,
+       0.0911050811,
+       0.119076833,
+       0.114786044
+      ],
+      "v6": [
+       0.535081983,
+       0.510783195,
+       0.51440084,
+       0.483699739,
+       0.520838737,
+       0.528718174,
+       0.538109004,
+       0.52827394,
+       0.514787138,
+       0.3125377,
+       0.494954824,
+       0.541571498
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.114786044,
+       "v6": 0.535081983
+      },
+      "3": {
+       "production": 0.11840175566666666,
+       "v6": 0.5200886726666667
+      },
+      "12": {
+       "production": 0.11491728184166666,
+       "v6": 0.501979731
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.309098244,
+       0.341157705,
+       0.334484726,
+       0.326998055,
+       0.334484726,
+       0.331019521,
+       0.344437659,
+       0.315388232,
+       0.319174767,
+       0.317024916,
+       0.342009574,
+       0.330630779
+      ],
+      "v6": [
+       0.396592498,
+       0.336652428,
+       0.319829077,
+       0.383226782,
+       0.325572759,
+       0.368507683,
+       0.331122369,
+       0.335624993,
+       0.406777024,
+       0.45399639,
+       0.311960787,
+       0.30629757
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.309098244,
+       "v6": 0.396592498
+      },
+      "3": {
+       "production": 0.3282468916666667,
+       "v6": 0.3510246676666667
+      },
+      "12": {
+       "production": 0.328825742,
+       "v6": 0.3563466966666667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.321438909,
+       0.340471089,
+       0.330007225,
+       0.329843819,
+       0.336022139,
+       0.328950673,
+       0.318074256,
+       0.314217716,
+       0.320048928,
+       0.329843819,
+       0.321153104,
+       0.325764894
+      ],
+      "v6": [
+       0.363957316,
+       0.373155385,
+       0.36002475,
+       0.406704992,
+       0.280953377,
+       0.362537503,
+       0.393907338,
+       0.386640936,
+       0.403743029,
+       0.388031304,
+       0.415562183,
+       0.442867845
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.321438909,
+       "v6": 0.363957316
+      },
+      "3": {
+       "production": 0.33063907433333334,
+       "v6": 0.3657124836666667
+      },
+      "12": {
+       "production": 0.32631971425,
+       "v6": 0.38150716316666666
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.144628659,
+       0.152479321,
+       0.15659295,
+       0.145296052,
+       0.148003772,
+       0.145296052,
+       0.151567772,
+       0.15659295,
+       0.148003772,
+       0.148003772,
+       0.142200425,
+       0.144628659
+      ],
+      "v6": [
+       0.606589317,
+       0.533095181,
+       0.554876149,
+       0.592946887,
+       0.520644784,
+       0.558775783,
+       0.552822888,
+       0.543114007,
+       0.520985544,
+       0.524083912,
+       0.543612778,
+       0.602845371
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.144628659,
+       "v6": 0.606589317
+      },
+      "3": {
+       "production": 0.15123364333333333,
+       "v6": 0.564853549
+      },
+      "12": {
+       "production": 0.14860784633333332,
+       "v6": 0.5545327167499999
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.257491112,
+       0.253904581,
+       0.254717201,
+       0.272709042,
+       0.270328939,
+       0.253810346,
+       0.244513124,
+       0.249297157,
+       0.25627324,
+       0.272709042,
+       0.122118801,
+       0.269052953
+      ],
+      "v6": [
+       0.342168868,
+       0.361665666,
+       0.329655856,
+       0.386099249,
+       0.255572081,
+       0.332128793,
+       0.367647946,
+       0.365473866,
+       0.377294213,
+       0.367510945,
+       0.462308735,
+       0.417826682
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.257491112,
+       "v6": 0.342168868
+      },
+      "3": {
+       "production": 0.2553709646666667,
+       "v6": 0.3444967966666667
+      },
+      "12": {
+       "production": 0.2480771281666667,
+       "v6": 0.3637794083333333
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l23-243003001-v6.json"
+  },
+  {
+   "level": 23,
+   "seed": 243003002,
+   "candidate": "v5",
+   "decision_zero_based": 0,
+   "tick": 0,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": []
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "searches": {
+    "v5": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.5752214590708414
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.44861432909965515
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.4864906072616577
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.476347453892231
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.5512384821971258
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.45933735370635986
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "before_values": [
+       0.4785049955050151,
+       0.5981727838516235
+      ],
+      "after_values": [
+       0.476347453892231,
+       0.5512384821971258
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430030020000,
+      "mode": "reproduced",
+      "seconds": 0.119679875
+     }
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.1263987421989441
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.11256051063537598
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.33585022886594135
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.32311850786209106
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.14462865889072418
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.2621176242828369
+      ]
+     ],
+     "verification": null
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 1,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.126398742,
+       0.126398742,
+       0.130163148,
+       0.120671973,
+       0.100435913,
+       0.120671973,
+       0.127204493,
+       0.133904815,
+       0.130163148,
+       0.120671973,
+       0.125951916,
+       0.0951282904
+      ],
+      "v5": [
+       0.581956923,
+       0.581956923,
+       0.561750531,
+       0.559038043,
+       0.346504867,
+       0.559038043,
+       0.517727554,
+       0.56634599,
+       0.561750531,
+       0.559038043,
+       0.561711609,
+       0.385061502
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.126398742,
+       "v5": 0.581956923
+      },
+      "3": {
+       "production": 0.127653544,
+       "v5": 0.5752214590000001
+      },
+      "12": {
+       "production": 0.1214804272,
+       "v5": 0.5284900465833333
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.112560511,
+       0.0911249146,
+       0.124911509,
+       0.119076833,
+       0.124911509,
+       0.124911509,
+       0.114786044,
+       0.112560511,
+       0.0911050811,
+       0.124911509,
+       0.0920228213,
+       0.114786044
+      ],
+      "v5": [
+       0.513237417,
+       0.383991241,
+       0.564398408,
+       0.559015512,
+       0.564398408,
+       0.564398408,
+       0.578730464,
+       0.513237417,
+       0.382363558,
+       0.564398408,
+       0.343703866,
+       0.578730464
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.112560511,
+       "v5": 0.513237417
+      },
+      "3": {
+       "production": 0.10953231153333333,
+       "v5": 0.487209022
+      },
+      "12": {
+       "production": 0.112305733,
+       "v5": 0.50921696425
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.344493836,
+       0.329843819,
+       0.333213031,
+       0.319174767,
+       0.333531499,
+       0.330992699,
+       0.222004876,
+       0.345405906,
+       0.332088768,
+       0.319260031,
+       0.33096531,
+       0.306194246
+      ],
+      "v5": [
+       0.486490607,
+       0.507914424,
+       0.466035128,
+       0.488863498,
+       0.465812057,
+       0.496120363,
+       0.474782586,
+       0.485044807,
+       0.50826472,
+       0.454884976,
+       0.508089542,
+       0.492222011
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.344493836,
+       "v5": 0.486490607
+      },
+      "3": {
+       "production": 0.3358502286666667,
+       "v5": 0.4868133863333333
+      },
+      "12": {
+       "production": 0.320597399,
+       "v5": 0.48621039325
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.334063232,
+       0.319322556,
+       0.315969735,
+       0.319769651,
+       0.339386612,
+       0.318074256,
+       0.345405906,
+       0.334484726,
+       0.344437659,
+       0.310181856,
+       0.278749973,
+       0.314228505
+      ],
+      "v5": [
+       0.461721569,
+       0.485455245,
+       0.488338172,
+       0.471580893,
+       0.480776101,
+       0.488688409,
+       0.485044807,
+       0.46603933,
+       0.484816641,
+       0.479454249,
+       0.456429124,
+       0.467824906
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.334063232,
+       "v5": 0.461721569
+      },
+      "3": {
+       "production": 0.32311850766666667,
+       "v5": 0.47850499533333335
+      },
+      "12": {
+       "production": 0.3228395555833333,
+       "v5": 0.4763474538333334
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.144628659,
+       0.144628659,
+       0.151567772,
+       0.142200425,
+       0.117447279,
+       0.142200425,
+       0.148003772,
+       0.15659295,
+       0.151567772,
+       0.142200425,
+       0.145296052,
+       0.112683557
+      ],
+      "v5": [
+       0.604680896,
+       0.604680896,
+       0.58515656,
+       0.581384242,
+       0.368666828,
+       0.581384242,
+       0.541761935,
+       0.588730991,
+       0.58515656,
+       0.581384242,
+       0.585004389,
+       0.406870008
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.144628659,
+       "v5": 0.604680896
+      },
+      "3": {
+       "production": 0.14694169666666665,
+       "v5": 0.598172784
+      },
+      "12": {
+       "production": 0.14158481225,
+       "v5": 0.5512384824166666
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.26859805,
+       0.255637199,
+       0.242722064,
+       0.215104774,
+       0.28261587,
+       0.244513124,
+       0.28672877,
+       0.258567393,
+       0.285853237,
+       0.261370867,
+       0.208332762,
+       0.224167183
+      ],
+      "v5": [
+       0.459337354,
+       0.483058482,
+       0.497288465,
+       0.414249003,
+       0.485662043,
+       0.497638881,
+       0.487383276,
+       0.474960327,
+       0.487155139,
+       0.474866301,
+       0.46207419,
+       0.389338374
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.26859805,
+       "v5": 0.459337354
+      },
+      "3": {
+       "production": 0.2556524376666666,
+       "v5": 0.479894767
+      },
+      "12": {
+       "production": 0.25285094108333334,
+       "v5": 0.46775098625
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l23-243003002-v5.json"
+  },
+  {
+   "level": 23,
+   "seed": 243003002,
+   "candidate": "v6",
+   "decision_zero_based": 0,
+   "tick": 0,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": []
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "searches": {
+    "v6": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.5463148355484009
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.4138062745332718
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.3582914471626282
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.3663954958319664
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.5236877749363581
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.258840948343277
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "before_values": [
+       0.34945260485013324,
+       0.5818319320678711
+      ],
+      "after_values": [
+       0.3663954958319664,
+       0.5236877749363581
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430030020000,
+      "mode": "reproduced",
+      "seconds": 0.091629125
+     }
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.1263987421989441
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.11256051063537598
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.33585022886594135
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.32311850786209106
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.14462865889072418
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.2621176242828369
+      ]
+     ],
+     "verification": null
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 1,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.126398742,
+       0.126398742,
+       0.130163148,
+       0.120671973,
+       0.100435913,
+       0.120671973,
+       0.127204493,
+       0.133904815,
+       0.130163148,
+       0.120671973,
+       0.125951916,
+       0.0951282904
+      ],
+      "v6": [
+       0.55553937,
+       0.548807204,
+       0.534597933,
+       0.51426208,
+       0.289898306,
+       0.504342675,
+       0.508535028,
+       0.509511828,
+       0.531192362,
+       0.519113541,
+       0.553558528,
+       0.307441771
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.126398742,
+       "v6": 0.55553937
+      },
+      "3": {
+       "production": 0.127653544,
+       "v6": 0.5463148356666667
+      },
+      "12": {
+       "production": 0.1214804272,
+       "v6": 0.48973338549999995
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.112560511,
+       0.0911249146,
+       0.124911509,
+       0.119076833,
+       0.124911509,
+       0.124911509,
+       0.114786044,
+       0.112560511,
+       0.0911050811,
+       0.124911509,
+       0.0920228213,
+       0.114786044
+      ],
+      "v6": [
+       0.50871408,
+       0.318898469,
+       0.521110952,
+       0.526701748,
+       0.517908633,
+       0.52209115,
+       0.548086405,
+       0.507228673,
+       0.304490119,
+       0.501818895,
+       0.267080873,
+       0.558825672
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.112560511,
+       "v6": 0.50871408
+      },
+      "3": {
+       "production": 0.10953231153333333,
+       "v6": 0.44957450033333335
+      },
+      "12": {
+       "production": 0.112305733,
+       "v6": 0.4669129724166667
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.344493836,
+       0.329843819,
+       0.333213031,
+       0.319174767,
+       0.333531499,
+       0.330992699,
+       0.222004876,
+       0.345405906,
+       0.332088768,
+       0.319260031,
+       0.33096531,
+       0.306194246
+      ],
+      "v6": [
+       0.358291447,
+       0.397292376,
+       0.31347546,
+       0.387018442,
+       0.31053862,
+       0.388341576,
+       0.351015508,
+       0.31939742,
+       0.410411388,
+       0.322528899,
+       0.397858143,
+       0.438898444
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.344493836,
+       "v6": 0.358291447
+      },
+      "3": {
+       "production": 0.3358502286666667,
+       "v6": 0.35635309433333334
+      },
+      "12": {
+       "production": 0.320597399,
+       "v6": 0.36625564358333335
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.334063232,
+       0.319322556,
+       0.315969735,
+       0.319769651,
+       0.339386612,
+       0.318074256,
+       0.345405906,
+       0.334484726,
+       0.344437659,
+       0.310181856,
+       0.278749973,
+       0.314228505
+      ],
+      "v6": [
+       0.278379172,
+       0.36276111,
+       0.407217532,
+       0.444699466,
+       0.362392485,
+       0.389184475,
+       0.331667095,
+       0.313322932,
+       0.330220014,
+       0.392806619,
+       0.385577649,
+       0.3985174
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.334063232,
+       "v6": 0.278379172
+      },
+      "3": {
+       "production": 0.32311850766666667,
+       "v6": 0.34945260466666667
+      },
+      "12": {
+       "production": 0.3228395555833333,
+       "v6": 0.36639549574999997
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.144628659,
+       0.144628659,
+       0.151567772,
+       0.142200425,
+       0.117447279,
+       0.142200425,
+       0.148003772,
+       0.15659295,
+       0.151567772,
+       0.142200425,
+       0.145296052,
+       0.112683557
+      ],
+      "v6": [
+       0.588657081,
+       0.585919559,
+       0.570919156,
+       0.545148075,
+       0.319263071,
+       0.540700257,
+       0.543969989,
+       0.547991455,
+       0.565192699,
+       0.555072606,
+       0.589282453,
+       0.332136899
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.144628659,
+       "v6": 0.588657081
+      },
+      "3": {
+       "production": 0.14694169666666665,
+       "v6": 0.581831932
+      },
+      "12": {
+       "production": 0.14158481225,
+       "v6": 0.5236877750000001
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.26859805,
+       0.255637199,
+       0.242722064,
+       0.215104774,
+       0.28261587,
+       0.244513124,
+       0.28672877,
+       0.258567393,
+       0.285853237,
+       0.261370867,
+       0.208332762,
+       0.224167183
+      ],
+      "v6": [
+       0.258840948,
+       0.339951247,
+       0.380577087,
+       0.382686704,
+       0.340324432,
+       0.363130271,
+       0.309751451,
+       0.286146015,
+       0.308051854,
+       0.367477655,
+       0.364717245,
+       0.308599234
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.26859805,
+       "v6": 0.258840948
+      },
+      "3": {
+       "production": 0.2556524376666666,
+       "v6": 0.3264564273333333
+      },
+      "12": {
+       "production": 0.25285094108333334,
+       "v6": 0.33418784525
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l23-243003002-v6.json"
+  },
+  {
+   "level": 23,
+   "seed": 243003003,
+   "candidate": "v5",
+   "decision_zero_based": 0,
+   "tick": 0,
+   "root": {
+    "sun": 50,
+    "wave": 0,
+    "plants": []
+   },
+   "policy": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "searches": {
+    "v5": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.5366888046264648
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.5450396537780762
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.4608132243156433
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.4745835562547048
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.5776266157627106
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.45203158259391785
+      ]
+     ],
+     "verification": {
+      "samples": 9,
+      "student": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "challenger": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "before_values": [
+       0.4832617441813151,
+       0.5513007243474325
+      ],
+      "after_values": [
+       0.4745835562547048,
+       0.5776266157627106
+      ],
+      "before_override": true,
+      "after_override": true,
+      "original_samples": [
+       3,
+       3
+      ],
+      "decision_seed": 2430030030000,
+      "mode": "reproduced",
+      "seconds": 0.120150292
+     }
+    },
+    "production": {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "targets": [
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 1,
+        "col": 0
+       },
+       0.11745083332061768
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 1,
+        "row": 2,
+        "col": 0
+       },
+       0.12491150945425034
+      ],
+      [
+       {
+        "type": "wait",
+        "ticks": 60,
+        "until": "timeout"
+       },
+       0.33277709285418194
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 4
+       },
+       0.3224697510401408
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 0,
+        "col": 0
+       },
+       0.14050976932048798
+      ],
+      [
+       {
+        "type": "plant",
+        "packet": 0,
+        "row": 4,
+        "col": 5
+       },
+       0.27068814635276794
+      ]
+     ],
+     "verification": null
+    }
+   },
+   "candidate_comparison": [
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 1,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.117450833,
+       0.130163148,
+       0.117450833,
+       0.120671973,
+       0.126398742,
+       0.127204493,
+       0.126398742,
+       0.120671973,
+       0.126398742,
+       0.130163148,
+       0.130163148,
+       0.133904815
+      ],
+      "v5": [
+       0.511627078,
+       0.561750531,
+       0.511627078,
+       0.559038043,
+       0.581956923,
+       0.517727554,
+       0.581956923,
+       0.559038043,
+       0.581956923,
+       0.561750531,
+       0.561750531,
+       0.56634599
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.117450833,
+       "v5": 0.511627078
+      },
+      "3": {
+       "production": 0.12168827133333333,
+       "v5": 0.5283348956666667
+      },
+      "12": {
+       "production": 0.12558671583333333,
+       "v5": 0.5547105123333333
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.124911509,
+       0.112560511,
+       0.115507714,
+       0.124911509,
+       0.12172205,
+       0.114786044,
+       0.116639726,
+       0.116639726,
+       0.114786044,
+       0.115507714,
+       0.119076833,
+       0.112560511
+      ],
+      "v5": [
+       0.564398408,
+       0.513237417,
+       0.557483137,
+       0.564398408,
+       0.572614133,
+       0.578730464,
+       0.515907228,
+       0.515907228,
+       0.578730464,
+       0.557483137,
+       0.559015512,
+       0.513237417
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.124911509,
+       "v5": 0.564398408
+      },
+      "3": {
+       "production": 0.11765991133333333,
+       "v5": 0.545039654
+      },
+      "12": {
+       "production": 0.11746749091666668,
+       "v5": 0.5492619127499999
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "common_future_values": {
+      "production": [
+       0.321336746,
+       0.343470722,
+       0.33352381,
+       0.32923314,
+       0.332097262,
+       0.305859983,
+       0.347074836,
+       0.325722337,
+       0.335048378,
+       0.320334226,
+       0.316975713,
+       0.322545558
+      ],
+      "v5": [
+       0.460813224,
+       0.484408021,
+       0.440386832,
+       0.493880838,
+       0.460909069,
+       0.47875464,
+       0.486266732,
+       0.442055851,
+       0.462128282,
+       0.485630333,
+       0.488513291,
+       0.485980421
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.321336746,
+       "v5": 0.460813224
+      },
+      "3": {
+       "production": 0.33277709266666666,
+       "v5": 0.46186935900000003
+      },
+      "12": {
+       "production": 0.32776855925,
+       "v5": 0.4724772945
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 4
+     },
+     "common_future_values": {
+      "production": [
+       0.319362521,
+       0.328724176,
+       0.319322556,
+       0.322545558,
+       0.313126415,
+       0.334484726,
+       0.319322556,
+       0.305859983,
+       0.332579672,
+       0.337936968,
+       0.32965219,
+       0.341864318
+      ],
+      "v5": [
+       0.456590742,
+       0.507739246,
+       0.485455245,
+       0.485980421,
+       0.466234714,
+       0.46603933,
+       0.485455245,
+       0.47875464,
+       0.465404898,
+       0.463168919,
+       0.464183807,
+       0.469995469
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.319362521,
+       "v5": 0.456590742
+      },
+      "3": {
+       "production": 0.322469751,
+       "v5": 0.48326174433333335
+      },
+      "12": {
+       "production": 0.32539846991666665,
+       "v5": 0.4745835563333333
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 0,
+      "col": 0
+     },
+     "common_future_values": {
+      "production": [
+       0.140509769,
+       0.151567772,
+       0.140509769,
+       0.142200425,
+       0.144628659,
+       0.148003772,
+       0.144628659,
+       0.142200425,
+       0.144628659,
+       0.151567772,
+       0.151567772,
+       0.15659295
+      ],
+      "v5": [
+       0.534372807,
+       0.58515656,
+       0.534372807,
+       0.581384242,
+       0.604680896,
+       0.541761935,
+       0.604680896,
+       0.581384242,
+       0.604680896,
+       0.58515656,
+       0.58515656,
+       0.588730991
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.140509769,
+       "v5": 0.534372807
+      },
+      "3": {
+       "production": 0.14419577,
+       "v5": 0.5513007246666667
+      },
+      "12": {
+       "production": 0.14655053358333334,
+       "v5": 0.577626616
+      }
+     }
+    },
+    {
+     "action": {
+      "type": "plant",
+      "packet": 0,
+      "row": 4,
+      "col": 5
+     },
+     "common_future_values": {
+      "production": [
+       0.2696715,
+       0.271704793,
+       0.255637199,
+       0.258461446,
+       0.248349696,
+       0.258567393,
+       0.255637199,
+       0.257475227,
+       0.256927788,
+       0.272022784,
+       0.254412413,
+       0.284857869
+      ],
+      "v5": [
+       0.452031583,
+       0.510078728,
+       0.483058482,
+       0.48358351,
+       0.479355425,
+       0.474960327,
+       0.483058482,
+       0.474167287,
+       0.474324554,
+       0.460783631,
+       0.473100722,
+       0.474872023
+      ]
+     },
+     "means": {
+      "1": {
+       "production": 0.2696715,
+       "v5": 0.452031583
+      },
+      "3": {
+       "production": 0.265671164,
+       "v5": 0.481722931
+      },
+      "12": {
+       "production": 0.26197710891666665,
+       "v5": 0.47694789616666666
+      }
+     }
+    }
+   ],
+   "raw_report": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/divergence-l23-243003003-v5.json"
+  }
+ ],
+ "l22_repairs": {
+  "v5-t3": {
+   "temperature": 3,
+   "margin_relative": 0,
+   "versus_production": {
+    "pairs": 32,
+    "candidate_wins": 26,
+    "incumbent_wins": 31,
+    "gain": 1,
+    "harm": 6,
+    "both_win": 25,
+    "both_lose": 0,
+    "delta_rate": -0.15625,
+    "ci95": [
+     -0.32600389178176,
+     0.010467194589250578
+    ],
+    "mcnemar_worse_p": 0.0625,
+    "mcnemar_two_sided_p": 0.125,
+    "point_noninferior_margin_2_of_32": false,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "versus_raw_v5": {
+    "pairs": 32,
+    "candidate_wins": 26,
+    "incumbent_wins": 5,
+    "gain": 21,
+    "harm": 0,
+    "both_win": 5,
+    "both_lose": 6,
+    "delta_rate": 0.65625,
+    "ci95": [
+     0.4365176832681367,
+     0.7816729998078147
+    ],
+    "mcnemar_worse_p": 1.0,
+    "mcnemar_two_sided_p": 9.5367431640625e-07,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": true
+   },
+   "original_harm_rescued": 20,
+   "pairs": [
+    {
+     "seed": 243002002,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002000,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002001,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002004,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002003,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002005,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002007,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002006,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002008,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002010,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002009,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002011,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002012,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002013,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002014,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002017,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002015,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002016,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002018,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002019,
+     "production": false,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002020,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002022,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002023,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002021,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002024,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002025,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002026,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002027,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002028,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002030,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002029,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002031,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    }
+   ],
+   "model": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/v5-t3.pt",
+   "outcomes": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/l22-v5-t3/outcomes.json",
+   "choice": "诊断叶子约0.003经T=3温度变换到约0.13，与生产早期0.1–0.2同数量级；单次先导，未做温度遍历。"
+  },
+  "v5-t3-r002": {
+   "temperature": 3,
+   "margin_relative": 0.02,
+   "versus_production": {
+    "pairs": 32,
+    "candidate_wins": 29,
+    "incumbent_wins": 31,
+    "gain": 1,
+    "harm": 3,
+    "both_win": 28,
+    "both_lose": 0,
+    "delta_rate": -0.0625,
+    "ci95": [
+     -0.21459856677131348,
+     0.0809665405743848
+    ],
+    "mcnemar_worse_p": 0.3125,
+    "mcnemar_two_sided_p": 0.625,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "versus_raw_v5": {
+    "pairs": 32,
+    "candidate_wins": 29,
+    "incumbent_wins": 5,
+    "gain": 25,
+    "harm": 1,
+    "both_win": 4,
+    "both_lose": 2,
+    "delta_rate": 0.75,
+    "ci95": [
+     0.5142931094785209,
+     0.864562337817185
+    ],
+    "mcnemar_worse_p": 0.9999999850988388,
+    "mcnemar_two_sided_p": 8.046627044677734e-07,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": true
+   },
+   "original_harm_rescued": 24,
+   "pairs": [
+    {
+     "seed": 243002002,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002001,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002000,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002004,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002003,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002005,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002006,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002007,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002008,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002009,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002010,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002011,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002012,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002013,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002014,
+     "production": true,
+     "raw_v5": true,
+     "candidate": false
+    },
+    {
+     "seed": 243002017,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002015,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002016,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002019,
+     "production": false,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002018,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002020,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002021,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002023,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002022,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002025,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002024,
+     "production": true,
+     "raw_v5": true,
+     "candidate": true
+    },
+    {
+     "seed": 243002026,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002027,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002028,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002030,
+     "production": true,
+     "raw_v5": false,
+     "candidate": false
+    },
+    {
+     "seed": 243002029,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    },
+    {
+     "seed": 243002031,
+     "production": true,
+     "raw_v5": false,
+     "candidate": true
+    }
+   ],
+   "model": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/models/v5-t3.pt",
+   "outcomes": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/l22-v5-t3-r002/outcomes.json",
+   "choice": "保留T=3，并启用已有相对门槛参数0.02；低值段门槛约0.002–0.004，仍保留0.001下限。"
+  }
+ },
+ "panel": {
+  "status": "完成",
+  "rules": {
+   "each_level_min_net_wins": -2,
+   "each_level_pairs": 32,
+   "one_sided_mcnemar_min_p": 0.05,
+   "pooled_ci95_lower_min": -0.0625
+  },
+  "manifest": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/panel-panel.json",
+  "candidate": "task243同数据v5，温度T=3，相对接管门槛0.02",
+  "control": "task243冻结生产v5，屋顶v5roof，绝对0.02门槛",
+  "prior": "普通地形固定task243学生，雾与屋顶固定task243 GPT先验；静态候选网固定",
+  "per_level": {
+   "9": {
+    "pairs": 32,
+    "candidate_wins": 31,
+    "incumbent_wins": 27,
+    "gain": 5,
+    "harm": 1,
+    "both_win": 26,
+    "both_lose": 0,
+    "delta_rate": 0.125,
+    "ci95": [
+     -0.03408572346999056,
+     0.29027893287394724
+    ],
+    "mcnemar_worse_p": 0.984375,
+    "mcnemar_two_sided_p": 0.21875,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": true
+   },
+   "14": {
+    "pairs": 32,
+    "candidate_wins": 31,
+    "incumbent_wins": 32,
+    "gain": 0,
+    "harm": 1,
+    "both_win": 31,
+    "both_lose": 0,
+    "delta_rate": -0.03125,
+    "ci95": [
+     -0.1574426382001255,
+     0.0789702099142691
+    ],
+    "mcnemar_worse_p": 0.5,
+    "mcnemar_two_sided_p": 1.0,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "22": {
+    "pairs": 32,
+    "candidate_wins": 30,
+    "incumbent_wins": 28,
+    "gain": 4,
+    "harm": 2,
+    "both_win": 26,
+    "both_lose": 0,
+    "delta_rate": 0.0625,
+    "ci95": [
+     -0.10189380212298466,
+     0.2287902116842557
+    ],
+    "mcnemar_worse_p": 0.890625,
+    "mcnemar_two_sided_p": 0.6875,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "23": {
+    "pairs": 32,
+    "candidate_wins": 20,
+    "incumbent_wins": 24,
+    "gain": 3,
+    "harm": 7,
+    "both_win": 17,
+    "both_lose": 5,
+    "delta_rate": -0.125,
+    "ci95": [
+     -0.31069157785506446,
+     0.07333584525321585
+    ],
+    "mcnemar_worse_p": 0.171875,
+    "mcnemar_two_sided_p": 0.34375,
+    "point_noninferior_margin_2_of_32": false,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "33": {
+    "pairs": 32,
+    "candidate_wins": 22,
+    "incumbent_wins": 16,
+    "gain": 10,
+    "harm": 4,
+    "both_win": 12,
+    "both_lose": 6,
+    "delta_rate": 0.1875,
+    "ci95": [
+     -0.0426290453048645,
+     0.3913185698673525
+    ],
+    "mcnemar_worse_p": 0.9713134765625,
+    "mcnemar_two_sided_p": 0.1795654296875,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": true
+   },
+   "47": {
+    "pairs": 32,
+    "candidate_wins": 32,
+    "incumbent_wins": 31,
+    "gain": 1,
+    "harm": 0,
+    "both_win": 31,
+    "both_lose": 0,
+    "delta_rate": 0.03125,
+    "ci95": [
+     -0.0789702099142691,
+     0.1574426382001255
+    ],
+    "mcnemar_worse_p": 1.0,
+    "mcnemar_two_sided_p": 1.0,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false
+   }
+  },
+  "pooled": {
+   "pairs": 192,
+   "candidate_wins": 166,
+   "incumbent_wins": 158,
+   "gain": 23,
+   "harm": 15,
+   "both_win": 143,
+   "both_lose": 11,
+   "delta_rate": 0.041666666666666664,
+   "ci95": [
+    -0.022415219407537185,
+    0.10614911407288657
+   ],
+   "mcnemar_worse_p": 0.928346672852058,
+   "mcnemar_two_sided_p": 0.2558750795433298,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true
+  },
+  "eligible": false,
+  "pairs": [
+   {
+    "level": 9,
+    "seed": 244100002,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 9,
+    "seed": 244100001,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100003,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 9,
+    "seed": 244100005,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100004,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100007,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100010,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100009,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100011,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100013,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100012,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100015,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100016,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100017,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100018,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100019,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 9,
+    "seed": 244100020,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 9,
+    "seed": 244100021,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100023,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 9,
+    "seed": 244100022,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100024,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100025,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100027,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100028,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100029,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100030,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 9,
+    "seed": 244100031,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101002,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101001,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101004,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101003,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101005,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101007,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101011,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101010,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101009,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101013,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101012,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101016,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101015,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101017,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101019,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101018,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101020,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101021,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101022,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101023,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101024,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101025,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101027,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101028,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101029,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101030,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 14,
+    "seed": 244101031,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102001,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102002,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102004,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 22,
+    "seed": 244102003,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102005,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102007,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102009,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102010,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102011,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102012,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102013,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102016,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102015,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102018,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102019,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102017,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 22,
+    "seed": 244102020,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 22,
+    "seed": 244102021,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102023,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102022,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 22,
+    "seed": 244102024,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102025,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102027,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102028,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102029,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102031,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 22,
+    "seed": 244102030,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103002,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103001,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103003,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103005,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103004,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103007,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103009,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103010,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103011,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103012,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103013,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103015,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103017,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103016,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103018,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103019,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103020,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103022,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103021,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103023,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103025,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103024,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103028,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103027,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 23,
+    "seed": 244103030,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103029,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 23,
+    "seed": 244103031,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104002,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104001,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104003,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104004,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104005,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104007,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104010,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104009,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104011,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104013,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104012,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104016,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104015,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104017,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104019,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104018,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104020,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104021,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104022,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104023,
+    "candidate": false,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104024,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104025,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104029,
+    "candidate": false,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104027,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104028,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 33,
+    "seed": 244104030,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 33,
+    "seed": 244104031,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105000,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105001,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105002,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105004,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105005,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105003,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105007,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105006,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105008,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105009,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105010,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105011,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105012,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105014,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105013,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105017,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105015,
+    "candidate": true,
+    "production": false
+   },
+   {
+    "level": 47,
+    "seed": 244105016,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105018,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105019,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105020,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105021,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105023,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105022,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105024,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105025,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105026,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105027,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105029,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105028,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105030,
+    "candidate": true,
+    "production": true
+   },
+   {
+    "level": 47,
+    "seed": 244105031,
+    "candidate": true,
+    "production": true
+   }
+  ],
+  "results": [
+   {
+    "level": 9,
+    "production": 27,
+    "candidate": 31,
+    "net": 4,
+    "mcnemar_worse_p": 0.984375
+   },
+   {
+    "level": 14,
+    "production": 32,
+    "candidate": 31,
+    "net": -1,
+    "mcnemar_worse_p": 0.5
+   },
+   {
+    "level": 22,
+    "production": 28,
+    "candidate": 30,
+    "net": 2,
+    "mcnemar_worse_p": 0.890625
+   },
+   {
+    "level": 23,
+    "production": 24,
+    "candidate": 20,
+    "net": -4,
+    "mcnemar_worse_p": 0.171875
+   },
+   {
+    "level": 33,
+    "production": 16,
+    "candidate": 22,
+    "net": 6,
+    "mcnemar_worse_p": 0.9713134765625
+   },
+   {
+    "level": 47,
+    "production": 31,
+    "candidate": 32,
+    "net": 1,
+    "mcnemar_worse_p": 1.0
+   }
+  ]
+ },
+ "production": {
+  "deployed": false,
+  "recommendation": "不建议将本轮修复上生产，继续保持生产v5/v5roof配置。",
+  "reason": "L23修复20胜，生产24胜，净差-4/32，低于每关-2/32要求。各关单侧McNemar均未显著变差，合并95%区间下界-0.022415高于-0.0625，但这两项不能替代单关净差条件。",
+  "next_steps": [
+   "围绕L23的同根候选搜索叶补充少量分支续走标签，混入训练，并保留生产v5已有的分支监督；先检查同根排序，再按本次L22先导及六关面板验收。当前未执行这项数据修复。",
+   "候选完整通过原验收规则后，确定模型与门槛成套配置。当前采集入口scripts/curriculum_queue.py:1093未透传margin-relative，需要在同一命令生成入口接入该参数，维持单一实现。",
+   "通过验收并获主控采用后，模型经HF transfer中转到台式机、取用后删除中转文件。组边界切换叶值及门槛，保留旧模型和原参数回滚路径，静态候选网与先验沿用冻结配置。",
+   "本轮未改C++、未构建或部署新引擎，铲子保持关闭。"
+  ]
+ },
+ "resources": {
+  "mac_workers_max": 3,
+  "desktop_used": false,
+  "collector": "未暂停或停止",
+  "engine": "沿用只读build-vn6，未修改C++、build2或build-vn6",
+  "temporary_directory": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnfix/artifacts/task244/work",
+  "pytest_runs": 0,
+  "observed_artifact_bytes_before_cleanup": 31418896,
+  "intermediates": "已删除临时目录、日志、C++导出权重与逐局中间目录，保留模型和报告附件。",
+  "retained_artifact_bytes": 10771112
+ },
+ "reproduction": {
+  "diagnose": "python3 scripts/task244_diagnose.py --level 22 --seed 243002000 --candidate v6",
+  "l22_temperature": "python3 scripts/task244_experiment.py --label v5-t3 --model artifacts/task244/models/v5.pt --temperature 3",
+  "l22_relative": "python3 scripts/task244_experiment.py --label v5-t3-r002 --model artifacts/task244/models/v5-t3.pt --margin-relative 0.02",
+  "panel_control": "python3 scripts/task244_experiment.py --phase panel --label production --model artifacts/task244/models/production.pt",
+  "panel_candidate": "python3 scripts/task244_experiment.py --phase panel --label v5-t3-r002 --model artifacts/task244/models/v5-t3.pt --margin-relative 0.02",
+  "input_preparation": "panel-original.json来自MEMORY/docs/task243-vn6-full.json的teacher.panel；task243-pairs.json为task243原配对表副本。models内冻结输入对应inputs哈希。"
+ }
+}
