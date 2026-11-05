@@ -1564,3 +1564,10 @@
 - 11-05 10:20 用户授权：训练相关的事（不涉及硬件，例如磁盘）可自主决定。
   - **门禁加一条“胜局点估计 ≥ 0”**（`overall_win_point_estimate_negative`），防止近乎持平的候选靠双输对的波数分晋升（r117 情形）。
   - 定向测试 2 项通过；集成分支 pkg238 0d6d4972；布 `autodeploy-gatewin`，等 r118 结束后部署。GATE_VERSION 不变，避免在途轮次合同失效、重评。
+- 11-05 10:40 CST **238 包导入完成**（import-238a，两份都 exit 1）。
+  - 后一份：drill 398 份，290 胜入库为 llm_demo（带 drill 标记、×3），108 局负局只记录；resume 486 份，478 入库。
+  - **72 份 drill 存档复验不通过**：“判据与存档记录不一致：meta=True replay=False”。两份合计，有重复，**全部是雾关气球题**。复验失败的不进训练。
+  - 已排除：引擎改动（scenario 的 Zombie.cpp 只新增 EnvironmentPlaceAt，不碰气球逻辑）和 PRIV 可用性（引擎支持 PRIV，on_board 优先用它）。
+  - 怀疑沙箱 drill_result 与导入复验的判定时点不同：GPT 的 wait 跨过视界后才判，而复验在视界那一刻截断；气球被仙人掌慢慢扎死，对时点很敏感。
+  - 后果：GPT 在约 10% 的题上拿到错误的“成功”反馈，浪费时间，但不污染数据。
+  - 待 Mac 回到 AC 后派 Codex 拿失败存档（台式机 `~/llm_runs/LLMPlay_2026-11-05_*.zip` 暂不删）定位并修判定一致性，修完需重新打包。
