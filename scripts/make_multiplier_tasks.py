@@ -101,6 +101,21 @@ INDEPENDENT_BLOCKS = {
     'fog_user_v2': (FOG_USER_V2_MULT_SEED_BASE, FOG_USER_V2_MULT_STRIDE, 31),
     'fog79b': (FOG79B_MULT_SEED_BASE, FOG79B_MULT_STRIDE, 36),
     'roof_user': (ROOF_USER_MULT_SEED_BASE, ROOF_USER_MULT_STRIDE, 47),
+    # task247: independent blocks, appended families leave legacy slot indices intact.
+    'pool_user': (247_100_000, 100_000, 22),
+    'pool_user1': (248_100_000, 100_000, 29),
+    'pool_user2': (249_100_000, 100_000, 29),
+    'fog_good': (250_100_000, 100_000, 31),
+}
+GATE_COVERAGE_FAMILIES = ('roof_user', 'pool_user', 'pool_user1', 'pool_user2', 'fog_good')
+GATE_COVERAGE_LOW_MULTIPLIERS = {
+    family: ((0.5, 'm050'), (0.75, 'm075')) +
+            (((0.25, 'm025'),) if family == 'pool_user1' else ())
+    for family in GATE_COVERAGE_FAMILIES
+}
+GATE_COVERAGE_LADDERS = {
+    family: sorted([1.0] + [m for m, _ in MULTIPLIERS + low])
+    for family, low in GATE_COVERAGE_LOW_MULTIPLIERS.items()
 }
 NATIVE_BLOCKS = {'native_l25': NATIVE_MULT_SEED_BASE,
                  'native_l30': NATIVE_MULT_SEED_BASE + 100_000,
@@ -140,6 +155,10 @@ FAMILIES = (
     ('native_l25', 'native', 'pool_l25_orig_train', (25,), 'pool'),
     ('native_l30', 'native', 'pool_l30_orig_train', (30,), 'pool'),
     ('native_l40', 'native', 'storm_l40_orig_train', (40,), 'fog'),
+    ('pool_user', 'gate_coverage', 'pool_user_l{level}_user', (22,), 'pool'),
+    ('pool_user1', 'gate_coverage', 'pool_user_l{level}_user1', (29,), 'pool'),
+    ('pool_user2', 'gate_coverage', 'pool_user_l{level}_user2', (29,), 'pool'),
+    ('fog_good', 'gate_coverage', 'fog_good_l{level}_train', (31, 32, 34, 36), 'fog'),
 )
 
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
@@ -168,6 +187,9 @@ def variant_id(base_id: str, suffix: str) -> str:
 
 
 def multipliers_for_family(family: str):
+    if family in GATE_COVERAGE_FAMILIES:
+        # Append low rungs so roof_user's six issued seed bands keep their meaning.
+        return MULTIPLIERS + GATE_COVERAGE_LOW_MULTIPLIERS[family]
     return NATIVE_LADDER_MULTIPLIERS[family] if family in NATIVE_BLOCKS else MULTIPLIERS
 
 
@@ -203,6 +225,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'native': overrides.get('native') or ROOT / 'artifacts/task75/native_conveyor_panel.json',
         # task227: local manifest from scripts/make_user_roof_panel.py (not in git).
         'roof_user': overrides.get('roof_user') or ROOT / 'artifacts/task227/user_roof_panel.json',
+        'gate_coverage': overrides.get('gate_coverage') or ROOT / 'artifacts/task247/gate_coverage_panel.json',
     }
 
 
@@ -344,6 +367,7 @@ def main() -> None:
     parser.add_argument('--fog79b-manifest', type=Path)
     parser.add_argument('--roof-user-manifest', type=Path,
                         help='task227 user roof-deck base panel (default artifacts/task227/user_roof_panel.json)')
+    parser.add_argument('--gate-coverage-manifest', type=Path)
     parser.add_argument('--scan-root', type=Path, action='append',
                         help='trees whose artifacts/ feeds the seed-disjointness scan (repeatable; default: this repo)')
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
@@ -356,7 +380,8 @@ def main() -> None:
                           'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest,
                           'fog': args.fog_manifest, 'fog_user': args.fog_user_manifest,
                           'fog79b': args.fog79b_manifest, 'native': args.native_manifest,
-                          'roof_user': args.roof_user_manifest})
+                          'roof_user': args.roof_user_manifest,
+                          'gate_coverage': args.gate_coverage_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests(args.scan_root)

@@ -142,7 +142,8 @@ class CurriculumRulesTest(unittest.TestCase):
         # human_v2 bases; L39 remains demonstration-only; fog_f8/f8p stay out.
         self.assertEqual({name for name in ids if name.startswith('fog')},
                          {'fog_user_v2_l31_snow', 'fog79b_l36_best', 'fog79b_l37_best',
-                          'fog79b_l38_best'})
+                          'fog79b_l38_best', 'fog_good_l31_train', 'fog_good_l32_train',
+                          'fog_good_l34_train', 'fog_good_l36_train'})
         self.assertIn('pool_l25_orig_train', ids)
         self.assertEqual(CURRICULUM_LADDERS['native_l25'], [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
 

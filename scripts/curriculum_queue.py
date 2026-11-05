@@ -70,6 +70,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
+                                   GATE_COVERAGE_LADDERS,
                                    load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, START_SEED_BLOCK,
@@ -158,6 +159,7 @@ DEFAULT_TEACHER_RATES = Path.home() / 'pvz-logs/teacher_rates.json'
 DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
 CURRICULUM_LADDERS = {
     'native_l25': [0.5, 1.0] + [m for m, _ in MULTIPLIERS],
+    **GATE_COVERAGE_LADDERS,
 }
 # task137: v5 随机卡组格的阶梯写在清单里（每个任务带 curriculum_ladder），
 # 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
@@ -668,9 +670,17 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
         cells[base] = retired.pop(base)
         lines.append(f'cell restored: {base}')
     for base, task in wanted.items():
+        family = family_of(base)
+        ladder = GATE_COVERAGE_LADDERS.get(family)
+        if base in cells and ladder and cells[base].get('ladder') != ladder:
+            cell = cells[base]
+            old_ladder = cell.get('ladder') or [1.0] + [m for m, _ in MULTIPLIERS]
+            current = old_ladder[cell['mult_index']]
+            cell['ladder'] = list(ladder)
+            cell['mult_index'] = cell['ladder'].index(current)
+            lines.append(f'cell ladder updated: {base} (kept {current:g})')
         if base in cells or base in state.get('cell_errors', {}):
             continue
-        family = family_of(base)
         cell = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
                     mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
         if family in CURRICULUM_LADDERS:

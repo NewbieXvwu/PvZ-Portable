@@ -302,8 +302,14 @@ GOOD_DECKS: dict[int, tuple[tuple[int, ...], ...]] = {
 task227: 用户屋顶卡组进入生产采集课程。门禁与采集共用这一份定义；[48, x] 是
 “模仿者→x”，由 deck_card 展开（卡组槽仍只占一格）。"""
 USER_DECKS: dict[int, tuple[int | tuple[int, int], ...]] = {
+    22: (1, 16, 35, 10, 42, 36, 17, 4, 19, 21),
+    29: (1, 16, 35, 10, 42, 39, 44, 30, 21, 17),
     47: (1, 33, 41, (48, 1), 39, 44, 37, 4, 17, 30),
     49: (1, 33, 39, 44, 4, 2, 17, 35, 14, 15),
+}
+# task247: L29 有两份不同卡组的用户录像，顺序与门禁 user1/user2 一致。
+USER_DECK_ALTERNATES: dict[int, tuple[tuple[int, ...], ...]] = {
+    29: ((1, 7, 40, 22, 23, 19, 16, 17, 21, 46),),
 }
 
 
@@ -311,7 +317,8 @@ def good_decks_for_level(level: int) -> tuple[tuple, ...]:
     """这一关选中的好卡组（第一套 = 门禁 / 北极星用的卡组）；没有记录时退回 deck_for_level。"""
     user = USER_DECKS.get(level)
     if user:
-        return (tuple(user),) + tuple(d for d in GOOD_DECKS.get(level, ()) if tuple(d) != tuple(user))
+        users = (tuple(user),) + USER_DECK_ALTERNATES.get(level, ())
+        return users + tuple(d for d in GOOD_DECKS.get(level, ()) if tuple(d) not in users)
     return GOOD_DECKS.get(level) or (deck_for_level(level),)
 
 

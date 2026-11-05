@@ -93,7 +93,8 @@ class MultiplierTasksTest(unittest.TestCase):
         """Re-adding roof last must not move any other family's preregistered seeds."""
         # task70/227: fog_user_v2 and roof_user were appended after roof, so they are not
         # part of the seed set roof had to preserve either.
-        late = ('roof', 'fog_user_v2', 'fog79b', 'roof_user', 'native_l25', 'native_l30', 'native_l40')
+        late = ('roof', 'fog_user_v2', 'fog79b', 'roof_user', 'native_l25', 'native_l30', 'native_l40',
+                'pool_user', 'pool_user1', 'pool_user2', 'fog_good')
         old = {(m, entry[0], level): seed_start(m, f, level)
                for f, entry in enumerate(FAMILIES)
                if entry[0] not in late
@@ -115,7 +116,8 @@ class MultiplierTasksTest(unittest.TestCase):
         legacy = ('day_d7', 'day_orig', 'night_n10', 'night_orig', 'pool_p9k',
                   'day_d7q', 'night_n10p', 'night_n10q', 'fog_f8', 'fog_f8p')
         for index, (family, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
-            if family in ('native_l25', 'native_l30', 'native_l40'):
+            if family in ('native_l25', 'native_l30', 'native_l40',
+                          'pool_user', 'pool_user1', 'pool_user2', 'fog_good'):
                 continue
             for mult in range(6):
                 for level in levels:
@@ -164,7 +166,8 @@ class MultiplierTasksTest(unittest.TestCase):
         # task70/227: the original task68 proof (appending fog_user preserved everything)
         # must drop the later families from the "before" build too.
         late = ('fog_user', 'fog_user_v2', 'fog79b', 'roof_user',
-                'native_l25', 'native_l30', 'native_l40')
+                'native_l25', 'native_l30', 'native_l40',
+                'pool_user', 'pool_user1', 'pool_user2', 'fog_good')
         old_families = tuple(f for f in FAMILIES if f[0] not in late)
         old_sources = {key: table for key, table in self.sources.items()
                        if key not in ('fog_user', 'fog_user_v2', 'roof_user', 'native')}
