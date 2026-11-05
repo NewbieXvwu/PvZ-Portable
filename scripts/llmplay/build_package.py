@@ -296,10 +296,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         stage.mkdir()
         copy_modules(stage)
         copy_constant_sources(stage)
-        (stage / "build").mkdir()
-        engine = Path(executable) if executable else previous / "build" / "pvz-portable"
-        shutil.copyfile(engine, stage / "build" / "pvz-portable")
-        (stage / "build" / "pvz-portable").chmod(0o755)
+        copy_engine(Path(executable) if executable else previous / "build" / "pvz-portable", stage)
         (stage / "configs").mkdir()
         manifest = task_manifest()
         for name, document in (("human_demo_tasks.json", manifest),
@@ -351,14 +348,27 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         return volumes
 
 
+
+def copy_engine(executable, stage: Path) -> None:
+    """GPT 沙箱是 x86-64 Linux：只收静态链接的 x86-64 ELF。238 包曾误打进 Mac arm64 引擎。"""
+    import struct
+    data = Path(executable).read_bytes()
+    if data[:4] != b"\x7fELF" or data[4] != 2 or data[5] != 1 or struct.unpack_from("<H", data, 18)[0] != 62:
+        raise SystemExit(f"{executable} 不是 x86-64 Linux ELF，GPT 沙箱跑不了")
+    phoff, = struct.unpack_from("<Q", data, 32)
+    size, count = struct.unpack_from("<HH", data, 54)
+    if any(struct.unpack_from("<I", data, phoff + i * size)[0] == 3 for i in range(count)):
+        raise SystemExit(f"{executable} 是动态链接（带 PT_INTERP），沙箱缺库；用 -DBUILD_STATIC=ON 构建")
+    (stage / "build").mkdir()
+    shutil.copyfile(executable, stage / "build" / "pvz-portable")
+    (stage / "build" / "pvz-portable").chmod(0o755)
+
 def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_name, carry=None):
     stage = temporary / "stage"
     stage.mkdir()
     copy_modules(stage)
     copy_constant_sources(stage)
-    (stage / "build").mkdir()
-    shutil.copyfile(executable, stage / "build" / "pvz-portable")
-    (stage / "build" / "pvz-portable").chmod(0o755)
+    copy_engine(executable, stage)
     resource_stage = temporary / "resources"
     copy_resources(resource_stage, resource_dir)
     shutil.copytree(cache_dir / "cache64", resource_stage / "res" / "cache64")
