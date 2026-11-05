@@ -1625,3 +1625,10 @@
   - task245 结题（雾关单独换叶值不成立，不加 `--value-fog`）；
   - task246 在后台生成分支标签，预计约 47 小时，完成后自动训练、比较、推送；
   - task247 结题（gatecover ec6279b9：L22 / L29 用户卡组与 4 个雾关门禁卡组原来都没有整局训练格，已补；屋顶用户格阶梯下探到 0.5），待部署。
+- 11-05 21:45 CST
+  - 用户同意后，已删 Windows 侧两个中转临时文件（build_static.sh、pvz-portable-238c.xz）。
+  - **GPT 报第 3 个 bug**：失败终局无法再推进时间，导出却要求到满视界。修复（pkg238 e91e220b）：唯一的 `drill_start.horizon_reached` 把终局算作到达，game.py 的 drill / scenario 导出都改为调用它（原来各自比较 tick_delta）。导入器本来就不要求视界。test_drill_start 15 项通过。
+  - **gatecover 合入集成分支**（e73a19f3）。台式机用新代码在 gc247 工作树生成清单：倍率清单 481 → 542 项，原有 481 项逐项不变，新增 61 项；另有 gate_coverage 基础清单 7 项。
+  - 布 `autodeploy-gatecover`（`~/pvz-logs/deploy-gatecover/run.sh`）：等 r123 出结论后，把两份清单装进 cq（旧倍率清单备份在 `deploy-gatecover/multiplier_panel.before.json`），再 `deploy26.py --revision e91e220b`。
+  - `test_multiplier_tasks::test_fog_user_v2_cell_preserves_every_existing_cell` 在生产 ec360eb4 上同样失败，是原有问题，不是这次引入的。
+  - 新包 238c 等 task248 交付后再打；用户会把它传进正在跑的 GPT 会话。
