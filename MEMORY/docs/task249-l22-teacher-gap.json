@@ -1,0 +1,2463 @@
+{
+ "task": "task249",
+ "title": "L22 老师实验与生产采集胜率差异诊断",
+ "status": "完成，仅诊断，未部署",
+ "base_commit": "53e39650",
+ "conclusion": {
+  "root_cause": "将 beta=0 的学生执行成绩误作老师胜率。fast_search 表示搜索参与标注，beta 决定执行方。",
+  "causal_control": "同配置同16种子，仅 beta 1→0：老师 15/16，学生 0/16。",
+  "teacher_collapse": false,
+  "student_regression": "本批r112→r119：自走3/16→0/16，老师16/16→15/16。r117→r119：自走0/16→0/16，老师16/16→15/16。r117→r119自走平均波次变化+0.1875，本批未出现进一步自走胜率下降，老师仅1局胜转负。r112的3局自走胜局到r117已经消失。",
+  "production_configuration_bug": false,
+  "production_fix": "保留既定 DAgger 采集行为。老师能力复核命令显式使用 --dagger-beta 1，统计按 beta 区分执行方。"
+ },
+ "protocol": {
+  "level": 22,
+  "deck": [
+   1,
+   16,
+   35,
+   10,
+   42,
+   36,
+   17,
+   4,
+   19,
+   21
+  ],
+  "zombie_count_multiplier": 0.5,
+  "seeds": [
+   243002000,
+   243002001,
+   243002002,
+   243002003,
+   243002004,
+   243002005,
+   243002006,
+   243002007,
+   243002008,
+   243002009,
+   243002010,
+   243002011,
+   243002012,
+   243002013,
+   243002014,
+   243002015
+  ],
+  "games_per_arm": 16,
+  "total_games": 192,
+  "arms": 12,
+  "pairing": "沿用task243：同重置种子，SEARCH未来种子公式固定；每个对照重置整局。",
+  "search_future_formula": "decision_seed = reset_seed * 10000 + decision; future_k = (decision_seed * 1000 + k) mod 2**32",
+  "implementation": "既有 search_play / C++ SEARCH、RunRollout；没有另写游戏或搜索实现。",
+  "equality_fields": [
+   "won",
+   "final_wave",
+   "final_tick",
+   "decisions",
+   "searched",
+   "overrides",
+   "planted_types",
+   "planted_slots",
+   "mowers_used"
+  ]
+ },
+ "inputs": {
+  "roof.pt": {
+   "bytes": 588955,
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "static.pt": {
+   "bytes": 584603,
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "value.pt": {
+   "bytes": 611739,
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "gptbc.pt": {
+   "bytes": 737326,
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "old.pt": {
+   "bytes": 5467950,
+   "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57",
+   "structure": {
+    "width": 64,
+    "pool": "meanmax",
+    "row_pool": true,
+    "context": false,
+    "obs": "v2timer",
+    "packet_head": "identity",
+    "plant_embedding_dim": 64
+   },
+   "tensor_bytes": 728588,
+   "pickle_bytes": 4735394
+  },
+  "r119.pt": {
+   "bytes": 5951790,
+   "sha256": "535349fe1b6c2c9d196c9279b1600984708c6c326a19a0a5848c5c42b6b36506",
+   "structure": {
+    "width": 64,
+    "pool": "meanmax",
+    "row_pool": true,
+    "context": false,
+    "obs": "v2timer",
+    "packet_head": "identity",
+    "plant_embedding_dim": 64
+   },
+   "tensor_bytes": 728588,
+   "pickle_bytes": 5219225
+  },
+  "build2": {
+   "bytes": 3634576,
+   "sha256": "4b3b0617d0ccb5a150fb1b876e8379896283c3dc1f7b8583922c22653a503334"
+  },
+  "build-vn6": {
+   "bytes": 4050784,
+   "sha256": "2f7e814c28ccfe6559cebca6ab033aea19dcfbc129a6d2a5a3b70b27219d85b5"
+  },
+  "r117.pt": {
+   "bytes": 5577646,
+   "sha256": "a0861d3a403ff8f7daa1f046d9e55403ac36629a5b2e5da2a20a64ef52e44160",
+   "structure": {
+    "width": 64,
+    "pool": "meanmax",
+    "row_pool": true,
+    "context": false,
+    "obs": "v2timer",
+    "packet_head": "identity",
+    "plant_embedding_dim": 64
+   },
+   "tensor_bytes": 728588,
+   "pickle_bytes": 4845078
+  }
+ },
+ "model_structure": {
+  "same_tensor_shapes": true,
+  "observation": "v2timer",
+  "token_input": null,
+  "explanation": "三份学生网络结构相同，权重张量均为728588字节。文件增长来自训练元数据，含标签和历史语料路径。obs_v3是本次采集附件开关，未把CNN学生改成obs_v3网络。",
+  "sources": {
+   "old": "task243冻结的生产round_000112/student/model.pt",
+   "r117": "生产round_000117/student/model.pt，经HF transfer/task249/r117.pt取用后删除中转文件",
+   "r119": "Mac缓存student_37d834645b80.pt，哈希与生产round_000119/student/model.pt一致"
+  }
+ },
+ "search": {
+  "production": {
+   "arms": "fast_search",
+   "dagger_beta": 0,
+   "obs_v3": true,
+   "native_games": true,
+   "per_card": 1,
+   "student_candidates": 2,
+   "samples": 3,
+   "verify_samples": 9,
+   "halving": true,
+   "halving_first_samples": 1,
+   "horizon": 2500,
+   "min_gap": 300,
+   "rollout_sim_skip": 61,
+   "margin_relative": 0,
+   "absolute_margin": 0.02,
+   "save_candidates": 0,
+   "combo_candidates": 0,
+   "wall_clock_search_budget": null
+  },
+  "compared_fields": [
+   "arms",
+   "per_card",
+   "student_candidates",
+   "samples",
+   "verify_samples",
+   "halving",
+   "halving_first_samples",
+   "horizon",
+   "min_gap",
+   "rollout_sim_skip",
+   "margin_relative",
+   "save_candidates",
+   "save_share",
+   "save_max_wait",
+   "save_chunk",
+   "save_interval",
+   "combo_candidates",
+   "combo_buffer",
+   "combo_interval",
+   "combo_max_wait"
+  ],
+  "task243_to_production_parameter_differences": {},
+  "leaf_and_static_sha_match_task243_and_production": true,
+  "explanation": "两者的搜索预算和参数一致。beta、帧归档、obs附件和根动作计算分别对照。工作进程数只控制并发，未使用墙钟搜索限额。"
+ },
+ "task_contract": {
+  "effective_kwargs": [
+   {
+    "level": 22,
+    "deck": [
+     1,
+     16,
+     35,
+     10,
+     42,
+     36,
+     17,
+     4,
+     19,
+     21
+    ],
+    "seed": 243002000,
+    "first_aid_owned": false,
+    "task_extra": {
+     "wave_cap": null,
+     "zombie_count_multiplier": 0.5
+    }
+   },
+   {
+    "level": 22,
+    "deck": [
+     1,
+     16,
+     35,
+     10,
+     42,
+     36,
+     17,
+     4,
+     19,
+     21
+    ],
+    "seed": 243002000,
+    "first_aid_owned": false,
+    "task_extra": {
+     "wave_cap": null,
+     "zombie_count_multiplier": 0.5
+    }
+   }
+  ],
+  "equal": true,
+  "initial_state": {
+   "source": "artifacts/task249/frames/collection_teacher/seed_243002005/collection_teacher_fast_search/frames.npz",
+   "sun": 50,
+   "tick": 0
+  },
+  "sun_start": "sun_start不进入training_task_kwargs或TaskSpec/RESET_V2。门禁缺省/null与新格50均使用引擎冒险第二周目开局50阳光。"
+ },
+ "driver": {
+  "protocol": "build-vn6广告SEARCH协议2，须用现有vnfix匹配包装器；其铲子参数全部为0。build2使用协议1，另以当前生产驱动作16对控制。",
+  "vnfix_commit": "861e1b2fa507cf4a1c6d3e91fd3b4fd32019e482",
+  "production_driver_commit": "53e39650",
+  "native_games": "fast_search仍为Python逐决策驱动+C++搜索。native-games开关改变CNN根动作前向路径，未切换成另一套搜索。"
+ },
+ "groups": {
+  "old_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 16,
+   "mean_final_wave": 30.0,
+   "mean_seconds": 80.40625,
+   "mean_searches": 281.4375,
+   "mean_search_override_proposals": 57.5625,
+   "mean_planted_types": {
+    "1": 16.75,
+    "4": 14.875,
+    "10": 9.4375,
+    "16": 23.5625,
+    "17": 19.6875,
+    "19": 16.8125,
+    "21": 11.75,
+    "35": 5.8125,
+    "36": 24.25,
+    "42": 1.1875
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83150,
+     "decisions": 1543
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80095,
+     "decisions": 1488
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 77451,
+     "decisions": 1426
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81391,
+     "decisions": 1486
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81383,
+     "decisions": 1523
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 84876,
+     "decisions": 1571
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80756,
+     "decisions": 1499
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80654,
+     "decisions": 1487
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76806,
+     "decisions": 1422
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 77180,
+     "decisions": 1424
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81900,
+     "decisions": 1514
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81534,
+     "decisions": 1511
+    },
+    {
+     "seed": 243002012,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 77017,
+     "decisions": 1410
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83860,
+     "decisions": 1548
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80814,
+     "decisions": 1509
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78646,
+     "decisions": 1458
+    }
+   ],
+   "configuration": {
+    "student": "old.pt",
+    "engine": "build-vn6",
+    "task_id": "task222_l22_pool_user",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": false,
+    "obs_v3": false,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "r119_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 84.4,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build-vn6",
+    "task_id": "task222_l22_pool_user",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": false,
+    "obs_v3": false,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "build2_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 73.13125,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "task222_l22_pool_user",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": false,
+    "obs_v3": false,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "new_task_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 70.64375,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": false,
+    "obs_v3": false,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "frames_only_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 73.1625,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": false,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "collection_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 73.725,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "collection_student": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 0,
+   "mean_final_wave": 16.25,
+   "mean_seconds": 20.46875,
+   "mean_searches": 132.5,
+   "mean_search_override_proposals": 44.0625,
+   "mean_planted_types": {
+    "1": 2.375,
+    "4": 4.5,
+    "10": 5.75,
+    "16": 2.125,
+    "17": 10.8125,
+    "19": 4.5,
+    "21": 1.25,
+    "35": 1.0625,
+    "36": 9.6875
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 40549,
+     "decisions": 732
+    },
+    {
+     "seed": 243002001,
+     "won": false,
+     "final_wave": 16,
+     "final_tick": 43875,
+     "decisions": 775
+    },
+    {
+     "seed": 243002002,
+     "won": false,
+     "final_wave": 18,
+     "final_tick": 51098,
+     "decisions": 907
+    },
+    {
+     "seed": 243002003,
+     "won": false,
+     "final_wave": 13,
+     "final_tick": 35159,
+     "decisions": 624
+    },
+    {
+     "seed": 243002004,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 46484,
+     "decisions": 824
+    },
+    {
+     "seed": 243002005,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 45848,
+     "decisions": 814
+    },
+    {
+     "seed": 243002006,
+     "won": false,
+     "final_wave": 19,
+     "final_tick": 55373,
+     "decisions": 972
+    },
+    {
+     "seed": 243002007,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 44820,
+     "decisions": 794
+    },
+    {
+     "seed": 243002008,
+     "won": false,
+     "final_wave": 16,
+     "final_tick": 41849,
+     "decisions": 743
+    },
+    {
+     "seed": 243002009,
+     "won": false,
+     "final_wave": 23,
+     "final_tick": 62546,
+     "decisions": 1104
+    },
+    {
+     "seed": 243002010,
+     "won": false,
+     "final_wave": 18,
+     "final_tick": 48235,
+     "decisions": 855
+    },
+    {
+     "seed": 243002011,
+     "won": false,
+     "final_wave": 20,
+     "final_tick": 57840,
+     "decisions": 1018
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 34972,
+     "decisions": 616
+    },
+    {
+     "seed": 243002013,
+     "won": false,
+     "final_wave": 9,
+     "final_tick": 26426,
+     "decisions": 473
+    },
+    {
+     "seed": 243002014,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 37979,
+     "decisions": 670
+    },
+    {
+     "seed": 243002015,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 35568,
+     "decisions": 635
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 0.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "python_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 73.6375,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": false,
+    "driver": "vnfix"
+   }
+  },
+  "old_collection_student": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 3,
+   "mean_final_wave": 19.875,
+   "mean_seconds": 54.30625,
+   "mean_searches": 196.25,
+   "mean_search_override_proposals": 92.375,
+   "mean_planted_types": {
+    "1": 4.1875,
+    "4": 5.9375,
+    "10": 10.0,
+    "16": 3.3125,
+    "17": 11.3125,
+    "19": 3.875,
+    "21": 3.625,
+    "35": 4.5625,
+    "36": 10.5625,
+    "42": 2.6875
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": false,
+     "final_wave": 21,
+     "final_tick": 56110,
+     "decisions": 1007
+    },
+    {
+     "seed": 243002001,
+     "won": false,
+     "final_wave": 30,
+     "final_tick": 90460,
+     "decisions": 1627
+    },
+    {
+     "seed": 243002002,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 48650,
+     "decisions": 858
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 88859,
+     "decisions": 1573
+    },
+    {
+     "seed": 243002004,
+     "won": false,
+     "final_wave": 13,
+     "final_tick": 33564,
+     "decisions": 594
+    },
+    {
+     "seed": 243002005,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 38792,
+     "decisions": 688
+    },
+    {
+     "seed": 243002006,
+     "won": false,
+     "final_wave": 29,
+     "final_tick": 81791,
+     "decisions": 1453
+    },
+    {
+     "seed": 243002007,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 33628,
+     "decisions": 598
+    },
+    {
+     "seed": 243002008,
+     "won": false,
+     "final_wave": 15,
+     "final_tick": 41496,
+     "decisions": 734
+    },
+    {
+     "seed": 243002009,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 37353,
+     "decisions": 671
+    },
+    {
+     "seed": 243002010,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 34516,
+     "decisions": 610
+    },
+    {
+     "seed": 243002011,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 35976,
+     "decisions": 636
+    },
+    {
+     "seed": 243002012,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 89394,
+     "decisions": 1607
+    },
+    {
+     "seed": 243002013,
+     "won": false,
+     "final_wave": 19,
+     "final_tick": 55494,
+     "decisions": 991
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81812,
+     "decisions": 1469
+    },
+    {
+     "seed": 243002015,
+     "won": false,
+     "final_wave": 18,
+     "final_tick": 48127,
+     "decisions": 855
+    }
+   ],
+   "configuration": {
+    "student": "old.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 0.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "production_driver": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 15,
+   "mean_final_wave": 29.6875,
+   "mean_seconds": 75.54375,
+   "mean_searches": 284.5625,
+   "mean_search_override_proposals": 60.5,
+   "mean_planted_types": {
+    "1": 18.1875,
+    "4": 14.3125,
+    "10": 9.25,
+    "16": 23.0,
+    "17": 18.6875,
+    "19": 15.5,
+    "21": 10.875,
+    "35": 5.8125,
+    "36": 27.375,
+    "42": 2.625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78069,
+     "decisions": 1443
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83286,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76854,
+     "decisions": 1431
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85672,
+     "decisions": 1584
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80016,
+     "decisions": 1458
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87486,
+     "decisions": 1614
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79800,
+     "decisions": 1470
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83066,
+     "decisions": 1551
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80682,
+     "decisions": 1508
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79234,
+     "decisions": 1468
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 85337,
+     "decisions": 1583
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79869,
+     "decisions": 1506
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 25,
+     "final_tick": 67306,
+     "decisions": 1247
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 76472,
+     "decisions": 1411
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81962,
+     "decisions": 1497
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81497,
+     "decisions": 1497
+    }
+   ],
+   "configuration": {
+    "student": "r119.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "l22diag"
+   }
+  },
+  "r117_teacher": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 16,
+   "mean_final_wave": 30.0,
+   "mean_seconds": 75.25625,
+   "mean_searches": 284.75,
+   "mean_search_override_proposals": 58.625,
+   "mean_planted_types": {
+    "1": 16.0,
+    "4": 15.0,
+    "10": 10.5625,
+    "16": 23.25,
+    "17": 19.4375,
+    "19": 15.625,
+    "21": 11.1875,
+    "35": 5.9375,
+    "36": 25.1875,
+    "42": 2.25
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80605,
+     "decisions": 1505
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78407,
+     "decisions": 1445
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 81397,
+     "decisions": 1487
+    },
+    {
+     "seed": 243002003,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83011,
+     "decisions": 1521
+    },
+    {
+     "seed": 243002004,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78007,
+     "decisions": 1425
+    },
+    {
+     "seed": 243002005,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83116,
+     "decisions": 1510
+    },
+    {
+     "seed": 243002006,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 74129,
+     "decisions": 1388
+    },
+    {
+     "seed": 243002007,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 87371,
+     "decisions": 1631
+    },
+    {
+     "seed": 243002008,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83311,
+     "decisions": 1565
+    },
+    {
+     "seed": 243002009,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 82623,
+     "decisions": 1523
+    },
+    {
+     "seed": 243002010,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 77229,
+     "decisions": 1450
+    },
+    {
+     "seed": 243002011,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 78499,
+     "decisions": 1453
+    },
+    {
+     "seed": 243002012,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 82503,
+     "decisions": 1514
+    },
+    {
+     "seed": 243002013,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 79676,
+     "decisions": 1454
+    },
+    {
+     "seed": 243002014,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83555,
+     "decisions": 1558
+    },
+    {
+     "seed": 243002015,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 80815,
+     "decisions": 1504
+    }
+   ],
+   "configuration": {
+    "student": "r117.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 1.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  },
+  "r117_collection_student": {
+   "games": 16,
+   "terminal_games": 16,
+   "wins": 0,
+   "mean_final_wave": 16.0625,
+   "mean_seconds": 24.18125,
+   "mean_searches": 137.125,
+   "mean_search_override_proposals": 41.625,
+   "mean_planted_types": {
+    "1": 2.5,
+    "4": 5.0625,
+    "10": 5.5625,
+    "16": 2.5625,
+    "17": 10.75,
+    "19": 4.0,
+    "21": 1.5,
+    "35": 0.6875,
+    "36": 11.8125,
+    "42": 0.0625
+   },
+   "per_seed": [
+    {
+     "seed": 243002000,
+     "won": false,
+     "final_wave": 16,
+     "final_tick": 43355,
+     "decisions": 780
+    },
+    {
+     "seed": 243002001,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 35416,
+     "decisions": 621
+    },
+    {
+     "seed": 243002002,
+     "won": false,
+     "final_wave": 21,
+     "final_tick": 61966,
+     "decisions": 1099
+    },
+    {
+     "seed": 243002003,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 41330,
+     "decisions": 734
+    },
+    {
+     "seed": 243002004,
+     "won": false,
+     "final_wave": 18,
+     "final_tick": 48612,
+     "decisions": 857
+    },
+    {
+     "seed": 243002005,
+     "won": false,
+     "final_wave": 7,
+     "final_tick": 17970,
+     "decisions": 324
+    },
+    {
+     "seed": 243002006,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 38453,
+     "decisions": 679
+    },
+    {
+     "seed": 243002007,
+     "won": false,
+     "final_wave": 15,
+     "final_tick": 41230,
+     "decisions": 728
+    },
+    {
+     "seed": 243002008,
+     "won": false,
+     "final_wave": 24,
+     "final_tick": 66333,
+     "decisions": 1197
+    },
+    {
+     "seed": 243002009,
+     "won": false,
+     "final_wave": 16,
+     "final_tick": 46334,
+     "decisions": 817
+    },
+    {
+     "seed": 243002010,
+     "won": false,
+     "final_wave": 21,
+     "final_tick": 60765,
+     "decisions": 1080
+    },
+    {
+     "seed": 243002011,
+     "won": false,
+     "final_wave": 23,
+     "final_tick": 63005,
+     "decisions": 1120
+    },
+    {
+     "seed": 243002012,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 35027,
+     "decisions": 617
+    },
+    {
+     "seed": 243002013,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 47548,
+     "decisions": 852
+    },
+    {
+     "seed": 243002014,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 47114,
+     "decisions": 831
+    },
+    {
+     "seed": 243002015,
+     "won": false,
+     "final_wave": 10,
+     "final_tick": 31341,
+     "decisions": 557
+    }
+   ],
+   "configuration": {
+    "student": "r117.pt",
+    "engine": "build2",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 0.0,
+    "workers": 3,
+    "frames": true,
+    "obs_v3": true,
+    "native_root": true,
+    "driver": "vnfix"
+   }
+  }
+ },
+ "comparisons": {
+  "r112_to_r119_teacher": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 16,
+   "gain": 0,
+   "harm": 1,
+   "both_win": 15,
+   "both_lose": 0,
+   "delta_rate": -0.0625,
+   "ci95": [
+    -0.28328737570298923,
+    0.1378095247219639
+   ],
+   "mcnemar_worse_p": 0.5,
+   "factor": "学生 r112 → r119，老师执行",
+   "control": "old_teacher",
+   "candidate": "r119_teacher",
+   "mean_paired_wave_delta": -0.3125,
+   "identical_recorded_endpoints_and_counts": 0
+  },
+  "r117_to_r119_teacher": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 16,
+   "gain": 0,
+   "harm": 1,
+   "both_win": 15,
+   "both_lose": 0,
+   "delta_rate": -0.0625,
+   "ci95": [
+    -0.28328737570298923,
+    0.1378095247219639
+   ],
+   "mcnemar_worse_p": 0.5,
+   "factor": "学生 r117 → r119，老师执行",
+   "control": "r117_teacher",
+   "candidate": "collection_teacher",
+   "mean_paired_wave_delta": -0.3125,
+   "identical_recorded_endpoints_and_counts": 0
+  },
+  "engine": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "build-vn6 → build2",
+   "control": "r119_teacher",
+   "candidate": "build2_teacher",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "task": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "门禁任务 → task247 新格",
+   "control": "build2_teacher",
+   "candidate": "new_task_teacher",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "frames": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "关闭 → 开启帧归档",
+   "control": "new_task_teacher",
+   "candidate": "frames_only_teacher",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "obs_attachment": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "关闭 → 开启 obs_v3 附件",
+   "control": "frames_only_teacher",
+   "candidate": "collection_teacher",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "native_root": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "C++ → Python 根动作计算",
+   "control": "collection_teacher",
+   "candidate": "python_teacher",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "driver": {
+   "pairs": 16,
+   "candidate_wins": 15,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 15,
+   "both_lose": 1,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.20198791293788002,
+    0.20198791293788002
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "vnfix → 当前生产驱动",
+   "control": "collection_teacher",
+   "candidate": "production_driver",
+   "mean_paired_wave_delta": 0.0,
+   "identical_recorded_endpoints_and_counts": 16
+  },
+  "beta": {
+   "pairs": 16,
+   "candidate_wins": 0,
+   "incumbent_wins": 15,
+   "gain": 0,
+   "harm": 15,
+   "both_win": 0,
+   "both_lose": 1,
+   "delta_rate": -0.9375,
+   "ci95": [
+    -0.9888806552353575,
+    -0.6438488477261883
+   ],
+   "mcnemar_worse_p": 3.0517578125e-05,
+   "factor": "老师执行 beta=1 → 学生执行 beta=0",
+   "control": "collection_teacher",
+   "candidate": "collection_student",
+   "mean_paired_wave_delta": -13.4375,
+   "identical_recorded_endpoints_and_counts": 0
+  },
+  "r112_to_r119_student": {
+   "pairs": 16,
+   "candidate_wins": 0,
+   "incumbent_wins": 3,
+   "gain": 0,
+   "harm": 3,
+   "both_win": 0,
+   "both_lose": 13,
+   "delta_rate": -0.1875,
+   "ci95": [
+    -0.4300888096197413,
+    0.0411189083954214
+   ],
+   "mcnemar_worse_p": 0.125,
+   "factor": "学生 r112 → r119，beta=0",
+   "control": "old_collection_student",
+   "candidate": "collection_student",
+   "mean_paired_wave_delta": -3.625,
+   "identical_recorded_endpoints_and_counts": 0
+  },
+  "r117_to_r119_student": {
+   "pairs": 16,
+   "candidate_wins": 0,
+   "incumbent_wins": 0,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 0,
+   "both_lose": 16,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.1936076805344364,
+    0.1936076805344364
+   ],
+   "mcnemar_worse_p": 1.0,
+   "factor": "学生 r117 → r119，beta=0",
+   "control": "r117_collection_student",
+   "candidate": "collection_student",
+   "mean_paired_wave_delta": 0.1875,
+   "identical_recorded_endpoints_and_counts": 0
+  },
+  "r117_beta": {
+   "pairs": 16,
+   "candidate_wins": 0,
+   "incumbent_wins": 16,
+   "gain": 0,
+   "harm": 16,
+   "both_win": 0,
+   "both_lose": 0,
+   "delta_rate": -1.0,
+   "ci95": [
+    -1.0,
+    -0.7261973924086025
+   ],
+   "mcnemar_worse_p": 1.52587890625e-05,
+   "factor": "r117 老师执行 → 学生执行",
+   "control": "r117_teacher",
+   "candidate": "r117_collection_student",
+   "mean_paired_wave_delta": -13.9375,
+   "identical_recorded_endpoints_and_counts": 0
+  }
+ },
+ "beta0_archive_evidence": {
+  "source": "artifacts/task249/frames/collection_student/seed_243002000/collection_student_fast_search/frames.npz",
+  "seed": 243002000,
+  "frames": 733,
+  "different_label_actions": 41,
+  "first_difference": {
+   "decision": 17,
+   "tick_after": 900,
+   "executed": {
+    "type": "plant",
+    "packet": 0,
+    "row": 4,
+    "col": 4
+   },
+   "teacher_label": {
+    "type": "plant",
+    "packet": 0,
+    "row": 0,
+    "col": 0
+   }
+  }
+ },
+ "production_snapshot": {
+  "source_commit": "c84ad7d14df103698d0e758a01da704e641fcf9f",
+  "root": "/home/newbiexvwu/PvZ-search",
+  "groups": {
+   "l22": {
+    "round": 124,
+    "label": "c124pooluserl22userm050_o0",
+    "task_id": "pool_user_l22_user_m050",
+    "beta": 0,
+    "games": 24,
+    "wins": 0,
+    "seed_range": [
+     247700000,
+     247700023
+    ],
+    "mean_wave": 15.333333333333334,
+    "wave_range": [
+     9,
+     20
+    ],
+    "mean_seconds": 35.625,
+    "mean_searched": 127.70833333333333,
+    "mean_search_overrides": 39.166666666666664,
+    "source": "artifacts/hard/c124pooluserl22userm050_o0_24/config.json and games.jsonl",
+    "review": {
+     "beta": 0.5,
+     "multiplier": 1,
+     "games": 6,
+     "wins": 0
+    },
+    "selected_plant_totals": {
+     "9": 0,
+     "10": 141,
+     "42": 0,
+     "35": 16
+    }
+   },
+   "l29_user1": {
+    "round": 124,
+    "label": "c124pooluserl29user1m025_o0",
+    "task_id": "pool_user_l29_user1_m025",
+    "beta": 0,
+    "games": 24,
+    "wins": 0,
+    "seed_range": [
+     248900000,
+     248900023
+    ],
+    "mean_wave": 14.208333333333334,
+    "wave_range": [
+     9,
+     19
+    ],
+    "mean_seconds": 17.004166666666666,
+    "mean_searched": 96.45833333333333,
+    "mean_search_overrides": 0,
+    "source": "artifacts/hard/c124pooluserl29user1m025_o0_24/config.json and games.jsonl",
+    "review": {
+     "beta": 0.5,
+     "multiplier": 1,
+     "games": 6,
+     "wins": 0
+    },
+    "selected_plant_totals": {
+     "9": 0,
+     "10": 34,
+     "42": 0,
+     "35": 2
+    }
+   }
+  },
+  "note": "上述均值对应r124可定位分组的原始24局输出。"
+ },
+ "gate": {
+  "historical": {
+   "117": {
+    "source": "pvz-logs/curriculum_state.pipeline/round_000117/evaluations/59c2a22eb6913b805340",
+    "student": "B",
+    "incumbent_round": 112,
+    "task": "task222_l22_pool_user",
+    "multiplier": 0.5,
+    "endpoint": "waves",
+    "pairs": 46,
+    "candidate_wins": 0,
+    "incumbent_wins": 2,
+    "candidate_mean_wave": 16.630434782608695,
+    "incumbent_mean_wave": 18.369565217391305,
+    "paired_wave_delta": -1.7391304347826086,
+    "wave_less_equal_more": [
+     28,
+     4,
+     14
+    ],
+    "pool_win_delta": -0.036855036855036855,
+    "pool_mcnemar_worse_p": 0.07953482594061892,
+    "pool_holm_adjusted_p": 0.3181393037624757,
+    "overall_wins": [
+     774,
+     788
+    ],
+    "overall_pairs": 1863,
+    "overall_score_delta": 0.0005457147969225262,
+    "overall_score_ci": [
+     -0.02797296408097721,
+     0.029064393674822265
+    ],
+    "approved": true,
+    "note": "历史 r117 的波数分数抵消了胜局净损失。当前代码已有总体胜率差不得为负的检查，本任务未修改。"
+   },
+   "119": {
+    "source": "pvz-logs/curriculum_state.pipeline/round_000119/evaluations/399f750865089a7cf465",
+    "student": "B",
+    "incumbent_round": 117,
+    "task": "task222_l22_pool_user",
+    "multiplier": 0.5,
+    "endpoint": "waves",
+    "pairs": 12,
+    "candidate_wins": 0,
+    "incumbent_wins": 0,
+    "candidate_mean_wave": 16.25,
+    "incumbent_mean_wave": 17,
+    "paired_wave_delta": -0.75,
+    "wave_less_equal_more": [
+     7,
+     1,
+     4
+    ],
+    "pool_win_delta": 0.1111111111111111,
+    "pool_mcnemar_worse_p": 0.9899691964965314,
+    "overall_wins": [
+     228,
+     209
+    ],
+    "overall_pairs": 492,
+    "overall_score_delta": 0.03404471544715447,
+    "overall_score_ci": [
+     -0.02512511768442078,
+     0.09321454857872971
+    ],
+    "approved": true,
+    "note": "L22 波数略降，泳池区整体净增12胜、总体净增19胜，第一阶段通过。门禁按总体和分区裁决，没有每任务单独否决。"
+   }
+  },
+  "explanation": "L22在低胜率任务中使用波数端点，0胜仍有波数信号。门禁按总体和分区合并裁决，没有L22逐任务否决，也没有老师搜索能力项。r119在L22少0.75波时泳池整体净增12胜、总体净增19胜，第一阶段通过。"
+ },
+ "plant_diagnostic": {
+  "names": {
+   "1": "向日葵",
+   "10": "大喷菇",
+   "35": "咖啡豆",
+   "42": "忧郁菇"
+  },
+  "note": "阳光菇(9)不在L22这套卡组中。planted_types为实际执行种植，overrides为搜索接管建议计数；beta=0时建议只作为label记录。"
+ },
+ "l29": {
+  "production": "同样是beta=0的0/24，不能作为老师执行胜率。",
+  "teacher_evidence": "task247旧学生beta=1先导在0.25倍0/2、0.5倍0/2。本次没有扩大L29整局对照，未将L22的高老师胜率外推至L29。"
+ },
+ "recommendations": [
+  "统计按执行方分列：beta=0学生自走，beta=1老师执行，中间beta为混合。arm=fast_search及searched/overrides均不能单独证明老师执行。",
+  "本卡组老师可生成完整咖啡豆/忧郁菇轨迹，beta=0学生轨迹很少覆盖这条链。需要完整示范时复用现有beta=1入口；本任务未改训练配方或调度。",
+  "学生改动的影响按配对结果记录。老师能力诊断使用固定配置beta=1，避免由学生自走成绩推断搜索失效。"
+ ],
+ "resources": {
+  "mac_workers_max": 3,
+  "desktop": "只读，nice -n 19，ulimit -v 4000000；未跑pytest或游戏",
+  "engine": "只读build2/build-vn6，未重建",
+  "collector": "未冻结或停止",
+  "task246": "未触碰",
+  "transfer": "仅r117模型经HF transfer，取用后已删除",
+  "temporary_directory": "artifacts/task249/work",
+  "deployed": false,
+  "training_changed": false,
+  "pytest_runs": 0
+ },
+ "reproduction": {
+  "command": "python3 scripts/task249_teacher_gap.py --driver-root ../vnfix --workers 3",
+  "inputs": "把inputs对应模型放入artifacts/task249/models/{old,r117,r119,value,roof,static,gptbc}.pt。模型不入git。",
+  "output": "artifacts/task249/<组名>_16/{config.json,games.jsonl}",
+  "script": "scripts/task249_teacher_gap.py"
+ },
+ "sources": [
+  "scripts/search_play.py:403,574-617,648-670,840-904",
+  "scripts/curriculum_queue.py:31,1094-1136,2360-2433",
+  "scripts/render_episode.py:299-329",
+  "python/pvz_env.py:128-143,454",
+  "src/Lawn/Board.cpp:1354-1375",
+  "python/pvz_rollout_policy.py:305-315",
+  "python/pvz_promotion.py:363-383,446-529",
+  "vnfix分支 MEMORY/docs/task243-vn6-full.json 与 scripts/task243_teacher.py",
+  "vnfix分支 MEMORY/docs/task244-vn-collapse.json",
+  "MEMORY/docs/task247-gate-coverage.md"
+ ]
+}
