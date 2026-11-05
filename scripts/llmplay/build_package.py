@@ -102,7 +102,7 @@ def copy_modules(stage: Path) -> None:
     # 分不清看哪个。
     shutil.copytree(ROOT / "scripts" / "llmplay", stage / "llmplay",
                     ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
-                                                  "build_probe.py", "probe",
+                                                  "build_probe.py", "probe", "accept_package.py",
                                                   "PROMPT.md", "README.md", "examples",
                                                   "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
@@ -347,7 +347,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
 
 
 
-def copy_engine(executable, stage: Path) -> None:
+def check_engine(executable) -> None:
     """GPT 沙箱是 x86-64 Linux：只收静态链接的 x86-64 ELF。238 包曾误打进 Mac arm64 引擎。"""
     import struct
     data = Path(executable).read_bytes()
@@ -357,6 +357,10 @@ def copy_engine(executable, stage: Path) -> None:
     size, count = struct.unpack_from("<HH", data, 54)
     if any(struct.unpack_from("<I", data, phoff + i * size)[0] == 3 for i in range(count)):
         raise SystemExit(f"{executable} 是动态链接（带 PT_INTERP），沙箱缺库；用 -DBUILD_STATIC=ON 构建")
+
+
+def copy_engine(executable, stage: Path) -> None:
+    check_engine(executable)
     (stage / "build").mkdir()
     shutil.copyfile(executable, stage / "build" / "pvz-portable")
     (stage / "build" / "pvz-portable").chmod(0o755)
