@@ -1643,3 +1643,14 @@
   - **更正**：台式机暂停期间，Mac 采集也会停。`mac_collect.py` 每批都要向生产控制器取计划，控制器不在就报 “production curriculum controller is not running”，每 60 s 重试一次，台式机恢复后自动接上。
   - **task246 的后台流水线已死**：codex exec 结束时把它带走了，日志停在 Mac 08:12，只完成 1 / 107 局。已在 tmux `task246-exp` 用 nice 10 重启 `task246_experiment.py --data artifacts/task246`，它能从已完成的局续跑。
   - task248 进展：850 题核对完，145 题的等待时长问题已修。
+- 11-05 22:40 CST **238c 包完成并通过交付验收**：`~/Downloads/pvz-llmplay-238c/`，pkg md5 3a4aa145…；res 与 238 相同（7c55cd5b…）；集成分支 pkg238 53e39650。
+  - 内容：静态 x86-64 引擎、气球判定修复、task248 两个修复（并发进度、drill 起点核对，903 题保留、15 题剔除）、终局可导出。
+  - 验收时又发现一个问题：drill / scenario / resume 局 `save()` 后 `load()` 报“没有任务”（任务定义在源存档里）。改为 save 记源存档、load 走 from_archive（007b7471）。
+  - 新增交付验收脚本 `scripts/llmplay/accept_package.py`，在台式机 Linux 上用 nice 19 跑约 2 分钟：
+    - 引擎是静态 x86-64；
+    - 3 进程同时领题不重复；
+    - drill 开局、save 后新进程 load 续到视界并导出，导入器复验与存档一致；
+    - scenario 注入、声明、导出成功；
+    - resume 开局并推进成功；
+    - 连续两次导出，进度 12518 → 12518，不回退。
+  - 报告在台式机 `~/pvz-logs/accept238c.report.txt`，解包目录已删。
