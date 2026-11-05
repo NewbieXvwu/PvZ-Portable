@@ -1632,3 +1632,10 @@
   - 布 `autodeploy-gatecover`（`~/pvz-logs/deploy-gatecover/run.sh`）：等 r123 出结论后，把两份清单装进 cq（旧倍率清单备份在 `deploy-gatecover/multiplier_panel.before.json`），再 `deploy26.py --revision e91e220b`。
   - `test_multiplier_tasks::test_fog_user_v2_cell_preserves_every_existing_cell` 在生产 ec360eb4 上同样失败，是原有问题，不是这次引入的。
   - 新包 238c 等 task248 交付后再打；用户会把它传进正在跑的 GPT 会话。
+- 11-05 21:50 CST **用户要用台式机玩游戏，生产暂停**。
+  - 21:42 放 `stop_curr`，撤掉 autodeploy-gatecover。
+  - 21:47 r124 在组边界停采；当时已采的组都保留，恢复后接着采剩下的组。
+  - 控制器等 r123 门禁跑完才退出：r123 否，现任仍是 r119。
+  - 退出后 GPU 0%，WSL 内存只用 1 GB；看门狗因 stop_curr 不会重启。
+  - Mac 采集照常，批次照常投递到台式机 frames。
+  - **恢复**：用户说可以时运行 `~/pvz-logs/deploy-gatecover/resume.sh`。它会装 gatecover 的两份清单、删 stop_curr，再 `deploy26.py --revision e91e220b` 拉起 qc，恢复和部署 gatecover 一步完成。
