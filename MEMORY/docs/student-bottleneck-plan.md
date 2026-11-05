@@ -1579,3 +1579,9 @@
   - **修复**（pkg238 0fea7ad4）：`_judge` 优先用题目块里持久化的 `mowers_start` / `root_tick`。drill 题库与 scenario 声明都已写这两个字段。
   - 打补丁包 **238b**（`~/Downloads/pvz-llmplay-238b/`，pkg md5 07061d50…，只替换 llmplay/game.py，文件数 28875 与 238 相同）。下次会话用 238b + 最新交回分卷 resume。
 - 11-05 12:55 CST r119 在后台训练候选 B（11:51 排队，12:38 起 B）；r120 采集进行中。现任仍为 r117。r119 是第一轮按“胜局点估计 ≥ 0”评估的候选。Mac 继续只充电（AC 75%），采集进程组 77692 冻结，无 Codex / dsh 任务在跑。
+- 11-05 13:15 CST **r119 晋升**（候选 B）。门禁：胜 228 比 209（胜局 +3.9pp），综合分 +3.4pp，置信区间 [-0.7, +8.4]，首看即停。候选 A 被拒（-6.5pp，含新规则 overall_win_point_estimate_negative 与泳池显著退步）。战术考试（不否决）：B 46/100，现任 43/100，A 43/100。留出监测：L7 20 比 12，L9 33 比 43（L9 退步，只记录）。
+- 11-05 14:05 CST **决定：候选 A 不再从 gptbc 重启，改为现任蒸馏微调的第二个种子**（pkg238 ec360eb4，`qc_launch.py` 默认 `--no-a-restart`、A 配方改用 clean_b）。
+  - 依据：自 r111 B 改为“现任+蒸馏”以来，A 连续 9 轮被拒（胜局 -1.4 到 -12pp），B 过了 4 次（r111/112/117/119）。重启要 8 个 epoch，耗时约是 B 的两倍，还从没赢过。
+  - 两个同配方不同种子：训练不稳定（全局 randperm）本来就让不同种子落在不同盆地，等于每轮两次机会；门禁已按 2 个候选做 Bonferroni 校正。A 训练时间减半。
+  - 想回到重启时 `qc_launch.py --a-restart --recipe recipes/dw4i2_v2timer_clean_a.json`。
+  - r120 已按旧配置入队，布 `autodeploy-areplicate` 等 r120 出结论后部署，r121 起生效。
