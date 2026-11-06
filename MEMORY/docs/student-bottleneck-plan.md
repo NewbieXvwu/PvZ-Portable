@@ -1685,3 +1685,8 @@
     - resume 486 份，478 份通过，与上批相同，没有新增；scenario 0 份。
   - **打 238d**：238c 代码加上这次交回作 carry，共 12864 条。台式机验收通过：静态引擎，三类题、回收续打、并发领题、导出不回退都正常，carry 生效（进度 12866）。pkg md5 b3cb56a2…，res 不变。新会话直接用，不用 resume()。
 - 11-06 08:50 CST **更正 08:30 那条“待办”**：deploy26 把 `llmimport/scripts/import_llm_run.py` 做成指向 `cq/scripts/import_llm_run.py` 的软链，脚本里 `ROOT = Path(__file__).resolve()...` 会解析到 cq，所以导入用的一直是部署版本的 llmplay 与 drill_start。llmimport 工作树里那份旧 game.py 不会被用到，没有分叉，撤销该待办。以后照旧从 llmimport 跑导入即可，默认清单是 cq 的 `configs/human_demo_tasks.json`。
+- 11-06 11:15 CST **r128 晋升**（B）。r125–r127 都否。
+  - A、B 都过了，B 分数更高被选中。第 4 看，1863 对，胜 726 对 700（+1.4pp），综合 +0.8pp，95% 区间 [-1.1, +3.9]。
+  - 雾 113 对 92；夜 209 对 221（略退）；其余持平。
+  - 留出：L7 17 对 16，L9 31 对 34。
+  - 现任从 r124 换成 r128。
