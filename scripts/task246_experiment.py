@@ -96,7 +96,11 @@ def main():
                     if .2<=rate<=.8:continue
                     index=grid.index(float(multiplier))+(1 if rate>.8 else -1)
                     if not 0<=index<len(grid):
-                        raise RuntimeError(f"L{task['level']} cannot reach 20%-80% on the existing multiplier grid")
+                        # e.g. L29 user1 deck: the production teacher is 0/32 even at 0.25. A pair
+                        # where neither side can win carries no information; drop the level, record it.
+                        calibration.append(dict(level=task['level'],dropped='cannot reach 20%-80% on the grid'))
+                        changes.append((task,multiplier,None))
+                        continue
                     next_multiplier=grid[index]
                     if any(r['level']==task['level'] and r['multiplier']==next_multiplier for r in calibration):
                         raise RuntimeError(f"L{task['level']} calibration straddles 20%-80%; inspect the measured results")
@@ -107,7 +111,10 @@ def main():
                     saved=base/'calibration'/f"l{task['level']}-m{old:g}"
                     saved.parent.mkdir(exist_ok=True)
                     shutil.move(base/'panel-production'/f"l{task['level']}",saved)
-                    task['zombie_count_multiplier']=new
+                    if new is None:
+                        panel_document['tasks'].remove(task)
+                    else:
+                        task['zombie_count_multiplier']=new
                 write_json(base/'panel-original.json',panel_document)
             panel(chosen,base/'models'/f'{chosen}.pt',.02)
             result=json.loads((base/f'panel-{chosen}'/'report.json').read_text())
