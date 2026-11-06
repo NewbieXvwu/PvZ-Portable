@@ -102,7 +102,7 @@ def main():
                         changes.append((task,multiplier,None))
                         continue
                     next_multiplier=grid[index]
-                    if any(r['level']==task['level'] and r['multiplier']==next_multiplier for r in calibration):
+                    if any(r['level']==task['level'] and r.get('multiplier')==next_multiplier for r in calibration):
                         raise RuntimeError(f"L{task['level']} calibration straddles 20%-80%; inspect the measured results")
                     changes.append((task,multiplier,next_multiplier))
                 write_json(base/'calibration.json',calibration)
