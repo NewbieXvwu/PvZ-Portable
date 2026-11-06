@@ -139,6 +139,8 @@ def main():
     if args.limit: jobs=jobs[:args.limit]
     started=time.monotonic()
     results=[]
+    failed=[]
+    owner={}
     external=set(args.external_pids)
     with ProcessPoolExecutor(max_workers=min(4,args.workers),mp_context=mp.get_context("spawn")) as pool:
         futures=set()
@@ -152,19 +154,30 @@ def main():
             while not exhausted and len(futures)<capacity:
                 job=next(remaining,None)
                 if job is None:exhausted=True
-                else:futures.add(pool.submit(run_one,job))
+                else:
+                    future=pool.submit(run_one,job)
+                    owner[future]=job
+                    futures.add(future)
             if not futures:
                 if not exhausted:time.sleep(10)
                 continue
             done,futures=wait(futures,timeout=30,return_when=FIRST_COMPLETED)
             for f in done:
-                result=f.result()
+                try:
+                    result=f.result()
+                except Exception as error:
+                    # One game whose teacher continuation hits the action cap must not discard
+                    # the rest of a two-day generation; record it and keep going.
+                    job=owner[f]
+                    failed.append(dict(game=job["game"],terrain=job.get("terrain"),error=f"{type(error).__name__}: {error}"))
+                    print(json.dumps(dict(failed=failed[-1])),flush=True)
+                    continue
                 results.append(result)
                 print(json.dumps(result),flush=True)
     from value_teacher_feasibility import write_json
     name = args.plan.stem if args.plan else "collection"
     write_json(base/(f"{name}-report.json"),dict(
-        games=results,seconds=time.monotonic()-started))
+        games=results,failed=failed,seconds=time.monotonic()-started))
 
 
 if __name__=="__main__":
