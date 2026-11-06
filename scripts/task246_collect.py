@@ -25,6 +25,8 @@ def run_one(job):
     target = base / "branches" / f"game_{job['game']:04d}"
     if (target / "complete.json").exists():
         return json.loads((target / "complete.json").read_text())
+    if (target / "failed.json").exists():      # deterministic failure: do not replay it on every resume
+        raise RuntimeError(json.loads((target / "failed.json").read_text())["error"])
     target.mkdir(parents=True, exist_ok=True)
     archive = base / "corpus" / job["archive"] if job.get("archive") else None
     if archive is not None:
@@ -170,6 +172,9 @@ def main():
                     # the rest of a two-day generation; record it and keep going.
                     job=owner[f]
                     failed.append(dict(game=job["game"],terrain=job.get("terrain"),error=f"{type(error).__name__}: {error}"))
+                    marker=base/"branches"/f"game_{job['game']:04d}"/"failed.json"
+                    marker.parent.mkdir(parents=True,exist_ok=True)
+                    marker.write_text(json.dumps(dict(error=str(error)))+"\n")
                     print(json.dumps(dict(failed=failed[-1])),flush=True)
                     continue
                 results.append(result)
