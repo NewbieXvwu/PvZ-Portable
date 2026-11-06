@@ -1,12 +1,12 @@
 {
  "task": "task246",
- "status": "先导采样中，训练与验收尚未完成",
+ "status": "\u5b8c\u6210\uff0c\u672a\u90e8\u7f72",
  "branch": "vnbranch",
  "base_commit": "861e1b2f",
  "inputs": {
   "selection": "artifacts/task246/selection.tsv",
   "split": "artifacts/task246/split.json",
-  "source": "task243原4000局，剔除其已知138个重放失败档案"
+  "source": "task243\u539f4000\u5c40\uff0c\u5254\u9664\u5176\u5df2\u77e5138\u4e2a\u91cd\u653e\u5931\u8d25\u6863\u6848"
  },
  "plan": {
   "games": 96,
@@ -19,13 +19,13 @@
   },
   "roots_per_game_max": 3,
   "shared_futures": 4,
-  "split": "沿用task243整局train/validation/test，分支继承原局划分",
-  "sampling": "首两个开局经济植物落子前状态，无经济植物时取首两个落子，另取中盘落子前状态。候选完全由现有C++搜索给出。",
-  "training": "编码2，宽64；生产v5热启动与从头训练；轨迹终局行和分支行各占1/2",
-  "offline_gate": "留出候选排序一致率较task244至少提高5个百分点，泳池同方向，按局配对自举的95%差值下界大于0，才跑整局面板",
-  "panel": "6关新种子每关32对，加L21/L24/L27/L29各32对，保持生产叶值/屋顶路由作对照",
-  "ranking": "所有候选全部共同未来均参与排序，完全终局候选使用真实结果。按原局编号分组。",
-  "l23": "11个独立初始翻转根，每候选12个共同未来，不进入训练。"
+  "split": "\u6cbf\u7528task243\u6574\u5c40train/validation/test\uff0c\u5206\u652f\u7ee7\u627f\u539f\u5c40\u5212\u5206",
+  "sampling": "\u9996\u4e24\u4e2a\u5f00\u5c40\u7ecf\u6d4e\u690d\u7269\u843d\u5b50\u524d\u72b6\u6001\uff0c\u65e0\u7ecf\u6d4e\u690d\u7269\u65f6\u53d6\u9996\u4e24\u4e2a\u843d\u5b50\uff0c\u53e6\u53d6\u4e2d\u76d8\u843d\u5b50\u524d\u72b6\u6001\u3002\u5019\u9009\u5b8c\u5168\u7531\u73b0\u6709C++\u641c\u7d22\u7ed9\u51fa\u3002",
+  "training": "\u7f16\u78012\uff0c\u5bbd64\uff1b\u751f\u4ea7v5\u70ed\u542f\u52a8\u4e0e\u4ece\u5934\u8bad\u7ec3\uff1b\u8f68\u8ff9\u7ec8\u5c40\u884c\u548c\u5206\u652f\u884c\u5404\u53601/2",
+  "offline_gate": "\u7559\u51fa\u5019\u9009\u6392\u5e8f\u4e00\u81f4\u7387\u8f83task244\u81f3\u5c11\u63d0\u9ad85\u4e2a\u767e\u5206\u70b9\uff0c\u6cf3\u6c60\u540c\u65b9\u5411\uff0c\u6309\u5c40\u914d\u5bf9\u81ea\u4e3e\u768495%\u5dee\u503c\u4e0b\u754c\u5927\u4e8e0\uff0c\u624d\u8dd1\u6574\u5c40\u9762\u677f",
+  "panel": "6\u5173\u65b0\u79cd\u5b50\u6bcf\u517332\u5bf9\uff0c\u52a0L21/L24/L27/L29\u540432\u5bf9\uff0c\u4fdd\u6301\u751f\u4ea7\u53f6\u503c/\u5c4b\u9876\u8def\u7531\u4f5c\u5bf9\u7167",
+  "ranking": "\u6240\u6709\u5019\u9009\u5168\u90e8\u5171\u540c\u672a\u6765\u5747\u53c2\u4e0e\u6392\u5e8f\uff0c\u5b8c\u5168\u7ec8\u5c40\u5019\u9009\u4f7f\u7528\u771f\u5b9e\u7ed3\u679c\u3002\u6309\u539f\u5c40\u7f16\u53f7\u5206\u7ec4\u3002",
+  "l23": "11\u4e2a\u72ec\u7acb\u521d\u59cb\u7ffb\u8f6c\u6839\uff0c\u6bcf\u5019\u900912\u4e2a\u5171\u540c\u672a\u6765\uff0c\u4e0d\u8fdb\u5165\u8bad\u7ec3\u3002"
  },
  "resources": {
   "workers_max": 4,
@@ -35,8 +35,8 @@
   "production_deployed": false
  },
  "implementation": {
-  "collector": "恢复task43 value_teacher_feasibility.sample_root，短推演与搜索继续调用C++；终局续走调用search_play._play",
-  "ranking": "恢复task43 train_value_branches.pair_accuracy",
+  "collector": "\u6062\u590dtask43 value_teacher_feasibility.sample_root\uff0c\u77ed\u63a8\u6f14\u4e0e\u641c\u7d22\u7ee7\u7eed\u8c03\u7528C++\uff1b\u7ec8\u5c40\u7eed\u8d70\u8c03\u7528search_play._play",
+  "ranking": "\u6062\u590dtask43 train_value_branches.pair_accuracy",
   "export": "task239_export",
   "training": "task239_train.run_arm",
   "packing": "task243_train.pack",
@@ -65,5 +65,6137 @@
    "estimated_hours": 6.7878557162604
   },
   "notes": "Estimate includes real teacher continuations with concurrent production load; replay/search overhead and AC pauses are additional. Actual candidates are usually fewer than six."
- }
+ },
+ "production_deployed": false,
+ "updated_at": "2026-11-06 15:13:46",
+ "error": "L29 cannot reach 20%-80% on the existing multiplier grid",
+ "elapsed_seconds": 6735.277051210403,
+ "branch_data": {
+  "games": 96,
+  "by_terrain": {
+   "night": 12,
+   "day": 12,
+   "roof": 12,
+   "pool": 48,
+   "fog": 12
+  },
+  "roots": 280,
+  "rows": 7102,
+  "terminal_labels": 7128,
+  "generation_seconds": 0.14184450000175275,
+  "games_report": [
+   {
+    "game": 3840,
+    "terrain": "night",
+    "seed": 7251752,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 21
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 606,
+      "tick": 30420,
+      "labels": 28,
+      "wins": 21
+     }
+    ],
+    "rows": 80,
+    "wins": 64,
+    "seconds": 2670.7379573750004
+   },
+   {
+    "game": 155,
+    "terrain": "day",
+    "seed": 1970023159,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 20,
+      "wins": 8
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 20,
+      "wins": 1
+     },
+     {
+      "decision": 204,
+      "tick": 11455,
+      "labels": 20,
+      "wins": 0
+     }
+    ],
+    "rows": 60,
+    "wins": 9,
+    "seconds": 614.0654433750024
+   },
+   {
+    "game": 2662,
+    "terrain": "day",
+    "seed": 7800755,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 284,
+      "tick": 15240,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 56,
+    "wins": 56,
+    "seconds": 1011.7483286250063
+   },
+   {
+    "game": 46,
+    "terrain": "roof",
+    "seed": 46000928,
+    "roots": [
+     {
+      "decision": 21,
+      "tick": 1200,
+      "labels": 32,
+      "wins": 22
+     },
+     {
+      "decision": 103,
+      "tick": 6060,
+      "labels": 40,
+      "wins": 16
+     },
+     {
+      "decision": 179,
+      "tick": 10401,
+      "labels": 40,
+      "wins": 9
+     }
+    ],
+    "rows": 112,
+    "wins": 47,
+    "seconds": 888.3223838749982
+   },
+   {
+    "game": 43,
+    "terrain": "pool",
+    "seed": 200020105,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 398,
+      "tick": 20864,
+      "labels": 16,
+      "wins": 14
+     }
+    ],
+    "rows": 64,
+    "wins": 62,
+    "seconds": 1186.693262875
+   },
+   {
+    "game": 357,
+    "terrain": "day",
+    "seed": 1970000589,
+    "roots": [
+     {
+      "decision": 2,
+      "tick": 60,
+      "labels": 16,
+      "wins": 0
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 16,
+      "wins": 0
+     },
+     {
+      "decision": 237,
+      "tick": 13020,
+      "labels": 20,
+      "wins": 0
+     }
+    ],
+    "rows": 52,
+    "wins": 0,
+    "seconds": 176.9846459160035
+   },
+   {
+    "game": 863,
+    "terrain": "day",
+    "seed": 200022851,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 20,
+      "wins": 0
+     },
+     {
+      "decision": 23,
+      "tick": 1200,
+      "labels": 20,
+      "wins": 1
+     },
+     {
+      "decision": 319,
+      "tick": 16925,
+      "labels": 24,
+      "wins": 0
+     }
+    ],
+    "rows": 64,
+    "wins": 1,
+    "seconds": 457.59405312500166
+   },
+   {
+    "game": 1806,
+    "terrain": "day",
+    "seed": 200009699,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 383,
+      "tick": 21120,
+      "labels": 48,
+      "wins": 48
+     }
+    ],
+    "rows": 84,
+    "wins": 84,
+    "seconds": 1103.7681467500006
+   },
+   {
+    "game": 1902,
+    "terrain": "day",
+    "seed": 200022893,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 13
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 20,
+      "wins": 14
+     },
+     {
+      "decision": 517,
+      "tick": 28080,
+      "labels": 16,
+      "wins": 16
+     }
+    ],
+    "rows": 52,
+    "wins": 43,
+    "seconds": 576.2300239999968
+   },
+   {
+    "game": 2902,
+    "terrain": "day",
+    "seed": 7807001,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 21,
+      "tick": 1140,
+      "labels": 20,
+      "wins": 18
+     },
+     {
+      "decision": 328,
+      "tick": 17294,
+      "labels": 20,
+      "wins": 14
+     }
+    ],
+    "rows": 56,
+    "wins": 48,
+    "seconds": 1387.7122594579996
+   },
+   {
+    "game": 65,
+    "terrain": "day",
+    "seed": 1970085955,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 14
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 20,
+      "wins": 19
+     },
+     {
+      "decision": 526,
+      "tick": 28278,
+      "labels": 24,
+      "wins": 19
+     }
+    ],
+    "rows": 60,
+    "wins": 52,
+    "seconds": 1356.244911707996
+   },
+   {
+    "game": 2560,
+    "terrain": "day",
+    "seed": 200019821,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 11
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 16,
+      "wins": 15
+     },
+     {
+      "decision": 302,
+      "tick": 16399,
+      "labels": 28,
+      "wins": 9
+     }
+    ],
+    "rows": 60,
+    "wins": 35,
+    "seconds": 394.22409979100485
+   },
+   {
+    "game": 1518,
+    "terrain": "day",
+    "seed": 7800767,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 15
+     },
+     {
+      "decision": 21,
+      "tick": 1140,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 533,
+      "tick": 28406,
+      "labels": 24,
+      "wins": 21
+     }
+    ],
+    "rows": 60,
+    "wins": 56,
+    "seconds": 1481.0469436670028
+   },
+   {
+    "game": 1149,
+    "terrain": "day",
+    "seed": 7800739,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 12
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 326,
+      "tick": 17496,
+      "labels": 24,
+      "wins": 17
+     }
+    ],
+    "rows": 60,
+    "wins": 49,
+    "seconds": 1480.1397138329994
+   },
+   {
+    "game": 686,
+    "terrain": "day",
+    "seed": 1970015997,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 273,
+      "tick": 14760,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 56,
+    "wins": 56,
+    "seconds": 1054.9568388339976
+   },
+   {
+    "game": 3637,
+    "terrain": "night",
+    "seed": 1970007002,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 26
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 17
+     },
+     {
+      "decision": 636,
+      "tick": 32220,
+      "labels": 24,
+      "wins": 23
+     }
+    ],
+    "rows": 76,
+    "wins": 66,
+    "seconds": 2736.2211978330015
+   },
+   {
+    "game": 3041,
+    "terrain": "night",
+    "seed": 1970007431,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 5
+     },
+     {
+      "decision": 3,
+      "tick": 60,
+      "labels": 24,
+      "wins": 2
+     },
+     {
+      "decision": 412,
+      "tick": 23498,
+      "labels": 16,
+      "wins": 0
+     }
+    ],
+    "rows": 68,
+    "wins": 7,
+    "seconds": 1194.563767832995
+   },
+   {
+    "game": 503,
+    "terrain": "night",
+    "seed": 1970005533,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 28
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 752,
+      "tick": 40080,
+      "labels": 44,
+      "wins": 44
+     }
+    ],
+    "rows": 96,
+    "wins": 96,
+    "seconds": 5065.459448665999
+   },
+   {
+    "game": 1027,
+    "terrain": "night",
+    "seed": 1970078831,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 28
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 465,
+      "tick": 26013,
+      "labels": 48,
+      "wins": 48
+     }
+    ],
+    "rows": 96,
+    "wins": 96,
+    "seconds": 2963.1301049169997
+   },
+   {
+    "game": 1061,
+    "terrain": "night",
+    "seed": 200019007,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 22
+     },
+     {
+      "decision": 3,
+      "tick": 60,
+      "labels": 24,
+      "wins": 21
+     },
+     {
+      "decision": 317,
+      "tick": 18338,
+      "labels": 28,
+      "wins": 4
+     }
+    ],
+    "rows": 80,
+    "wins": 47,
+    "seconds": 987.5408646250071
+   },
+   {
+    "game": 2553,
+    "terrain": "night",
+    "seed": 200005288,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 7,
+      "tick": 300,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 654,
+      "tick": 33120,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 64,
+    "wins": 64,
+    "seconds": 2571.292642166998
+   },
+   {
+    "game": 3697,
+    "terrain": "night",
+    "seed": 1970020727,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 17
+     },
+     {
+      "decision": 11,
+      "tick": 540,
+      "labels": 16,
+      "wins": 14
+     },
+     {
+      "decision": 730,
+      "tick": 36720,
+      "labels": 24,
+      "wins": 8
+     }
+    ],
+    "rows": 64,
+    "wins": 39,
+    "seconds": 3313.9793276670025
+   },
+   {
+    "game": 732,
+    "terrain": "night",
+    "seed": 6879791,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 11,
+      "tick": 540,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 536,
+      "tick": 28080,
+      "labels": 24,
+      "wins": 19
+     }
+    ],
+    "rows": 64,
+    "wins": 59,
+    "seconds": 2063.212440083
+   },
+   {
+    "game": 3057,
+    "terrain": "night",
+    "seed": 7251702,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 634,
+      "tick": 32100,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 72,
+    "wins": 63,
+    "seconds": 4109.813859083995
+   },
+   {
+    "game": 1391,
+    "terrain": "fog",
+    "seed": 49500049,
+    "roots": [
+     {
+      "decision": 81,
+      "tick": 4200,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 460,
+      "tick": 22560,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 44,
+    "wins": 44,
+    "seconds": 1727.2771544579955
+   },
+   {
+    "game": 3647,
+    "terrain": "night",
+    "seed": 200018857,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 3,
+      "tick": 60,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 360,
+      "tick": 19921,
+      "labels": 32,
+      "wins": 32
+     }
+    ],
+    "rows": 72,
+    "wins": 72,
+    "seconds": 1602.017695208
+   },
+   {
+    "game": 3579,
+    "terrain": "night",
+    "seed": 200018808,
+    "roots": [
+     {
+      "decision": 3,
+      "tick": 60,
+      "labels": 16,
+      "wins": 15
+     },
+     {
+      "decision": 488,
+      "tick": 27360,
+      "labels": 16,
+      "wins": 14
+     }
+    ],
+    "rows": 32,
+    "wins": 29,
+    "seconds": 619.7298822079974
+   },
+   {
+    "game": 1414,
+    "terrain": "pool",
+    "seed": 1970020605,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 21,
+      "tick": 1140,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 517,
+      "tick": 27900,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 84,
+    "wins": 84,
+    "seconds": 3334.4484086670054
+   },
+   {
+    "game": 1857,
+    "terrain": "pool",
+    "seed": 1970000091,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 536,
+      "tick": 28741,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 72,
+    "seconds": 2158.6849619169952
+   },
+   {
+    "game": 1456,
+    "terrain": "pool",
+    "seed": 1970078907,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 20,
+      "tick": 1080,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 218,
+      "tick": 11515,
+      "labels": 20,
+      "wins": 15
+     }
+    ],
+    "rows": 68,
+    "wins": 57,
+    "seconds": 4512.059992124996
+   },
+   {
+    "game": 3470,
+    "terrain": "pool",
+    "seed": 1970084133,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 4
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 1
+     },
+     {
+      "decision": 715,
+      "tick": 37920,
+      "labels": 28,
+      "wins": 0
+     }
+    ],
+    "rows": 76,
+    "wins": 5,
+    "seconds": 3901.764256916991
+   },
+   {
+    "game": 2363,
+    "terrain": "pool",
+    "seed": 200020366,
+    "roots": [
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 20,
+      "wins": 17
+     },
+     {
+      "decision": 11,
+      "tick": 480,
+      "labels": 16,
+      "wins": 13
+     },
+     {
+      "decision": 842,
+      "tick": 42194,
+      "labels": 24,
+      "wins": 22
+     }
+    ],
+    "rows": 60,
+    "wins": 52,
+    "seconds": 4371.447820417001
+   },
+   {
+    "game": 3364,
+    "terrain": "pool",
+    "seed": 1970017656,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 748,
+      "tick": 38487,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 75,
+    "seconds": 8859.796595833002
+   },
+   {
+    "game": 3853,
+    "terrain": "pool",
+    "seed": 210201752,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 18,
+      "tick": 960,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 850,
+      "tick": 43740,
+      "labels": 20,
+      "wins": 17
+     }
+    ],
+    "rows": 68,
+    "wins": 64,
+    "seconds": 8073.865054624999
+   },
+   {
+    "game": 569,
+    "terrain": "pool",
+    "seed": 1970001631,
+    "roots": [
+     {
+      "decision": 11,
+      "tick": 600,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 363,
+      "tick": 19033,
+      "labels": 36,
+      "wins": 35
+     }
+    ],
+    "rows": 76,
+    "wins": 75,
+    "seconds": 2926.2774825420056
+   },
+   {
+    "game": 3989,
+    "terrain": "pool",
+    "seed": 1970083986,
+    "roots": [
+     {
+      "decision": 11,
+      "tick": 600,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 12,
+      "tick": 600,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 377,
+      "tick": 19801,
+      "labels": 36,
+      "wins": 19
+     }
+    ],
+    "rows": 72,
+    "wins": 55,
+    "seconds": 2474.162356249988
+   },
+   {
+    "game": 3306,
+    "terrain": "pool",
+    "seed": 1970014179,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 2
+     },
+     {
+      "decision": 18,
+      "tick": 960,
+      "labels": 20,
+      "wins": 5
+     },
+     {
+      "decision": 569,
+      "tick": 30088,
+      "labels": 24,
+      "wins": 0
+     }
+    ],
+    "rows": 68,
+    "wins": 7,
+    "seconds": 2687.2284067919973
+   },
+   {
+    "game": 3705,
+    "terrain": "pool",
+    "seed": 210301516,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 586,
+      "tick": 30240,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 72,
+    "seconds": 6332.769820582995
+   },
+   {
+    "game": 2808,
+    "terrain": "pool",
+    "seed": 2061284,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 18,
+      "tick": 960,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 718,
+      "tick": 37134,
+      "labels": 24,
+      "wins": 22
+     }
+    ],
+    "rows": 72,
+    "wins": 64,
+    "seconds": 8756.769179083
+   },
+   {
+    "game": 2597,
+    "terrain": "pool",
+    "seed": 1970005659,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 17,
+      "tick": 900,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 904,
+      "tick": 48308,
+      "labels": 48,
+      "wins": 44
+     }
+    ],
+    "rows": 96,
+    "wins": 88,
+    "seconds": 10060.072375292002
+   },
+   {
+    "game": 1913,
+    "terrain": "pool",
+    "seed": 210401780,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 21
+     },
+     {
+      "decision": 17,
+      "tick": 900,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 486,
+      "tick": 24780,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 71,
+    "seconds": 6307.365731083002
+   },
+   {
+    "game": 3922,
+    "terrain": "pool",
+    "seed": 1970075423,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 827,
+      "tick": 43976,
+      "labels": 48,
+      "wins": 47
+     }
+    ],
+    "rows": 96,
+    "wins": 86,
+    "seconds": 9269.490153916006
+   },
+   {
+    "game": 3827,
+    "terrain": "pool",
+    "seed": 210401601,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 18,
+      "tick": 960,
+      "labels": 24,
+      "wins": 21
+     },
+     {
+      "decision": 608,
+      "tick": 31200,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 69,
+    "seconds": 5638.723686833997
+   },
+   {
+    "game": 852,
+    "terrain": "pool",
+    "seed": 210501234,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 985,
+      "tick": 50622,
+      "labels": 28,
+      "wins": 10
+     }
+    ],
+    "rows": 76,
+    "wins": 52,
+    "seconds": 7539.100647374988
+   },
+   {
+    "game": 2416,
+    "terrain": "pool",
+    "seed": 1970000093,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 23,
+      "tick": 1260,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 502,
+      "tick": 26735,
+      "labels": 32,
+      "wins": 32
+     }
+    ],
+    "rows": 80,
+    "wins": 80,
+    "seconds": 2173.3782437920017
+   },
+   {
+    "game": 3253,
+    "terrain": "pool",
+    "seed": 1970083089,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 269,
+      "tick": 15688,
+      "labels": 28,
+      "wins": 27
+     }
+    ],
+    "rows": 52,
+    "wins": 51,
+    "seconds": 912.8666092919884
+   },
+   {
+    "game": 1178,
+    "terrain": "pool",
+    "seed": 1970021431,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 0
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 24,
+      "wins": 0
+     },
+     {
+      "decision": 263,
+      "tick": 13806,
+      "labels": 24,
+      "wins": 0
+     }
+    ],
+    "rows": 72,
+    "wins": 0,
+    "seconds": 786.1173389160103
+   },
+   {
+    "game": 982,
+    "terrain": "pool",
+    "seed": 1970083422,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 20,
+      "tick": 1080,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 692,
+      "tick": 35414,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 74,
+    "seconds": 6001.127956749988
+   },
+   {
+    "game": 3976,
+    "terrain": "pool",
+    "seed": 1970076668,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 482,
+      "tick": 25020,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 70,
+    "seconds": 4886.392099124991
+   },
+   {
+    "game": 298,
+    "terrain": "pool",
+    "seed": 210101408,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 646,
+      "tick": 33240,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 71,
+    "seconds": 4418.415029083
+   },
+   {
+    "game": 3506,
+    "terrain": "pool",
+    "seed": 210201762,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 809,
+      "tick": 41627,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 68,
+    "wins": 66,
+    "seconds": 6196.881705624997
+   },
+   {
+    "game": 859,
+    "terrain": "pool",
+    "seed": 210202170,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 1013,
+      "tick": 54669,
+      "labels": 48,
+      "wins": 48
+     }
+    ],
+    "rows": 96,
+    "wins": 95,
+    "seconds": 7842.950909833002
+   },
+   {
+    "game": 1789,
+    "terrain": "pool",
+    "seed": 1970083980,
+    "roots": [
+     {
+      "decision": 5,
+      "tick": 240,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 20,
+      "wins": 19
+     },
+     {
+      "decision": 164,
+      "tick": 8653,
+      "labels": 32,
+      "wins": 21
+     }
+    ],
+    "rows": 68,
+    "wins": 56,
+    "seconds": 2100.9860622080014
+   },
+   {
+    "game": 1551,
+    "terrain": "pool",
+    "seed": 1970015693,
+    "roots": [
+     {
+      "decision": 5,
+      "tick": 240,
+      "labels": 16,
+      "wins": 15
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 348,
+      "tick": 18253,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 76,
+    "wins": 74,
+    "seconds": 2085.3435811669915
+   },
+   {
+    "game": 3907,
+    "terrain": "pool",
+    "seed": 200037180,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 0
+     },
+     {
+      "decision": 13,
+      "tick": 660,
+      "labels": 16,
+      "wins": 0
+     },
+     {
+      "decision": 327,
+      "tick": 17568,
+      "labels": 20,
+      "wins": 0
+     }
+    ],
+    "rows": 60,
+    "wins": 0,
+    "seconds": 767.7627319589956
+   },
+   {
+    "game": 273,
+    "terrain": "pool",
+    "seed": 210301444,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 626,
+      "tick": 32157,
+      "labels": 24,
+      "wins": 19
+     }
+    ],
+    "rows": 72,
+    "wins": 63,
+    "seconds": 4801.54622774999
+   },
+   {
+    "game": 1556,
+    "terrain": "pool",
+    "seed": 1970006020,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 619,
+      "tick": 31920,
+      "labels": 24,
+      "wins": 14
+     }
+    ],
+    "rows": 72,
+    "wins": 56,
+    "seconds": 7237.77643025
+   },
+   {
+    "game": 3396,
+    "terrain": "pool",
+    "seed": 1970075499,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 935,
+      "tick": 51330,
+      "labels": 52,
+      "wins": 35
+     }
+    ],
+    "rows": 100,
+    "wins": 77,
+    "seconds": 7844.143793874988
+   },
+   {
+    "game": 3863,
+    "terrain": "pool",
+    "seed": 1970083091,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 268,
+      "tick": 15567,
+      "labels": 32,
+      "wins": 23
+     }
+    ],
+    "rows": 56,
+    "wins": 46,
+    "seconds": 825.1280615830037
+   },
+   {
+    "game": 3508,
+    "terrain": "pool",
+    "seed": 1970082311,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 488,
+      "tick": 25215,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 76,
+    "seconds": 3292.209547374994
+   },
+   {
+    "game": 943,
+    "terrain": "pool",
+    "seed": 1970023413,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 654,
+      "tick": 33477,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 68,
+    "wins": 67,
+    "seconds": 5171.083688541999
+   },
+   {
+    "game": 1496,
+    "terrain": "pool",
+    "seed": 5305180,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 18,
+      "tick": 960,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 691,
+      "tick": 35340,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 76,
+    "seconds": 5798.886953416004
+   },
+   {
+    "game": 2795,
+    "terrain": "pool",
+    "seed": 210101820,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 513,
+      "tick": 26340,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 74,
+    "seconds": 5738.868059332992
+   },
+   {
+    "game": 1734,
+    "terrain": "pool",
+    "seed": 2020629,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 611,
+      "tick": 31369,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 76,
+    "wins": 75,
+    "seconds": 5801.5761145
+   },
+   {
+    "game": 2511,
+    "terrain": "pool",
+    "seed": 210201944,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 941,
+      "tick": 51140,
+      "labels": 52,
+      "wins": 52
+     }
+    ],
+    "rows": 100,
+    "wins": 99,
+    "seconds": 9216.989426208005
+   },
+   {
+    "game": 1396,
+    "terrain": "pool",
+    "seed": 1970021136,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 777,
+      "tick": 40099,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 71,
+    "seconds": 7587.047109624997
+   },
+   {
+    "game": 2954,
+    "terrain": "pool",
+    "seed": 200020014,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 14,
+      "tick": 720,
+      "labels": 16,
+      "wins": 16
+     },
+     {
+      "decision": 555,
+      "tick": 29229,
+      "labels": 28,
+      "wins": 28
+     }
+    ],
+    "rows": 68,
+    "wins": 68,
+    "seconds": 1794.410276833005
+   },
+   {
+    "game": 3286,
+    "terrain": "pool",
+    "seed": 200020197,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 22,
+      "tick": 1080,
+      "labels": 24,
+      "wins": 21
+     },
+     {
+      "decision": 481,
+      "tick": 24960,
+      "labels": 24,
+      "wins": 24
+     }
+    ],
+    "rows": 72,
+    "wins": 69,
+    "seconds": 2224.7266828339925
+   },
+   {
+    "game": 2852,
+    "terrain": "pool",
+    "seed": 1970078901,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 21
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 220,
+      "tick": 11622,
+      "labels": 24,
+      "wins": 3
+     }
+    ],
+    "rows": 72,
+    "wins": 43,
+    "seconds": 2826.3502184579993
+   },
+   {
+    "game": 1822,
+    "terrain": "pool",
+    "seed": 210101285,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 678,
+      "tick": 34549,
+      "labels": 24,
+      "wins": 23
+     }
+    ],
+    "rows": 72,
+    "wins": 70,
+    "seconds": 4404.954138250003
+   },
+   {
+    "game": 1422,
+    "terrain": "pool",
+    "seed": 1970020612,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 542,
+      "tick": 29280,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 84,
+    "wins": 84,
+    "seconds": 2230.197142332996
+   },
+   {
+    "game": 2460,
+    "terrain": "pool",
+    "seed": 1970015376,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 22
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 680,
+      "tick": 35264,
+      "labels": 32,
+      "wins": 31
+     }
+    ],
+    "rows": 80,
+    "wins": 77,
+    "seconds": 4710.048691417003
+   },
+   {
+    "game": 690,
+    "terrain": "pool",
+    "seed": 1970012998,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 15,
+      "tick": 780,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 768,
+      "tick": 39694,
+      "labels": 28,
+      "wins": 26
+     }
+    ],
+    "rows": 76,
+    "wins": 74,
+    "seconds": 6880.994063749997
+   },
+   {
+    "game": 3929,
+    "terrain": "pool",
+    "seed": 210201911,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 16,
+      "tick": 840,
+      "labels": 24,
+      "wins": 23
+     },
+     {
+      "decision": 825,
+      "tick": 42105,
+      "labels": 24,
+      "wins": 23
+     }
+    ],
+    "rows": 72,
+    "wins": 70,
+    "seconds": 6299.080284625001
+   },
+   {
+    "game": 1471,
+    "terrain": "fog",
+    "seed": 49300245,
+    "roots": [
+     {
+      "decision": 70,
+      "tick": 3600,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 506,
+      "tick": 26100,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 60,
+    "wins": 60,
+    "seconds": 1305.7760791659966
+   },
+   {
+    "game": 421,
+    "terrain": "fog",
+    "seed": 200009776,
+    "roots": [
+     {
+      "decision": 99,
+      "tick": 5374,
+      "labels": 20,
+      "wins": 18
+     },
+     {
+      "decision": 179,
+      "tick": 9627,
+      "labels": 24,
+      "wins": 19
+     }
+    ],
+    "rows": 44,
+    "wins": 37,
+    "seconds": 2010.8762300420058
+   },
+   {
+    "game": 3954,
+    "terrain": "fog",
+    "seed": 200009963,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 497,
+      "tick": 27068,
+      "labels": 52,
+      "wins": 43
+     }
+    ],
+    "rows": 100,
+    "wins": 91,
+    "seconds": 3078.550001333002
+   },
+   {
+    "game": 3175,
+    "terrain": "fog",
+    "seed": 200038423,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 23
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 28,
+      "wins": 24
+     },
+     {
+      "decision": 145,
+      "tick": 8292,
+      "labels": 40,
+      "wins": 0
+     }
+    ],
+    "rows": 96,
+    "wins": 47,
+    "seconds": 1352.2562540829967
+   },
+   {
+    "game": 3071,
+    "terrain": "fog",
+    "seed": 200010143,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 21
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 28,
+      "wins": 23
+     },
+     {
+      "decision": 304,
+      "tick": 18659,
+      "labels": 8,
+      "wins": 8
+     }
+    ],
+    "rows": 64,
+    "wins": 52,
+    "seconds": 1187.285474749995
+   },
+   {
+    "game": 1976,
+    "terrain": "fog",
+    "seed": 200010455,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 13
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 24,
+      "wins": 16
+     },
+     {
+      "decision": 287,
+      "tick": 15180,
+      "labels": 24,
+      "wins": 4
+     }
+    ],
+    "rows": 72,
+    "wins": 33,
+    "seconds": 1938.484468458002
+   },
+   {
+    "game": 858,
+    "terrain": "fog",
+    "seed": 200010483,
+    "roots": [
+     {
+      "decision": 32,
+      "tick": 1800,
+      "labels": 28,
+      "wins": 21
+     },
+     {
+      "decision": 90,
+      "tick": 4920,
+      "labels": 28,
+      "wins": 26
+     },
+     {
+      "decision": 465,
+      "tick": 25500,
+      "labels": 40,
+      "wins": 40
+     }
+    ],
+    "rows": 96,
+    "wins": 87,
+    "seconds": 2591.8226490829984
+   },
+   {
+    "game": 817,
+    "terrain": "fog",
+    "seed": 200041216,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 160,
+      "tick": 9235,
+      "labels": 36,
+      "wins": 33
+     }
+    ],
+    "rows": 84,
+    "wins": 81,
+    "seconds": 1923.6803359999903
+   },
+   {
+    "game": 2120,
+    "terrain": "fog",
+    "seed": 200020638,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 32,
+      "wins": 28
+     },
+     {
+      "decision": 2,
+      "tick": 0,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 353,
+      "tick": 18840,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 92,
+    "wins": 84,
+    "seconds": 1508.9948923330085
+   },
+   {
+    "game": 3486,
+    "terrain": "fog",
+    "seed": 200020597,
+    "roots": [
+     {
+      "decision": 34,
+      "tick": 1860,
+      "labels": 24,
+      "wins": 6
+     },
+     {
+      "decision": 221,
+      "tick": 12931,
+      "labels": 36,
+      "wins": 1
+     }
+    ],
+    "rows": 60,
+    "wins": 7,
+    "seconds": 330.3010435000033
+   },
+   {
+    "game": 3753,
+    "terrain": "fog",
+    "seed": 49300264,
+    "roots": [
+     {
+      "decision": 103,
+      "tick": 5340,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 457,
+      "tick": 22680,
+      "labels": 20,
+      "wins": 20
+     }
+    ],
+    "rows": 44,
+    "wins": 44,
+    "seconds": 1406.1083398330084
+   },
+   {
+    "game": 1141,
+    "terrain": "roof",
+    "seed": 200013937,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 31,
+      "tick": 1740,
+      "labels": 32,
+      "wins": 32
+     },
+     {
+      "decision": 458,
+      "tick": 25763,
+      "labels": 32,
+      "wins": 32
+     }
+    ],
+    "rows": 88,
+    "wins": 88,
+    "seconds": 1661.016886583995
+   },
+   {
+    "game": 2471,
+    "terrain": "roof",
+    "seed": 200014219,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 20
+     },
+     {
+      "decision": 20,
+      "tick": 1080,
+      "labels": 20,
+      "wins": 19
+     },
+     {
+      "decision": 518,
+      "tick": 28680,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 80,
+    "wins": 75,
+    "seconds": 2267.6654827919992
+   },
+   {
+    "game": 2704,
+    "terrain": "roof",
+    "seed": 200001179,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 18
+     },
+     {
+      "decision": 53,
+      "tick": 2880,
+      "labels": 32,
+      "wins": 20
+     },
+     {
+      "decision": 643,
+      "tick": 34560,
+      "labels": 24,
+      "wins": 17
+     }
+    ],
+    "rows": 84,
+    "wins": 55,
+    "seconds": 3984.868658749998
+   },
+   {
+    "game": 1478,
+    "terrain": "roof",
+    "seed": 200014400,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 0
+     },
+     {
+      "decision": 23,
+      "tick": 1260,
+      "labels": 24,
+      "wins": 5
+     },
+     {
+      "decision": 177,
+      "tick": 9960,
+      "labels": 28,
+      "wins": 1
+     }
+    ],
+    "rows": 80,
+    "wins": 6,
+    "seconds": 1196.7556159590022
+   },
+   {
+    "game": 3066,
+    "terrain": "roof",
+    "seed": 200014543,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 24
+     },
+     {
+      "decision": 25,
+      "tick": 1380,
+      "labels": 20,
+      "wins": 20
+     },
+     {
+      "decision": 651,
+      "tick": 37140,
+      "labels": 52,
+      "wins": 52
+     }
+    ],
+    "rows": 96,
+    "wins": 96,
+    "seconds": 2593.5005908750027
+   },
+   {
+    "game": 1871,
+    "terrain": "roof",
+    "seed": 200014659,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 24,
+      "wins": 19
+     },
+     {
+      "decision": 567,
+      "tick": 31380,
+      "labels": 36,
+      "wins": 10
+     }
+    ],
+    "rows": 60,
+    "wins": 48,
+    "seconds": 1912.7861322499957
+   },
+   {
+    "game": 2061,
+    "terrain": "roof",
+    "seed": 200014631,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 24,
+      "wins": 14
+     },
+     {
+      "decision": 62,
+      "tick": 3540,
+      "labels": 40,
+      "wins": 29
+     },
+     {
+      "decision": 655,
+      "tick": 36540,
+      "labels": 52,
+      "wins": 37
+     }
+    ],
+    "rows": 114,
+    "wins": 80,
+    "seconds": 4167.47252166699
+   },
+   {
+    "game": 2239,
+    "terrain": "roof",
+    "seed": 200014038,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 28,
+      "wins": 4
+     },
+     {
+      "decision": 27,
+      "tick": 1500,
+      "labels": 36,
+      "wins": 2
+     },
+     {
+      "decision": 101,
+      "tick": 5640,
+      "labels": 28,
+      "wins": 0
+     }
+    ],
+    "rows": 92,
+    "wins": 6,
+    "seconds": 602.4284020829946
+   },
+   {
+    "game": 1202,
+    "terrain": "roof",
+    "seed": 46000872,
+    "roots": [
+     {
+      "decision": 21,
+      "tick": 1200,
+      "labels": 20,
+      "wins": 19
+     },
+     {
+      "decision": 35,
+      "tick": 1980,
+      "labels": 32,
+      "wins": 30
+     },
+     {
+      "decision": 391,
+      "tick": 21960,
+      "labels": 36,
+      "wins": 36
+     }
+    ],
+    "rows": 88,
+    "wins": 85,
+    "seconds": 1348.308475916012
+   },
+   {
+    "game": 3554,
+    "terrain": "roof",
+    "seed": 200014213,
+    "roots": [
+     {
+      "decision": 1,
+      "tick": 0,
+      "labels": 36,
+      "wins": 0
+     },
+     {
+      "decision": 19,
+      "tick": 1020,
+      "labels": 36,
+      "wins": 0
+     },
+     {
+      "decision": 300,
+      "tick": 16320,
+      "labels": 12,
+      "wins": 0
+     }
+    ],
+    "rows": 84,
+    "wins": 0,
+    "seconds": 1548.3592011250148
+   },
+   {
+    "game": 3701,
+    "terrain": "roof",
+    "seed": 46000848,
+    "roots": [
+     {
+      "decision": 21,
+      "tick": 1200,
+      "labels": 32,
+      "wins": 26
+     },
+     {
+      "decision": 75,
+      "tick": 4380,
+      "labels": 36,
+      "wins": 23
+     },
+     {
+      "decision": 299,
+      "tick": 17520,
+      "labels": 36,
+      "wins": 17
+     }
+    ],
+    "rows": 104,
+    "wins": 66,
+    "seconds": 1469.8749453340133
+   }
+  ],
+  "diagnostic_games": [
+   {
+    "game": 9000,
+    "terrain": "pool",
+    "seed": 243003000,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 51
+     }
+    ],
+    "rows": 72,
+    "wins": 51,
+    "seconds": 3799.280039874997
+   },
+   {
+    "game": 9001,
+    "terrain": "pool",
+    "seed": 243003001,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 46
+     }
+    ],
+    "rows": 72,
+    "wins": 46,
+    "seconds": 3844.606798416993
+   },
+   {
+    "game": 9002,
+    "terrain": "pool",
+    "seed": 243003002,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 56
+     }
+    ],
+    "rows": 72,
+    "wins": 56,
+    "seconds": 3813.676254500024
+   },
+   {
+    "game": 9004,
+    "terrain": "pool",
+    "seed": 244103004,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 52
+     }
+    ],
+    "rows": 72,
+    "wins": 52,
+    "seconds": 4010.465795750002
+   },
+   {
+    "game": 9005,
+    "terrain": "pool",
+    "seed": 244103005,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 56
+     }
+    ],
+    "rows": 72,
+    "wins": 56,
+    "seconds": 4088.543366333004
+   },
+   {
+    "game": 9006,
+    "terrain": "pool",
+    "seed": 244103017,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 58
+     }
+    ],
+    "rows": 72,
+    "wins": 58,
+    "seconds": 4046.1476785830164
+   },
+   {
+    "game": 9009,
+    "terrain": "pool",
+    "seed": 244103029,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 53
+     }
+    ],
+    "rows": 72,
+    "wins": 53,
+    "seconds": 4110.595665041998
+   },
+   {
+    "game": 9008,
+    "terrain": "pool",
+    "seed": 244103028,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 54
+     }
+    ],
+    "rows": 72,
+    "wins": 54,
+    "seconds": 4084.129577541986
+   },
+   {
+    "game": 9007,
+    "terrain": "pool",
+    "seed": 244103019,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 60
+     }
+    ],
+    "rows": 72,
+    "wins": 60,
+    "seconds": 4266.909659249999
+   },
+   {
+    "game": 9010,
+    "terrain": "pool",
+    "seed": 244103030,
+    "roots": [
+     {
+      "decision": 0,
+      "tick": 0,
+      "labels": 72,
+      "wins": 48
+     }
+    ],
+    "rows": 72,
+    "wins": 48,
+    "seconds": 3899.5236030420056
+   }
+  ]
+ },
+ "episode_data": {
+  "games": 3862,
+  "failed": 0,
+  "channels": 92,
+  "scalars": 119,
+  "per_game": 96,
+  "failed_archives": [],
+  "failures": [],
+  "by_terrain": {
+   "day": {
+    "games": 1199,
+    "wins": 599
+   },
+   "night": {
+    "games": 999,
+    "wins": 499
+   },
+   "pool": {
+    "games": 742,
+    "wins": 361
+   },
+   "fog": {
+    "games": 581,
+    "wins": 295
+   },
+   "roof": {
+    "games": 341,
+    "wins": 169
+   }
+  }
+ },
+ "offline": {
+  "task": "task246",
+  "device": "mps",
+  "training": {
+   "finetune": {
+    "encoder": 2,
+    "width": 64,
+    "best_epoch": 0,
+    "best_validation": 0.46373912465075534,
+    "history": [
+     {
+      "epoch": 0,
+      "fit": 0.5049879047812709,
+      "validation": 0.46373912465075534
+     },
+     {
+      "epoch": 1,
+      "fit": 0.36442346403584946,
+      "validation": 0.47967997195276685
+     },
+     {
+      "epoch": 2,
+      "fit": 0.3234928137051603,
+      "validation": 0.5023240946380426
+     },
+     {
+      "epoch": 3,
+      "fit": 0.2968801754501569,
+      "validation": 0.5196610247402349
+     },
+     {
+      "epoch": 4,
+      "fit": 0.2771181885128155,
+      "validation": 0.5507098570970512
+     },
+     {
+      "epoch": 5,
+      "fit": 0.2579926214421661,
+      "validation": 0.5539999436361013
+     },
+     {
+      "epoch": 6,
+      "fit": 0.24264400930338678,
+      "validation": 0.5662493333328882
+     },
+     {
+      "epoch": 7,
+      "fit": 0.23025060152555618,
+      "validation": 0.5795510541379648
+     },
+     {
+      "epoch": 8,
+      "fit": 0.22043815134943082,
+      "validation": 0.607107738839046
+     },
+     {
+      "epoch": 9,
+      "fit": 0.2080430051555688,
+      "validation": 0.6756667435383951
+     },
+     {
+      "epoch": 10,
+      "fit": 0.20003561557020438,
+      "validation": 0.6759630108738338
+     },
+     {
+      "epoch": 11,
+      "fit": 0.1927120342536974,
+      "validation": 0.6415082126431212
+     },
+     {
+      "epoch": 12,
+      "fit": 0.18437072300783297,
+      "validation": 0.6910452563660048
+     },
+     {
+      "epoch": 13,
+      "fit": 0.17774417022118102,
+      "validation": 0.7286617460057296
+     },
+     {
+      "epoch": 14,
+      "fit": 0.17104943236260592,
+      "validation": 0.752791956858742
+     },
+     {
+      "epoch": 15,
+      "fit": 0.16950009786729617,
+      "validation": 0.7148186361135975
+     }
+    ],
+    "all_holdout": {
+     "n": 56370,
+     "wins": 28509,
+     "log_loss": 0.5411193370819092,
+     "brier": 0.1780676394701004,
+     "auc": 0.8271935781923192,
+     "accuracy": 0.7383182543906334,
+     "mean_prediction": 0.5811740756034851,
+     "actual": 0.5057477355003357
+    },
+    "by_terrain": {
+     "day": {
+      "n": 17304,
+      "wins": 8635,
+      "log_loss": 0.4023759961128235,
+      "brier": 0.12717700004577637,
+      "auc": 0.9055955225987106,
+      "accuracy": 0.8174410540915396,
+      "mean_prediction": 0.5412640571594238,
+      "actual": 0.4990175664424896
+     },
+     "night": {
+      "n": 14440,
+      "wins": 7226,
+      "log_loss": 0.5650374293327332,
+      "brier": 0.1855917125940323,
+      "auc": 0.8034045726046573,
+      "accuracy": 0.7263157894736842,
+      "mean_prediction": 0.5549019575119019,
+      "actual": 0.5004155039787292
+     },
+     "pool": {
+      "n": 11256,
+      "wins": 5768,
+      "log_loss": 0.7129852175712585,
+      "brier": 0.23435243964195251,
+      "auc": 0.7283493863044525,
+      "accuracy": 0.665955934612651,
+      "mean_prediction": 0.6396195292472839,
+      "actual": 0.5124378204345703
+     },
+     "fog": {
+      "n": 8432,
+      "wins": 4389,
+      "log_loss": 0.6154815554618835,
+      "brier": 0.21451705694198608,
+      "auc": 0.7796009203184698,
+      "accuracy": 0.6723197343453511,
+      "mean_prediction": 0.6236358284950256,
+      "actual": 0.5205170512199402
+     },
+     "roof": {
+      "n": 4938,
+      "wins": 2491,
+      "log_loss": 0.43862655758857727,
+      "brier": 0.1438595950603485,
+      "auc": 0.8953265675516453,
+      "accuracy": 0.7737950587282301,
+      "mean_prediction": 0.5921246409416199,
+      "actual": 0.5044552683830261
+     }
+    }
+   },
+   "scratch": {
+    "encoder": 2,
+    "width": 64,
+    "best_epoch": 2,
+    "best_validation": 0.4612834799392245,
+    "history": [
+     {
+      "epoch": 0,
+      "fit": 0.5406822344060936,
+      "validation": 0.4988889383557626
+     },
+     {
+      "epoch": 1,
+      "fit": 0.41460540322083944,
+      "validation": 0.4895247880962945
+     },
+     {
+      "epoch": 2,
+      "fit": 0.38228629178973533,
+      "validation": 0.4612834799392245
+     },
+     {
+      "epoch": 3,
+      "fit": 0.36338000852912034,
+      "validation": 0.47368573873469
+     },
+     {
+      "epoch": 4,
+      "fit": 0.35010655032912114,
+      "validation": 0.49192420642460194
+     },
+     {
+      "epoch": 5,
+      "fit": 0.3371267584356847,
+      "validation": 0.5050406835966705
+     },
+     {
+      "epoch": 6,
+      "fit": 0.3252926729068984,
+      "validation": 0.49741667623146746
+     },
+     {
+      "epoch": 7,
+      "fit": 0.316989835809342,
+      "validation": 0.5371555185354263
+     },
+     {
+      "epoch": 8,
+      "fit": 0.3095170359379912,
+      "validation": 0.5372064360892319
+     },
+     {
+      "epoch": 9,
+      "fit": 0.3003437617170859,
+      "validation": 0.5825311216961919
+     },
+     {
+      "epoch": 10,
+      "fit": 0.2942914089084454,
+      "validation": 0.5129274089580694
+     },
+     {
+      "epoch": 11,
+      "fit": 0.28808260396138063,
+      "validation": 0.5385866676173414
+     },
+     {
+      "epoch": 12,
+      "fit": 0.28295655422659005,
+      "validation": 0.566206454749638
+     },
+     {
+      "epoch": 13,
+      "fit": 0.2759251420274606,
+      "validation": 0.6346093296459155
+     },
+     {
+      "epoch": 14,
+      "fit": 0.271472363098007,
+      "validation": 0.5565257760485781
+     },
+     {
+      "epoch": 15,
+      "fit": 0.26660146022794434,
+      "validation": 0.5675724470628541
+     }
+    ],
+    "all_holdout": {
+     "n": 56370,
+     "wins": 28509,
+     "log_loss": 0.5118052363395691,
+     "brier": 0.16896876692771912,
+     "auc": 0.8391001216988649,
+     "accuracy": 0.7535213766187688,
+     "mean_prediction": 0.56585693359375,
+     "actual": 0.5057477355003357
+    },
+    "by_terrain": {
+     "day": {
+      "n": 17304,
+      "wins": 8635,
+      "log_loss": 0.40359023213386536,
+      "brier": 0.12786777317523956,
+      "auc": 0.9042372227565386,
+      "accuracy": 0.8174410540915396,
+      "mean_prediction": 0.5383472442626953,
+      "actual": 0.4990175664424896
+     },
+     "night": {
+      "n": 14440,
+      "wins": 7226,
+      "log_loss": 0.5488510131835938,
+      "brier": 0.1819145232439041,
+      "auc": 0.805600411706763,
+      "accuracy": 0.7272160664819944,
+      "mean_prediction": 0.5412706732749939,
+      "actual": 0.5004155039787292
+     },
+     "pool": {
+      "n": 11256,
+      "wins": 5768,
+      "log_loss": 0.7207284569740295,
+      "brier": 0.24560317397117615,
+      "auc": 0.7052200703691424,
+      "accuracy": 0.6475657427149965,
+      "mean_prediction": 0.6496902108192444,
+      "actual": 0.5124378204345703
+     },
+     "fog": {
+      "n": 8432,
+      "wins": 4389,
+      "log_loss": 0.47151508927345276,
+      "brier": 0.15841372311115265,
+      "auc": 0.8554029318117996,
+      "accuracy": 0.7588946869070209,
+      "mean_prediction": 0.5562551617622375,
+      "actual": 0.5205170512199402
+     },
+     "roof": {
+      "n": 4938,
+      "wins": 2491,
+      "log_loss": 0.3752515912055969,
+      "brier": 0.11847831308841705,
+      "auc": 0.9179716370023215,
+      "accuracy": 0.8388011340623734,
+      "mean_prediction": 0.559455394744873,
+      "actual": 0.5044552683830261
+     }
+    }
+   }
+  },
+  "episode": {
+   "all": {
+    "finetune": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 0.5594087243080139,
+     "brier": 0.18595582246780396,
+     "auc": 0.8186591030785085,
+     "accuracy": 0.7256343329959694,
+     "mean_prediction": 0.5954210162162781,
+     "actual": 0.4994406860917275
+    },
+    "scratch": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 0.5352011322975159,
+     "brier": 0.17976398766040802,
+     "auc": 0.8236213831758892,
+     "accuracy": 0.732647951845736,
+     "mean_prediction": 0.5765496492385864,
+     "actual": 0.4994406860917275
+    },
+    "production": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 1.0399898290634155,
+     "brier": 0.27680492401123047,
+     "auc": 0.7156091957272286,
+     "accuracy": 0.6478275537562812,
+     "mean_prediction": 0.6589927673339844,
+     "actual": 0.4994406860917275
+    },
+    "task244": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 0.5158866047859192,
+     "brier": 0.1702147275209427,
+     "auc": 0.8557948386845075,
+     "accuracy": 0.7653012304905982,
+     "mean_prediction": 0.5060303211212158,
+     "actual": 0.4994406860917275
+    },
+    "finetune-t3": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 0.5486368536949158,
+     "brier": 0.18467023968696594,
+     "auc": 0.8186591056007152,
+     "accuracy": 0.7256343329959694,
+     "mean_prediction": 0.5375946760177612,
+     "actual": 0.4994406860917275
+    },
+    "scratch-t3": {
+     "n": 56319,
+     "wins": 28128,
+     "log_loss": 0.551987886428833,
+     "brier": 0.18488241732120514,
+     "auc": 0.8236213800231309,
+     "accuracy": 0.732647951845736,
+     "mean_prediction": 0.5310224294662476,
+     "actual": 0.4994406860917275
+    }
+   },
+   "day": {
+    "finetune": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.4204675853252411,
+     "brier": 0.13692428171634674,
+     "auc": 0.8908106409408493,
+     "accuracy": 0.8000115101289135,
+     "mean_prediction": 0.5519561767578125,
+     "actual": 0.5027624309392266
+    },
+    "scratch": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.4109741747379303,
+     "brier": 0.13452379405498505,
+     "auc": 0.8936432816315629,
+     "accuracy": 0.8001266114180479,
+     "mean_prediction": 0.5489339828491211,
+     "actual": 0.5027624309392266
+    },
+    "production": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.9228134751319885,
+     "brier": 0.26153355836868286,
+     "auc": 0.7938452714819902,
+     "accuracy": 0.6603360957642725,
+     "mean_prediction": 0.7613836526870728,
+     "actual": 0.5027624309392266
+    },
+    "task244": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.45127320289611816,
+     "brier": 0.1423264890909195,
+     "auc": 0.9137847208973511,
+     "accuracy": 0.8225138121546961,
+     "mean_prediction": 0.4957292675971985,
+     "actual": 0.5027624309392266
+    },
+    "finetune-t3": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.48336416482925415,
+     "brier": 0.1558203101158142,
+     "auc": 0.8908106343164937,
+     "accuracy": 0.8000115101289135,
+     "mean_prediction": 0.5110908150672913,
+     "actual": 0.5027624309392266
+    },
+    "scratch-t3": {
+     "n": 17376,
+     "wins": 8736,
+     "log_loss": 0.48575642704963684,
+     "brier": 0.15496908128261566,
+     "auc": 0.8936432750072073,
+     "accuracy": 0.8001266114180479,
+     "mean_prediction": 0.5135721564292908,
+     "actual": 0.5027624309392266
+    }
+   },
+   "night": {
+    "finetune": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 0.5845966935157776,
+     "brier": 0.1956411749124527,
+     "auc": 0.7881839649579678,
+     "accuracy": 0.7163355408388521,
+     "mean_prediction": 0.5723375082015991,
+     "actual": 0.5033112582781457
+    },
+    "scratch": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 0.5726969242095947,
+     "brier": 0.19185848534107208,
+     "auc": 0.792840483369883,
+     "accuracy": 0.7150938189845475,
+     "mean_prediction": 0.5567723512649536,
+     "actual": 0.5033112582781457
+    },
+    "production": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 1.2010794878005981,
+     "brier": 0.3212924897670746,
+     "auc": 0.6814787783260234,
+     "accuracy": 0.6003725165562914,
+     "mean_prediction": 0.7872569561004639,
+     "actual": 0.5033112582781457
+    },
+    "task244": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 0.5337443351745605,
+     "brier": 0.1770707666873932,
+     "auc": 0.8434938665021929,
+     "accuracy": 0.7584850993377483,
+     "mean_prediction": 0.5142521262168884,
+     "actual": 0.5033112582781457
+    },
+    "finetune-t3": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 0.5708720684051514,
+     "brier": 0.19463784992694855,
+     "auc": 0.7881839744761209,
+     "accuracy": 0.7163355408388521,
+     "mean_prediction": 0.5293376445770264,
+     "actual": 0.5033112582781457
+    },
+    "scratch-t3": {
+     "n": 14496,
+     "wins": 7296,
+     "log_loss": 0.5816173553466797,
+     "brier": 0.19742609560489655,
+     "auc": 0.792840464333577,
+     "accuracy": 0.7150938189845475,
+     "mean_prediction": 0.5251116156578064,
+     "actual": 0.5033112582781457
+    }
+   },
+   "pool": {
+    "finetune": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 0.7216689586639404,
+     "brier": 0.23970994353294373,
+     "auc": 0.7334394082255747,
+     "accuracy": 0.6578171091445427,
+     "mean_prediction": 0.6492528319358826,
+     "actual": 0.48672566371681414
+    },
+    "scratch": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 0.7050809264183044,
+     "brier": 0.24250483512878418,
+     "auc": 0.7217184472690265,
+     "accuracy": 0.6448193215339233,
+     "mean_prediction": 0.6614157557487488,
+     "actual": 0.48672566371681414
+    },
+    "production": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 1.187447190284729,
+     "brier": 0.2805047631263733,
+     "auc": 0.7207950497703326,
+     "accuracy": 0.6603060471976401,
+     "mean_prediction": 0.6770131587982178,
+     "actual": 0.48672566371681414
+    },
+    "task244": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 0.6009387969970703,
+     "brier": 0.20823855698108673,
+     "auc": 0.7405763249412226,
+     "accuracy": 0.6673119469026548,
+     "mean_prediction": 0.4930880069732666,
+     "actual": 0.48672566371681414
+    },
+    "finetune-t3": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 0.6059094071388245,
+     "brier": 0.2102484405040741,
+     "auc": 0.7334393401961424,
+     "accuracy": 0.6578171091445427,
+     "mean_prediction": 0.5632755756378174,
+     "actual": 0.48672566371681414
+    },
+    "scratch-t3": {
+     "n": 10848,
+     "wins": 5280,
+     "log_loss": 0.6187942028045654,
+     "brier": 0.2157265543937683,
+     "auc": 0.7217184132543103,
+     "accuracy": 0.6448193215339233,
+     "mean_prediction": 0.563581645488739,
+     "actual": 0.48672566371681414
+    }
+   },
+   "fog": {
+    "finetune": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.5607811808586121,
+     "brier": 0.19438037276268005,
+     "auc": 0.8315065805625701,
+     "accuracy": 0.6945224719101124,
+     "mean_prediction": 0.6316872239112854,
+     "actual": 0.5056179775280899
+    },
+    "scratch": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.4708813726902008,
+     "brier": 0.15825413167476654,
+     "auc": 0.8614561960753367,
+     "accuracy": 0.7605337078651685,
+     "mean_prediction": 0.5717938542366028,
+     "actual": 0.5056179775280899
+    },
+    "production": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.7826464176177979,
+     "brier": 0.2472342997789383,
+     "auc": 0.751801379682239,
+     "accuracy": 0.6656132958801498,
+     "mean_prediction": 0.33990535140037537,
+     "actual": 0.5056179775280899
+    },
+    "task244": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.48503461480140686,
+     "brier": 0.15732897818088531,
+     "auc": 0.8863137122088945,
+     "accuracy": 0.7949438202247191,
+     "mean_prediction": 0.5270800590515137,
+     "actual": 0.5056179775280899
+    },
+    "finetune-t3": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.5582388043403625,
+     "brier": 0.1888299435377121,
+     "auc": 0.8315065531618266,
+     "accuracy": 0.6945224719101124,
+     "mean_prediction": 0.5603201985359192,
+     "actual": 0.5056179775280899
+    },
+    "scratch-t3": {
+     "n": 8544,
+     "wins": 4320,
+     "log_loss": 0.5328652858734131,
+     "brier": 0.17629548907279968,
+     "auc": 0.8614561960753367,
+     "accuracy": 0.7605337078651685,
+     "mean_prediction": 0.5424003601074219,
+     "actual": 0.5056179775280899
+    }
+   },
+   "roof": {
+    "finetune": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 0.6142438650131226,
+     "brier": 0.1971268206834793,
+     "auc": 0.8172894528862437,
+     "accuracy": 0.6947576656775469,
+     "mean_prediction": 0.6342013478279114,
+     "actual": 0.4937685459940653
+    },
+    "scratch": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 0.5988449454307556,
+     "brier": 0.2023039311170578,
+     "auc": 0.7726027920561919,
+     "accuracy": 0.6923837784371909,
+     "mean_prediction": 0.5541061162948608,
+     "actual": 0.4937685459940653
+    },
+    "production": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 1.099341869354248,
+     "brier": 0.24376434087753296,
+     "auc": 0.7346089812476829,
+     "accuracy": 0.6840751730959446,
+     "mean_prediction": 0.43986982107162476,
+     "actual": 0.4937685459940653
+    },
+    "task244": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 0.5564031600952148,
+     "brier": 0.18659739196300507,
+     "auc": 0.8069398728469654,
+     "accuracy": 0.7483679525222552,
+     "mean_prediction": 0.5100577473640442,
+     "actual": 0.4937685459940653
+    },
+    "finetune-t3": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 0.5701060891151428,
+     "brier": 0.1933336853981018,
+     "auc": 0.8172895311670224,
+     "accuracy": 0.6947576656775469,
+     "mean_prediction": 0.5588552355766296,
+     "actual": 0.4937685459940653
+    },
+    "scratch-t3": {
+     "n": 5055,
+     "wins": 2496,
+     "log_loss": 0.5836393237113953,
+     "brier": 0.20005743205547333,
+     "auc": 0.7726027920561919,
+     "accuracy": 0.6923837784371909,
+     "mean_prediction": 0.5188530683517456,
+     "actual": 0.4937685459940653
+    }
+   }
+  },
+  "ranking": {
+   "all": {
+    "finetune": {
+     "pair_accuracy": 0.6224489795918368,
+     "pairs": 196,
+     "positions": 45
+    },
+    "scratch": {
+     "pair_accuracy": 0.5204081632653061,
+     "pairs": 196,
+     "positions": 45
+    },
+    "production": {
+     "pair_accuracy": 0.6224489795918368,
+     "pairs": 196,
+     "positions": 45
+    },
+    "task244": {
+     "pair_accuracy": 0.49489795918367346,
+     "pairs": 196,
+     "positions": 45
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.6173469387755102,
+     "pairs": 196,
+     "positions": 45
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.5306122448979592,
+     "pairs": 196,
+     "positions": 45
+    }
+   },
+   "day": {
+    "finetune": {
+     "pair_accuracy": 0.7272727272727273,
+     "pairs": 11,
+     "positions": 6
+    },
+    "scratch": {
+     "pair_accuracy": 0.8181818181818182,
+     "pairs": 11,
+     "positions": 6
+    },
+    "production": {
+     "pair_accuracy": 0.6363636363636364,
+     "pairs": 11,
+     "positions": 6
+    },
+    "task244": {
+     "pair_accuracy": 0.8181818181818182,
+     "pairs": 11,
+     "positions": 6
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.7272727272727273,
+     "pairs": 11,
+     "positions": 6
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.8181818181818182,
+     "pairs": 11,
+     "positions": 6
+    }
+   },
+   "night": {
+    "finetune": {
+     "pair_accuracy": 0.5714285714285714,
+     "pairs": 7,
+     "positions": 5
+    },
+    "scratch": {
+     "pair_accuracy": 0.5714285714285714,
+     "pairs": 7,
+     "positions": 5
+    },
+    "production": {
+     "pair_accuracy": 0.7142857142857143,
+     "pairs": 7,
+     "positions": 5
+    },
+    "task244": {
+     "pair_accuracy": 0.7142857142857143,
+     "pairs": 7,
+     "positions": 5
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.5714285714285714,
+     "pairs": 7,
+     "positions": 5
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.5714285714285714,
+     "pairs": 7,
+     "positions": 5
+    }
+   },
+   "pool": {
+    "finetune": {
+     "pair_accuracy": 0.5060240963855421,
+     "pairs": 83,
+     "positions": 24
+    },
+    "scratch": {
+     "pair_accuracy": 0.3132530120481928,
+     "pairs": 83,
+     "positions": 24
+    },
+    "production": {
+     "pair_accuracy": 0.5783132530120482,
+     "pairs": 83,
+     "positions": 24
+    },
+    "task244": {
+     "pair_accuracy": 0.3132530120481928,
+     "pairs": 83,
+     "positions": 24
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.4939759036144578,
+     "pairs": 83,
+     "positions": 24
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.3373493975903614,
+     "pairs": 83,
+     "positions": 24
+    }
+   },
+   "fog": {
+    "finetune": {
+     "pair_accuracy": 0.9375,
+     "pairs": 16,
+     "positions": 4
+    },
+    "scratch": {
+     "pair_accuracy": 0.5,
+     "pairs": 16,
+     "positions": 4
+    },
+    "production": {
+     "pair_accuracy": 0.75,
+     "pairs": 16,
+     "positions": 4
+    },
+    "task244": {
+     "pair_accuracy": 0.6875,
+     "pairs": 16,
+     "positions": 4
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.9375,
+     "pairs": 16,
+     "positions": 4
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.5,
+     "pairs": 16,
+     "positions": 4
+    }
+   },
+   "roof": {
+    "finetune": {
+     "pair_accuracy": 0.6708860759493671,
+     "pairs": 79,
+     "positions": 6
+    },
+    "scratch": {
+     "pair_accuracy": 0.6962025316455697,
+     "pairs": 79,
+     "positions": 6
+    },
+    "production": {
+     "pair_accuracy": 0.6329113924050633,
+     "pairs": 79,
+     "positions": 6
+    },
+    "task244": {
+     "pair_accuracy": 0.5822784810126582,
+     "pairs": 79,
+     "positions": 6
+    },
+    "finetune-t3": {
+     "pair_accuracy": 0.6708860759493671,
+     "pairs": 79,
+     "positions": 6
+    },
+    "scratch-t3": {
+     "pair_accuracy": 0.6962025316455697,
+     "pairs": 79,
+     "positions": 6
+    }
+   }
+  },
+  "seconds": 310.29039001464844,
+  "ranking_bootstrap": {
+   "all": {
+    "finetune": {
+     "low": 0.015037593984962405,
+     "high": 0.24158839536516846,
+     "games": 16
+    },
+    "scratch": {
+     "low": -0.1203984942886812,
+     "high": 0.08642532424120868,
+     "games": 16
+    },
+    "finetune-t3": {
+     "low": 0.01796756756756757,
+     "high": 0.23487614913176696,
+     "games": 16
+    },
+    "scratch-t3": {
+     "low": -0.10578893442622951,
+     "high": 0.09411977834612105,
+     "games": 16
+    }
+   },
+   "pool": {
+    "finetune": {
+     "low": -0.025324569944823107,
+     "high": 0.3425404732254043,
+     "games": 8
+    },
+    "scratch": {
+     "low": -0.14903221040189124,
+     "high": 0.08196721311475409,
+     "games": 8
+    },
+    "finetune-t3": {
+     "low": -0.02631578947368421,
+     "high": 0.34783829995114796,
+     "games": 8
+    },
+    "scratch-t3": {
+     "low": -0.11396056475170399,
+     "high": 0.10296198668146492,
+     "games": 8
+    }
+   }
+  },
+  "eligible_for_panel": {
+   "finetune-t3": true,
+   "scratch-t3": false
+  },
+  "l23": [
+   {
+    "seed": 243003000,
+    "game": 9000,
+    "candidates": [
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12356405705213547,
+       "task244": 0.5008125901222229,
+       "finetune": 0.8125510215759277,
+       "scratch": 0.8892629742622375,
+       "finetune-t3": 0.6200464367866516,
+       "scratch-t3": 0.6673290729522705
+      }
+     },
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.25,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11336621642112732,
+       "task244": 0.5081557631492615,
+       "finetune": 0.8062208294868469,
+       "scratch": 0.8749491572380066,
+       "finetune-t3": 0.6167036294937134,
+       "scratch-t3": 0.6567038893699646
+      }
+     },
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.5833333333333334,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.31325075030326843,
+       "task244": 0.4920802116394043,
+       "finetune": 0.929438591003418,
+       "scratch": 0.931140124797821,
+       "finetune-t3": 0.7036235928535461,
+       "scratch-t3": 0.7051814198493958
+      }
+     },
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.3170482814311981,
+       "task244": 0.48790955543518066,
+       "finetune": 0.9302793145179749,
+       "scratch": 0.930536687374115,
+       "finetune-t3": 0.7041770815849304,
+       "scratch-t3": 0.7046181559562683
+      }
+     },
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14355744421482086,
+       "task244": 0.5085873007774353,
+       "finetune": 0.8768383860588074,
+       "scratch": 0.9095563888549805,
+       "finetune-t3": 0.6581105589866638,
+       "scratch-t3": 0.6837769150733948
+      }
+     },
+     {
+      "game": 9000,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 243003000,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.22994740307331085,
+       "task244": 0.4898402988910675,
+       "finetune": 0.8882138729095459,
+       "scratch": 0.9185088276863098,
+       "finetune-t3": 0.6685314774513245,
+       "scratch-t3": 0.6934625506401062
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": -0.08333333333333326,
+     "prediction": {
+      "production": 0.17349083721637726,
+      "task244": -0.02067774534225464,
+      "finetune": 0.05344092845916748,
+      "scratch": 0.02098029851913452,
+      "finetune-t3": 0.0460665225982666,
+      "scratch-t3": 0.020841240882873535
+     }
+    }
+   },
+   {
+    "seed": 243003001,
+    "game": 9001,
+    "candidates": [
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12788455188274384,
+       "task244": 0.5174867510795593,
+       "finetune": 0.8193845152854919,
+       "scratch": 0.8823637366294861,
+       "finetune-t3": 0.6234458088874817,
+       "scratch-t3": 0.6618956923484802
+      }
+     },
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11492162942886353,
+       "task244": 0.5156844258308411,
+       "finetune": 0.8096707463264465,
+       "scratch": 0.8749392032623291,
+       "finetune-t3": 0.6184254288673401,
+       "scratch-t3": 0.6566857695579529
+      }
+     },
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.5833333333333334,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.32882580161094666,
+       "task244": 0.4923492968082428,
+       "finetune": 0.9364317059516907,
+       "scratch": 0.9375482201576233,
+       "finetune-t3": 0.7104179263114929,
+       "scratch-t3": 0.7117742896080017
+      }
+     },
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.32631951570510864,
+       "task244": 0.49487900733947754,
+       "finetune": 0.9330329298973083,
+       "scratch": 0.9359105229377747,
+       "finetune-t3": 0.7064729332923889,
+       "scratch-t3": 0.7098461985588074
+      }
+     },
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.3333333333333333,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14861240983009338,
+       "task244": 0.525285542011261,
+       "finetune": 0.8790861964225769,
+       "scratch": 0.9038484692573547,
+       "finetune-t3": 0.6595759987831116,
+       "scratch-t3": 0.6785245537757874
+      }
+     },
+     {
+      "game": 9001,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 243003001,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2480766773223877,
+       "task244": 0.4978353977203369,
+       "finetune": 0.9020978808403015,
+       "scratch": 0.9277698993682861,
+       "finetune-t3": 0.6788768172264099,
+       "scratch-t3": 0.7018263936042786
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": 0.5,
+     "prediction": {
+      "production": 0.17770710587501526,
+      "task244": -0.030406534671783447,
+      "finetune": 0.053946733474731445,
+      "scratch": 0.03206205368041992,
+      "finetune-t3": 0.046896934509277344,
+      "scratch-t3": 0.03132164478302002
+     }
+    }
+   },
+   {
+    "seed": 243003002,
+    "game": 9002,
+    "candidates": [
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12148486822843552,
+       "task244": 0.5094137787818909,
+       "finetune": 0.8142122626304626,
+       "scratch": 0.8849990367889404,
+       "finetune-t3": 0.6208627820014954,
+       "scratch-t3": 0.6638220548629761
+      }
+     },
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11230883747339249,
+       "task244": 0.5029098391532898,
+       "finetune": 0.8051755428314209,
+       "scratch": 0.8757999539375305,
+       "finetune-t3": 0.6162380576133728,
+       "scratch-t3": 0.6572919487953186
+      }
+     },
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.32059717178344727,
+       "task244": 0.495398610830307,
+       "finetune": 0.9347394108772278,
+       "scratch": 0.9359333515167236,
+       "finetune-t3": 0.7088866233825684,
+       "scratch-t3": 0.7100120186805725
+      }
+     },
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.3228396773338318,
+       "task244": 0.49210914969444275,
+       "finetune": 0.9351642727851868,
+       "scratch": 0.935772716999054,
+       "finetune-t3": 0.7090917229652405,
+       "scratch-t3": 0.7100756764411926
+      }
+     },
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14159001410007477,
+       "task244": 0.5171976685523987,
+       "finetune": 0.8775601387023926,
+       "scratch": 0.906043529510498,
+       "finetune-t3": 0.6586156487464905,
+       "scratch-t3": 0.6803929805755615
+      }
+     },
+     {
+      "game": 9002,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 243003002,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2528518736362457,
+       "task244": 0.4891797602176666,
+       "finetune": 0.9033076167106628,
+       "scratch": 0.927386462688446,
+       "finetune-t3": 0.6791946291923523,
+       "scratch-t3": 0.7011545300483704
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": -0.08333333333333337,
+     "prediction": {
+      "production": 0.18124966323375702,
+      "task244": -0.025088518857955933,
+      "finetune": 0.05760413408279419,
+      "scratch": 0.029729187488555908,
+      "finetune-t3": 0.05047607421875,
+      "scratch-t3": 0.029682695865631104
+     }
+    }
+   },
+   {
+    "seed": 244103004,
+    "game": 9004,
+    "candidates": [
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.4166666666666667,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.1263429969549179,
+       "task244": 0.5185478329658508,
+       "finetune": 0.8189935088157654,
+       "scratch": 0.8831851482391357,
+       "finetune-t3": 0.6232844591140747,
+       "scratch-t3": 0.6624823212623596
+      }
+     },
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.5833333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11864564567804337,
+       "task244": 0.5200662016868591,
+       "finetune": 0.8133275508880615,
+       "scratch": 0.8742311596870422,
+       "finetune-t3": 0.6202719807624817,
+       "scratch-t3": 0.6561853289604187
+      }
+     },
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.3282971680164337,
+       "task244": 0.4918932020664215,
+       "finetune": 0.9345099329948425,
+       "scratch": 0.9343644976615906,
+       "finetune-t3": 0.708210289478302,
+       "scratch-t3": 0.7080488801002502
+      }
+     },
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.32143744826316833,
+       "task244": 0.49087655544281006,
+       "finetune": 0.9387217164039612,
+       "scratch": 0.935860812664032,
+       "finetune-t3": 0.7130044102668762,
+       "scratch-t3": 0.7097108960151672
+      }
+     },
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.147232323884964,
+       "task244": 0.5263271927833557,
+       "finetune": 0.8806481957435608,
+       "scratch": 0.9044740200042725,
+       "finetune-t3": 0.6606725454330444,
+       "scratch-t3": 0.6790458559989929
+      }
+     },
+     {
+      "game": 9004,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103004,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2651086151599884,
+       "task244": 0.48956549167633057,
+       "finetune": 0.9124212265014648,
+       "scratch": 0.9336428642272949,
+       "finetune-t3": 0.6860677599906921,
+       "scratch-t3": 0.7071916460990906
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": 0.16666666666666663,
+     "prediction": {
+      "production": 0.17420512437820435,
+      "task244": -0.035450637340545654,
+      "finetune": 0.05807352066040039,
+      "scratch": 0.03138679265975952,
+      "finetune-t3": 0.05233186483383179,
+      "scratch-t3": 0.030665040016174316
+     }
+    }
+   },
+   {
+    "seed": 244103005,
+    "game": 9005,
+    "candidates": [
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12205991894006729,
+       "task244": 0.5042245388031006,
+       "finetune": 0.8138163685798645,
+       "scratch": 0.8861649632453918,
+       "finetune-t3": 0.6206592917442322,
+       "scratch-t3": 0.664688229560852
+      }
+     },
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.10307034850120544,
+       "task244": 0.48531854152679443,
+       "finetune": 0.7984630465507507,
+       "scratch": 0.880310595035553,
+       "finetune-t3": 0.612870991230011,
+       "scratch-t3": 0.660484790802002
+      }
+     },
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.29847821593284607,
+       "task244": 0.49290063977241516,
+       "finetune": 0.9226188063621521,
+       "scratch": 0.926551103591919,
+       "finetune-t3": 0.6969602704048157,
+       "scratch-t3": 0.7002941966056824
+      }
+     },
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.3107522428035736,
+       "task244": 0.4892441928386688,
+       "finetune": 0.9316257834434509,
+       "scratch": 0.929642379283905,
+       "finetune-t3": 0.705493152141571,
+       "scratch-t3": 0.7037708163261414
+      }
+     },
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.1499045193195343,
+       "task244": 0.5140541195869446,
+       "finetune": 0.876617431640625,
+       "scratch": 0.9082462191581726,
+       "finetune-t3": 0.6579709053039551,
+       "scratch-t3": 0.6824474930763245
+      }
+     },
+     {
+      "game": 9005,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103005,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2358155995607376,
+       "task244": 0.4897824823856354,
+       "finetune": 0.8956398367881775,
+       "scratch": 0.9211735129356384,
+       "finetune-t3": 0.6735439300537109,
+       "scratch-t3": 0.6955533027648926
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": -0.16666666666666674,
+     "prediction": {
+      "production": 0.1608477234840393,
+      "task244": -0.024809926748275757,
+      "finetune": 0.05500835180282593,
+      "scratch": 0.021396160125732422,
+      "finetune-t3": 0.04752224683761597,
+      "scratch-t3": 0.021323323249816895
+     }
+    }
+   },
+   {
+    "seed": 244103017,
+    "game": 9006,
+    "candidates": [
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12659861147403717,
+       "task244": 0.5173768401145935,
+       "finetune": 0.8205878734588623,
+       "scratch": 0.8854972720146179,
+       "finetune-t3": 0.6241355538368225,
+       "scratch-t3": 0.6641766428947449
+      }
+     },
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11330646276473999,
+       "task244": 0.5089598298072815,
+       "finetune": 0.8075798153877258,
+       "scratch": 0.8758182525634766,
+       "finetune-t3": 0.6173766255378723,
+       "scratch-t3": 0.6573106646537781
+      }
+     },
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.32231250405311584,
+       "task244": 0.4896372854709625,
+       "finetune": 0.9288201332092285,
+       "scratch": 0.9338862895965576,
+       "finetune-t3": 0.7026190757751465,
+       "scratch-t3": 0.7080507278442383
+      }
+     },
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.3273575007915497,
+       "task244": 0.49053311347961426,
+       "finetune": 0.9348304271697998,
+       "scratch": 0.9352326989173889,
+       "finetune-t3": 0.7088119983673096,
+       "scratch-t3": 0.709298849105835
+      }
+     },
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.147396519780159,
+       "task244": 0.5250599980354309,
+       "finetune": 0.880136251449585,
+       "scratch": 0.9063889980316162,
+       "finetune-t3": 0.6603501439094543,
+       "scratch-t3": 0.6806795001029968
+      }
+     },
+     {
+      "game": 9006,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103017,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2747916877269745,
+       "task244": 0.48939642310142517,
+       "finetune": 0.9134407043457031,
+       "scratch": 0.9324458241462708,
+       "finetune-t3": 0.6875100135803223,
+       "scratch-t3": 0.7062390446662903
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": 0.08333333333333326,
+     "prediction": {
+      "production": 0.17996098101139069,
+      "task244": -0.03452688455581665,
+      "finetune": 0.054694175720214844,
+      "scratch": 0.028843700885772705,
+      "finetune-t3": 0.048461854457855225,
+      "scratch-t3": 0.028619349002838135
+     }
+    }
+   },
+   {
+    "seed": 244103019,
+    "game": 9007,
+    "candidates": [
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12178369611501694,
+       "task244": 0.5116155743598938,
+       "finetune": 0.8158071041107178,
+       "scratch": 0.8863320350646973,
+       "finetune-t3": 0.6216616630554199,
+       "scratch-t3": 0.6647956967353821
+      }
+     },
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11210913211107254,
+       "task244": 0.503030002117157,
+       "finetune": 0.8046781420707703,
+       "scratch": 0.876745879650116,
+       "finetune-t3": 0.6159387230873108,
+       "scratch-t3": 0.6579662561416626
+      }
+     },
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.3083713948726654,
+       "task244": 0.49194610118865967,
+       "finetune": 0.9277637004852295,
+       "scratch": 0.9318795204162598,
+       "finetune-t3": 0.7017098069190979,
+       "scratch-t3": 0.7059180736541748
+      }
+     },
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.3207562565803528,
+       "task244": 0.4879927635192871,
+       "finetune": 0.9348586201667786,
+       "scratch": 0.9354104399681091,
+       "finetune-t3": 0.7089087963104248,
+       "scratch-t3": 0.7099074721336365
+      }
+     },
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14789481461048126,
+       "task244": 0.5160390734672546,
+       "finetune": 0.8792040944099426,
+       "scratch": 0.9089643359184265,
+       "finetune-t3": 0.6598013043403625,
+       "scratch-t3": 0.6830351948738098
+      }
+     },
+     {
+      "game": 9007,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103019,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.24410049617290497,
+       "task244": 0.48952150344848633,
+       "finetune": 0.9018667340278625,
+       "scratch": 0.9265690445899963,
+       "finetune-t3": 0.6784928441047668,
+       "scratch-t3": 0.70101398229599
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": 0.0,
+     "prediction": {
+      "production": 0.17286144196987152,
+      "task244": -0.02804630994796753,
+      "finetune": 0.05565452575683594,
+      "scratch": 0.026446104049682617,
+      "finetune-t3": 0.049107491970062256,
+      "scratch-t3": 0.02687227725982666
+     }
+    }
+   },
+   {
+    "seed": 244103028,
+    "game": 9008,
+    "candidates": [
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12655030190944672,
+       "task244": 0.5181235074996948,
+       "finetune": 0.8181367516517639,
+       "scratch": 0.8834247589111328,
+       "finetune-t3": 0.6228160262107849,
+       "scratch-t3": 0.6626574397087097
+      }
+     },
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11955932527780533,
+       "task244": 0.5145697593688965,
+       "finetune": 0.811362087726593,
+       "scratch": 0.8757786154747009,
+       "finetune-t3": 0.6192776560783386,
+       "scratch-t3": 0.6572621464729309
+      }
+     },
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.32376429438591003,
+       "task244": 0.4894299805164337,
+       "finetune": 0.9387478232383728,
+       "scratch": 0.9375974535942078,
+       "finetune-t3": 0.7130511403083801,
+       "scratch-t3": 0.7117019295692444
+      }
+     },
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.5,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.32833242416381836,
+       "task244": 0.490066796541214,
+       "finetune": 0.935880720615387,
+       "scratch": 0.9360154271125793,
+       "finetune-t3": 0.7099611163139343,
+       "scratch-t3": 0.7101338505744934
+      }
+     },
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14781521260738373,
+       "task244": 0.5258646607398987,
+       "finetune": 0.8801928162574768,
+       "scratch": 0.9046478867530823,
+       "finetune-t3": 0.6603475213050842,
+       "scratch-t3": 0.6791930794715881
+      }
+     },
+     {
+      "game": 9008,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103028,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2529096305370331,
+       "task244": 0.49218106269836426,
+       "finetune": 0.9031661152839661,
+       "scratch": 0.9273353219032288,
+       "finetune-t3": 0.6797109246253967,
+       "scratch-t3": 0.7017419934272766
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": -0.25,
+     "prediction": {
+      "production": 0.18051721155643463,
+      "task244": -0.03579786419868469,
+      "finetune": 0.055687904357910156,
+      "scratch": 0.03136754035949707,
+      "finetune-t3": 0.0496135950088501,
+      "scratch-t3": 0.030940771102905273
+     }
+    }
+   },
+   {
+    "seed": 244103029,
+    "game": 9009,
+    "candidates": [
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.1245843768119812,
+       "task244": 0.510165274143219,
+       "finetune": 0.8180694580078125,
+       "scratch": 0.8858029246330261,
+       "finetune-t3": 0.6227962374687195,
+       "scratch-t3": 0.6644225120544434
+      }
+     },
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.4166666666666667,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11375357955694199,
+       "task244": 0.5060091018676758,
+       "finetune": 0.8065081238746643,
+       "scratch": 0.877005398273468,
+       "finetune-t3": 0.6168661713600159,
+       "scratch-t3": 0.658149242401123
+      }
+     },
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.3058575391769409,
+       "task244": 0.4877101182937622,
+       "finetune": 0.9267330765724182,
+       "scratch": 0.9330899119377136,
+       "finetune-t3": 0.7018678188323975,
+       "scratch-t3": 0.7068736553192139
+      }
+     },
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.32099172472953796,
+       "task244": 0.49075570702552795,
+       "finetune": 0.9339253902435303,
+       "scratch": 0.9349348545074463,
+       "finetune-t3": 0.7079034447669983,
+       "scratch-t3": 0.7095553874969482
+      }
+     },
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.9166666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.1451559066772461,
+       "task244": 0.5179561376571655,
+       "finetune": 0.8782455921173096,
+       "scratch": 0.9067668318748474,
+       "finetune-t3": 0.6590366363525391,
+       "scratch-t3": 0.6810245513916016
+      }
+     },
+     {
+      "game": 9009,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103029,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.24595177173614502,
+       "task244": 0.490621417760849,
+       "finetune": 0.8856186866760254,
+       "scratch": 0.9254478812217712,
+       "finetune-t3": 0.6685431599617004,
+       "scratch-t3": 0.6997913718223572
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": -0.16666666666666663,
+     "prediction": {
+      "production": 0.17583581805229187,
+      "task244": -0.027200430631637573,
+      "finetune": 0.0556797981262207,
+      "scratch": 0.028168022632598877,
+      "finetune-t3": 0.04886680841445923,
+      "scratch-t3": 0.02853083610534668
+     }
+    }
+   },
+   {
+    "seed": 244103030,
+    "game": 9010,
+    "candidates": [
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 0,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.4166666666666667,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 1,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.12615831196308136,
+       "task244": 0.5145927667617798,
+       "finetune": 0.8178491592407227,
+       "scratch": 0.8850790858268738,
+       "finetune-t3": 0.6226667165756226,
+       "scratch-t3": 0.6638732552528381
+      }
+     },
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 1,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 2,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.11992288380861282,
+       "task244": 0.5081105828285217,
+       "finetune": 0.8107099533081055,
+       "scratch": 0.8755464553833008,
+       "finetune-t3": 0.6190348863601685,
+       "scratch-t3": 0.6572341322898865
+      }
+     },
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 2,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.75,
+      "samples": 12,
+      "action": {
+       "type": "wait",
+       "ticks": 60,
+       "until": "timeout"
+      },
+      "prediction": {
+       "production": 0.3207350969314575,
+       "task244": 0.4876307547092438,
+       "finetune": 0.9369638562202454,
+       "scratch": 0.9380883574485779,
+       "finetune-t3": 0.7112862467765808,
+       "scratch-t3": 0.7126305103302002
+      }
+     },
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 3,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.8333333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 4
+      },
+      "prediction": {
+       "production": 0.32430610060691833,
+       "task244": 0.4902747571468353,
+       "finetune": 0.937720537185669,
+       "scratch": 0.9394453167915344,
+       "finetune-t3": 0.7119131088256836,
+       "scratch-t3": 0.7140741348266602
+      }
+     },
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 4,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.6666666666666666,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 0,
+       "col": 0
+      },
+      "prediction": {
+       "production": 0.14750686287879944,
+       "task244": 0.5222772359848022,
+       "finetune": 0.8788290023803711,
+       "scratch": 0.9060630798339844,
+       "finetune-t3": 0.6594161987304688,
+       "scratch-t3": 0.6804047226905823
+      }
+     },
+     {
+      "game": 9010,
+      "op": 0,
+      "candidate": 5,
+      "terrain": "pool",
+      "seed": 244103030,
+      "truth": 0.5833333333333334,
+      "samples": 12,
+      "action": {
+       "type": "plant",
+       "packet": 0,
+       "row": 4,
+       "col": 5
+      },
+      "prediction": {
+       "production": 0.2512216567993164,
+       "task244": 0.4918931722640991,
+       "finetune": 0.905296802520752,
+       "scratch": 0.9305204749107361,
+       "finetune-t3": 0.6812782287597656,
+       "scratch-t3": 0.7051188349723816
+      }
+     }
+    ],
+    "r4c4_minus_r0c0": {
+     "truth": 0.16666666666666674,
+     "prediction": {
+      "production": 0.1767992377281189,
+      "task244": -0.03200247883796692,
+      "finetune": 0.05889153480529785,
+      "scratch": 0.03338223695755005,
+      "finetune-t3": 0.052496910095214844,
+      "scratch-t3": 0.03366941213607788
+     }
+    }
+   }
+  ]
+ },
+ "panel": {
+  "ran": true,
+  "model": "finetune-t3",
+  "temperature": 3,
+  "margin_relative": 0.02,
+  "margin_floor": 0.001,
+  "seed_start": 246100000,
+  "pairs_per_level": 32,
+  "tasks": [
+   {
+    "task_id": "task222_l09_day_good",
+    "level": 9,
+    "deck": [
+     0,
+     1,
+     6,
+     7,
+     8,
+     15,
+     30,
+     35,
+     41
+    ],
+    "zombie_count_multiplier": 0.75,
+    "terrain": "day",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     243000000,
+     243000001,
+     243000002,
+     243000003,
+     243000004,
+     243000005,
+     243000006,
+     243000007,
+     243000008,
+     243000009,
+     243000010,
+     243000011,
+     243000012,
+     243000013,
+     243000014,
+     243000015,
+     243000016,
+     243000017,
+     243000018,
+     243000019,
+     243000020,
+     243000021,
+     243000022,
+     243000023,
+     243000024,
+     243000025,
+     243000026,
+     243000027,
+     243000028,
+     243000029,
+     243000030,
+     243000031
+    ]
+   },
+   {
+    "task_id": "task222_l14_night_good",
+    "level": 14,
+    "deck": [
+     8,
+     9,
+     10,
+     11,
+     21,
+     23,
+     46
+    ],
+    "zombie_count_multiplier": 2.0,
+    "terrain": "night",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     243001000,
+     243001001,
+     243001002,
+     243001003,
+     243001004,
+     243001005,
+     243001006,
+     243001007,
+     243001008,
+     243001009,
+     243001010,
+     243001011,
+     243001012,
+     243001013,
+     243001014,
+     243001015,
+     243001016,
+     243001017,
+     243001018,
+     243001019,
+     243001020,
+     243001021,
+     243001022,
+     243001023,
+     243001024,
+     243001025,
+     243001026,
+     243001027,
+     243001028,
+     243001029,
+     243001030,
+     243001031
+    ]
+   },
+   {
+    "task_id": "task222_l22_pool_user",
+    "level": 22,
+    "deck": [
+     1,
+     16,
+     35,
+     10,
+     42,
+     36,
+     17,
+     4,
+     19,
+     21
+    ],
+    "zombie_count_multiplier": 0.5,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "user",
+    "seeds": [
+     243002000,
+     243002001,
+     243002002,
+     243002003,
+     243002004,
+     243002005,
+     243002006,
+     243002007,
+     243002008,
+     243002009,
+     243002010,
+     243002011,
+     243002012,
+     243002013,
+     243002014,
+     243002015,
+     243002016,
+     243002017,
+     243002018,
+     243002019,
+     243002020,
+     243002021,
+     243002022,
+     243002023,
+     243002024,
+     243002025,
+     243002026,
+     243002027,
+     243002028,
+     243002029,
+     243002030,
+     243002031
+    ]
+   },
+   {
+    "task_id": "task222_l23_pool_user",
+    "level": 23,
+    "deck": [
+     1,
+     16,
+     19,
+     4,
+     5,
+     7,
+     30,
+     3,
+     41,
+     40
+    ],
+    "zombie_count_multiplier": 1.0,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "user",
+    "seeds": [
+     243003000,
+     243003001,
+     243003002,
+     243003003,
+     243003004,
+     243003005,
+     243003006,
+     243003007,
+     243003008,
+     243003009,
+     243003010,
+     243003011,
+     243003012,
+     243003013,
+     243003014,
+     243003015,
+     243003016,
+     243003017,
+     243003018,
+     243003019,
+     243003020,
+     243003021,
+     243003022,
+     243003023,
+     243003024,
+     243003025,
+     243003026,
+     243003027,
+     243003028,
+     243003029,
+     243003030,
+     243003031
+    ]
+   },
+   {
+    "task_id": "task222_l33_fog_user",
+    "level": 33,
+    "deck": [
+     9,
+     8,
+     16,
+     10,
+     42,
+     43,
+     24,
+     36,
+     5,
+     17
+    ],
+    "zombie_count_multiplier": 0.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "user",
+    "seeds": [
+     243004000,
+     243004001,
+     243004002,
+     243004003,
+     243004004,
+     243004005,
+     243004006,
+     243004007,
+     243004008,
+     243004009,
+     243004010,
+     243004011,
+     243004012,
+     243004013,
+     243004014,
+     243004015,
+     243004016,
+     243004017,
+     243004018,
+     243004019,
+     243004020,
+     243004021,
+     243004022,
+     243004023,
+     243004024,
+     243004025,
+     243004026,
+     243004027,
+     243004028,
+     243004029,
+     243004030,
+     243004031
+    ]
+   },
+   {
+    "task_id": "task222_l47_roof_user",
+    "level": 47,
+    "deck": [
+     1,
+     33,
+     41,
+     [
+      48,
+      1
+     ],
+     39,
+     44,
+     37,
+     4,
+     17,
+     30
+    ],
+    "zombie_count_multiplier": 0.5,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "user",
+    "seeds": [
+     243005000,
+     243005001,
+     243005002,
+     243005003,
+     243005004,
+     243005005,
+     243005006,
+     243005007,
+     243005008,
+     243005009,
+     243005010,
+     243005011,
+     243005012,
+     243005013,
+     243005014,
+     243005015,
+     243005016,
+     243005017,
+     243005018,
+     243005019,
+     243005020,
+     243005021,
+     243005022,
+     243005023,
+     243005024,
+     243005025,
+     243005026,
+     243005027,
+     243005028,
+     243005029,
+     243005030,
+     243005031
+    ]
+   },
+   {
+    "task_id": "task222_l21_pool_good",
+    "level": 21,
+    "deck": [
+     0,
+     1,
+     3,
+     7,
+     16,
+     17,
+     22,
+     40
+    ],
+    "zombie_count_multiplier": 1.75,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     246106000,
+     246106001,
+     246106002,
+     246106003,
+     246106004,
+     246106005,
+     246106006,
+     246106007,
+     246106008,
+     246106009,
+     246106010,
+     246106011,
+     246106012,
+     246106013,
+     246106014,
+     246106015,
+     246106016,
+     246106017,
+     246106018,
+     246106019,
+     246106020,
+     246106021,
+     246106022,
+     246106023,
+     246106024,
+     246106025,
+     246106026,
+     246106027,
+     246106028,
+     246106029,
+     246106030,
+     246106031
+    ]
+   },
+   {
+    "task_id": "task222_l24_pool_good",
+    "level": 24,
+    "deck": [
+     1,
+     4,
+     5,
+     16,
+     17,
+     18,
+     19,
+     23
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     246107000,
+     246107001,
+     246107002,
+     246107003,
+     246107004,
+     246107005,
+     246107006,
+     246107007,
+     246107008,
+     246107009,
+     246107010,
+     246107011,
+     246107012,
+     246107013,
+     246107014,
+     246107015,
+     246107016,
+     246107017,
+     246107018,
+     246107019,
+     246107020,
+     246107021,
+     246107022,
+     246107023,
+     246107024,
+     246107025,
+     246107026,
+     246107027,
+     246107028,
+     246107029,
+     246107030,
+     246107031
+    ]
+   },
+   {
+    "task_id": "task222_l27_pool_good",
+    "level": 27,
+    "deck": [
+     0,
+     1,
+     16,
+     17,
+     19,
+     23,
+     43
+    ],
+    "zombie_count_multiplier": 1.25,
+    "terrain": "pool",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     246108000,
+     246108001,
+     246108002,
+     246108003,
+     246108004,
+     246108005,
+     246108006,
+     246108007,
+     246108008,
+     246108009,
+     246108010,
+     246108011,
+     246108012,
+     246108013,
+     246108014,
+     246108015,
+     246108016,
+     246108017,
+     246108018,
+     246108019,
+     246108020,
+     246108021,
+     246108022,
+     246108023,
+     246108024,
+     246108025,
+     246108026,
+     246108027,
+     246108028,
+     246108029,
+     246108030,
+     246108031
+    ]
+   }
+  ],
+  "calibration": [
+   {
+    "level": 21,
+    "multiplier": 1.5,
+    "wins": 29,
+    "games": 32
+   },
+   {
+    "level": 24,
+    "multiplier": 1.0,
+    "wins": 31,
+    "games": 32
+   },
+   {
+    "level": 27,
+    "multiplier": 1.25,
+    "wins": 20,
+    "games": 32
+   },
+   {
+    "level": 29,
+    "multiplier": 0.25,
+    "wins": 0,
+    "games": 32
+   },
+   {
+    "level": 29,
+    "dropped": "cannot reach 20%-80% on the grid"
+   },
+   {
+    "level": 21,
+    "multiplier": 1.75,
+    "wins": 25,
+    "games": 32
+   },
+   {
+    "level": 24,
+    "multiplier": 1.25,
+    "wins": 30,
+    "games": 32
+   },
+   {
+    "level": 27,
+    "multiplier": 1.25,
+    "wins": 20,
+    "games": 32
+   },
+   {
+    "level": 21,
+    "multiplier": 1.75,
+    "wins": 25,
+    "games": 32
+   },
+   {
+    "level": 24,
+    "multiplier": 1.5,
+    "wins": 15,
+    "games": 32
+   },
+   {
+    "level": 27,
+    "multiplier": 1.25,
+    "wins": 20,
+    "games": 32
+   }
+  ],
+  "result": {
+   "per_level": {
+    "9": {
+     "pairs": 32,
+     "candidate_wins": 30,
+     "incumbent_wins": 28,
+     "gain": 4,
+     "harm": 2,
+     "both_win": 26,
+     "both_lose": 0,
+     "delta_rate": 0.0625,
+     "ci95": [
+      -0.10189380212298466,
+      0.2287902116842557
+     ],
+     "mcnemar_worse_p": 0.890625,
+     "mcnemar_two_sided_p": 0.6875,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": false
+    },
+    "14": {
+     "pairs": 32,
+     "candidate_wins": 32,
+     "incumbent_wins": 32,
+     "gain": 0,
+     "harm": 0,
+     "both_win": 32,
+     "both_lose": 0,
+     "delta_rate": 0.0,
+     "ci95": [
+      -0.10717919825507038,
+      0.10717919825507038
+     ],
+     "mcnemar_worse_p": 1.0,
+     "mcnemar_two_sided_p": 1.0,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": false
+    },
+    "22": {
+     "pairs": 32,
+     "candidate_wins": 21,
+     "incumbent_wins": 29,
+     "gain": 2,
+     "harm": 10,
+     "both_win": 19,
+     "both_lose": 1,
+     "delta_rate": -0.25,
+     "ci95": [
+      -0.4340941045276284,
+      -0.045487773163305906
+     ],
+     "mcnemar_worse_p": 0.019287109375,
+     "mcnemar_two_sided_p": 0.03857421875,
+     "point_noninferior_margin_2_of_32": false,
+     "ci_noninferior_margin_2_of_32": false
+    },
+    "23": {
+     "pairs": 32,
+     "candidate_wins": 29,
+     "incumbent_wins": 20,
+     "gain": 11,
+     "harm": 2,
+     "both_win": 18,
+     "both_lose": 1,
+     "delta_rate": 0.28125,
+     "ci95": [
+      0.07042758796838747,
+      0.4658859142862665
+     ],
+     "mcnemar_worse_p": 0.998291015625,
+     "mcnemar_two_sided_p": 0.0224609375,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": true
+    },
+    "33": {
+     "pairs": 32,
+     "candidate_wins": 21,
+     "incumbent_wins": 15,
+     "gain": 9,
+     "harm": 3,
+     "both_win": 12,
+     "both_lose": 8,
+     "delta_rate": 0.1875,
+     "ci95": [
+      -0.025043329466590408,
+      0.37553477026575105
+     ],
+     "mcnemar_worse_p": 0.980712890625,
+     "mcnemar_two_sided_p": 0.14599609375,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": true
+    },
+    "47": {
+     "pairs": 32,
+     "candidate_wins": 32,
+     "incumbent_wins": 29,
+     "gain": 3,
+     "harm": 0,
+     "both_win": 29,
+     "both_lose": 0,
+     "delta_rate": 0.09375,
+     "ci95": [
+      -0.02974499057328875,
+      0.24218154728387864
+     ],
+     "mcnemar_worse_p": 1.0,
+     "mcnemar_two_sided_p": 0.25,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": true
+    },
+    "21": {
+     "pairs": 32,
+     "candidate_wins": 14,
+     "incumbent_wins": 25,
+     "gain": 2,
+     "harm": 13,
+     "both_win": 12,
+     "both_lose": 5,
+     "delta_rate": -0.34375,
+     "ci95": [
+      -0.5258596004240622,
+      -0.11519028883318769
+     ],
+     "mcnemar_worse_p": 0.003692626953125,
+     "mcnemar_two_sided_p": 0.00738525390625,
+     "point_noninferior_margin_2_of_32": false,
+     "ci_noninferior_margin_2_of_32": false
+    },
+    "24": {
+     "pairs": 32,
+     "candidate_wins": 6,
+     "incumbent_wins": 15,
+     "gain": 5,
+     "harm": 14,
+     "both_win": 1,
+     "both_lose": 12,
+     "delta_rate": -0.28125,
+     "ci95": [
+      -0.49825963403692786,
+      -0.019614256462344548
+     ],
+     "mcnemar_worse_p": 0.0317840576171875,
+     "mcnemar_two_sided_p": 0.063568115234375,
+     "point_noninferior_margin_2_of_32": false,
+     "ci_noninferior_margin_2_of_32": false
+    },
+    "27": {
+     "pairs": 32,
+     "candidate_wins": 23,
+     "incumbent_wins": 20,
+     "gain": 10,
+     "harm": 7,
+     "both_win": 13,
+     "both_lose": 2,
+     "delta_rate": 0.09375,
+     "ci95": [
+      -0.15301250850265774,
+      0.3262786809870474
+     ],
+     "mcnemar_worse_p": 0.8338470458984375,
+     "mcnemar_two_sided_p": 0.629058837890625,
+     "point_noninferior_margin_2_of_32": true,
+     "ci_noninferior_margin_2_of_32": false
+    }
+   },
+   "pooled": {
+    "pairs": 288,
+    "candidate_wins": 208,
+    "incumbent_wins": 213,
+    "gain": 46,
+    "harm": 51,
+    "both_win": 162,
+    "both_lose": 29,
+    "delta_rate": -0.017361111111111112,
+    "ci95": [
+     -0.08443537706878652,
+     0.04990794273307973
+    ],
+    "mcnemar_worse_p": 0.3424293886072016,
+    "mcnemar_two_sided_p": 0.6848587772144032,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false
+   },
+   "eligible": false
+  }
+ },
+ "recommend_production": false,
+ "selected_model": "finetune-t3",
+ "models": {
+  "roof.pt": {
+   "bytes": 588955,
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "v5-t3.pt": {
+   "bytes": 603803,
+   "sha256": "8ccaa0b5cffba778a6530d64056ee5c4fef4fca3aaa9cc21e1345ae981ecc3cd"
+  },
+  "static.pt": {
+   "bytes": 584603,
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "student.pt": {
+   "bytes": 5467950,
+   "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+  },
+  "production.pt": {
+   "bytes": 611739,
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "finetune.pt": {
+   "bytes": 604689,
+   "sha256": "70decf6260d3e5cbc843f9ab7b28dc1b75b7fe2135ea91f18131469a61c8441f"
+  },
+  "gptbc.pt": {
+   "bytes": 737326,
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "finetune-t3.pt": {
+   "bytes": 604743,
+   "sha256": "4988616b62baf76ff3b4688fe3bdabc00816451d0bc65318f1409f70f0cac0d6"
+  },
+  "scratch-t3.pt": {
+   "bytes": 604661,
+   "sha256": "58158cb9d1cf2abd2bd923a70359537776e13db6ea2d7c19e139c1c2d83dd5a6"
+  },
+  "scratch.pt": {
+   "bytes": 603967,
+   "sha256": "5f2c8304572c8a1e80d6088d53ae5b7d221083567fb8d3db91c39f6e800174d8"
+  }
+ },
+ "recommendation_reason": "\u6574\u5c40\u9762\u677f\u672a\u901a\u8fc7"
 }
