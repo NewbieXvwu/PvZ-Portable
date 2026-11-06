@@ -81,6 +81,8 @@ def main():
             panel_document=json.loads((base/'panel-original.json').read_text())
             calibration=[]
             from make_multiplier_tasks import MULTIPLIERS
+            # MULTIPLIERS holds (value, suffix) pairs above 1.0; the panel also uses the low rungs.
+            grid=sorted({0.25,0.5,0.75,1.0}|{float(m) for m,_ in MULTIPLIERS})
             while True:
                 panel('production',base/'models/production.pt')
                 outcomes=json.loads((base/'panel-production/outcomes.json').read_text())
@@ -92,10 +94,10 @@ def main():
                     multiplier=task['zombie_count_multiplier']
                     calibration.append(dict(level=task['level'],multiplier=multiplier,wins=sum(r['won'] for r in rows),games=len(rows)))
                     if .2<=rate<=.8:continue
-                    index=MULTIPLIERS.index(multiplier)+(1 if rate>.8 else -1)
-                    if not 0<=index<len(MULTIPLIERS):
+                    index=grid.index(float(multiplier))+(1 if rate>.8 else -1)
+                    if not 0<=index<len(grid):
                         raise RuntimeError(f"L{task['level']} cannot reach 20%-80% on the existing multiplier grid")
-                    next_multiplier=MULTIPLIERS[index]
+                    next_multiplier=grid[index]
                     if any(r['level']==task['level'] and r['multiplier']==next_multiplier for r in calibration):
                         raise RuntimeError(f"L{task['level']} calibration straddles 20%-80%; inspect the measured results")
                     changes.append((task,multiplier,next_multiplier))
