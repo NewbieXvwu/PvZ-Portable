@@ -1729,3 +1729,7 @@
   - 分支监督修好了 L23 的排序反转，但三个泳池关退步。
 - 派 **task250**（vnpool，Codex，≤4 worker；台式机恢复后降到 3）：用 task244 的首次分歧方法定位泳池退步机制，做一次低成本修复（温度 / 门槛按地形或倍率、补高倍率泳池分支、排序损失），并估算“按地形路由”（雾 / 屋顶用新网）的收益。任务书明确：长流水线不放进 codex exec 后台。
 - 台式机仍离线（Tailscale 最后在线约 03:59 CST）。
+- 11-07 06:40 CST **Codex 不可用**：task250 一开始就退出，报 “workspace routing discovery unauthorized (401)”，简单测试同样报错。
+  - `~/.codex/config.toml` 的 `[model_providers.custom]` 里已经没有指向 localhost:8317 的 base_url，现在走 auth.json 直连；auth.json 修改于 11-05 21:57 EST。
+  - 聚合服务 cliproxyapi 仍在监听 8317。凭据和配置归用户管，主控不改。
+  - task250 改用 dshjob（DeepSeek v4.1 flash，session-9ccfd0a9）运行。
