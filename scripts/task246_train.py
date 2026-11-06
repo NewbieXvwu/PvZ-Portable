@@ -58,6 +58,8 @@ def candidate_rows(base, jobs, columns, predictions):
 
 def l23_report(base, paths, device):
     jobs=json.loads((base/'l23-plan.json').read_text())['jobs']
+    # A diagnostic game whose teacher continuation hit the action cap has no rows; skip it.
+    jobs=[job for job in jobs if (base/'branches'/f"game_{job['game']:04d}"/'rows.npz').exists()]
     shards=[]
     for job in jobs:
         with np.load(base/'branches'/f"game_{job['game']:04d}"/'rows.npz') as stored:
