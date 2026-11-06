@@ -1684,3 +1684,4 @@
     - 123 份是 GPT 自己放弃的起点无目标题；
     - resume 486 份，478 份通过，与上批相同，没有新增；scenario 0 份。
   - **打 238d**：238c 代码加上这次交回作 carry，共 12864 条。台式机验收通过：静态引擎，三类题、回收续打、并发领题、导出不回退都正常，carry 生效（进度 12866）。pkg md5 b3cb56a2…，res 不变。新会话直接用，不用 resume()。
+- 11-06 08:50 CST **更正 08:30 那条“待办”**：deploy26 把 `llmimport/scripts/import_llm_run.py` 做成指向 `cq/scripts/import_llm_run.py` 的软链，脚本里 `ROOT = Path(__file__).resolve()...` 会解析到 cq，所以导入用的一直是部署版本的 llmplay 与 drill_start。llmimport 工作树里那份旧 game.py 不会被用到，没有分叉，撤销该待办。以后照旧从 llmimport 跑导入即可，默认清单是 cq 的 `configs/human_demo_tasks.json`。
