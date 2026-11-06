@@ -1698,3 +1698,7 @@
   - r124–r130 七轮晋升三次（r124 / r128 / r130），此前 r113–r123 十一轮只晋升两次（r117 / r119）。“两个蒸馏种子”改动后，晋升频率明显提高。
 - 11-06 18:47 CST **r131 晋升**（接在 r130 之后，连续两轮晋升）。留出：L7 25/96，L9 32/96。task246 分支标签 85/107 局。
 - 11-06 21:15 CST r132 否，现任 r131。**task246 流水线在 99/107 局时整体退出**：某一局的老师续走触到动作上限（RuntimeError: teacher continuation reached action cap），ProcessPoolExecutor 里的 `f.result()` 一抛错就终止整个生成阶段。修复（vnbranch 529a8a1c）：单局失败只记进报告的 failed，继续其余局。已在 tmux `task246-exp` 重启，已完成的局直接复用。
+- 11-06 23:50 CST r133 否，现任 r131。
+- **task246**：分支标签生成完成，106 / 107 局，1 局触到动作上限记为失败。
+  - 随后实验在读 `features/summary.json` 时失败。原因是 11-05 08:12 codex exec 退出时，**轨迹特征导出**（task239_export）也被一起带走，停在 1150 / 3862 局，summary 从没写出来。
+  - 已在 tmux `task246-exp` 重跑完整导出（--per-game 96、--shard-size 32、引擎 build-vnbranch，约 160 局 / 分钟），跑完自动接实验流水线：训练、离线比较、条件面板。
