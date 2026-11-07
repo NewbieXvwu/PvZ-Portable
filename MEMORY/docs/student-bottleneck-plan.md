@@ -1754,3 +1754,7 @@
 - 下一步（等 Mac 插电、台式机恢复）：
   - 用新种子确认雾 / 屋顶路由；
   - 用用户 L29 录像做 demo-start 格（任务设计）。
+- 11-07 Mac 22:32 EST 插上电，看门狗恢复。task250 是 DeepSeek 任务，已结束，没有自己的后续。主控在 tmux `route-confirm` 补跑**雾 / 屋顶路由的新种子确认**：
+  - task250_experiment.py --phase panel，L33 / L47 各 32 对，种子从 250100000 起；
+  - 先跑生产（--margin-relative 0，即绝对 0.02），再跑 finetune-t3（相对 0.02，同 task246 面板配置），3 worker；
+  - 跑完由主控算配对统计。
