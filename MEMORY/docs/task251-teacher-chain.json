@@ -1,0 +1,5898 @@
+{
+ "task": "task251",
+ "title": "L29 升级链与咖啡豆卡组的搜索老师诊断",
+ "status": "完成，仅诊断，未部署",
+ "branch": "teachchain",
+ "base_commit": "53e39650",
+ "production_deployed": false,
+ "conclusion": {
+  "primary": "本批 L29 的 1517 次 SEARCH 全部未覆盖学生动作。候选均值集中在近零区域，最大挑战优势仍小于固定 0.02 门槛，老师执行与学生执行重合。",
+  "coverage": "咖啡豆在136个合法且启动搜索的根上全部入选，24次优于学生评分但未过门槛。两种升级均无合法根，西瓜也从未合法，不能归为现有合法动作生成漏项。",
+  "economy": "16局只种1–2株向日葵，最高阳光100–150，未种睡莲或西瓜。水路始终没有睡莲承载的火力，陆路主要依靠地刺与窝瓜。",
+  "loop": "大喷菇候选的28次抽样续走均未补咖啡豆，支持局部的续走闭环。但实际L29用了2次咖啡豆，且本批没有升级合法机会，“学生从不咖啡/升级”不能整体成立。",
+  "level_comparison": "同模型L22为3/4，能实际使用咖啡豆和忧郁菇。L22另有大蒜、土豆雷与缠绕海草，早期经济和低价防御条件与L29不同，无法把关卡差异单独归因于新增冰西瓜链。"
+ },
+ "protocol": {
+  "engine": "/Users/newbiexvwu/pvz-mac-collect/build2/pvz-portable",
+  "engine_readonly": true,
+  "model_directory": "/Users/newbiexvwu/pvz-mac-collect/models",
+  "student": "student_d65f4c4f6477.pt",
+  "model_inputs": {
+   "/Users/newbiexvwu/pvz-mac-collect/build2/pvz-portable": {
+    "bytes": 3634576,
+    "sha256": "4b3b0617d0ccb5a150fb1b876e8379896283c3dc1f7b8583922c22653a503334"
+   },
+   "/Users/newbiexvwu/pvz-mac-collect/models/student_d65f4c4f6477.pt": {
+    "bytes": 7500654,
+    "sha256": "abf9803760bf21a28e40385e8ee2fee56d3e40cd400888d9d81f0066d68553eb"
+   },
+   "/Users/newbiexvwu/pvz-mac-collect/models/value.pt": {
+    "bytes": 611739,
+    "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+   },
+   "/Users/newbiexvwu/pvz-mac-collect/models/static.pt": {
+    "bytes": 584603,
+    "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+   },
+   "/Users/newbiexvwu/pvz-mac-collect/models/gptbc.pt": {
+    "bytes": 737326,
+    "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+   }
+  },
+  "model_features": {
+   "student": "v2timer，已有睡眠/苏醒和计时输入",
+   "leaf": "featurize v2，未包含睡眠特征",
+   "static": "featurize v1，未包含睡眠特征"
+  },
+  "level29_deck": [
+   1,
+   16,
+   35,
+   10,
+   42,
+   39,
+   44,
+   30,
+   21,
+   17
+  ],
+  "level22_deck": [
+   1,
+   16,
+   35,
+   10,
+   42,
+   36,
+   17,
+   4,
+   19,
+   21
+  ],
+  "level29_seeds": [
+   251029000,
+   251029001,
+   251029002,
+   251029003,
+   251029004,
+   251029005,
+   251029006,
+   251029007
+  ],
+  "level22_seeds": [
+   243002000,
+   243002001,
+   243002002,
+   243002003
+  ],
+  "level29_multipliers": [
+   0.25,
+   0.5
+  ],
+  "level22_multiplier": 0.5,
+  "dagger_beta": 1,
+  "per_card": 1,
+  "student_candidates": 2,
+  "samples": 3,
+  "verify_samples": 9,
+  "halving": true,
+  "halving_first_samples": 1,
+  "horizon": 2500,
+  "min_gap": 300,
+  "rollout_sim_skip": 61,
+  "margin_relative": 0,
+  "absolute_margin": 0.02,
+  "combo_candidates": 0,
+  "save_candidates": 0,
+  "native_games": true,
+  "workers": 2,
+  "playthrough": 2,
+  "profile": "profile_for_deck声明10槽及升级所有权[42,44]，L22为[42]，RESET未被拒绝。",
+  "recording": "保留生产CNN原生根前向，无observer。包装现有search_play._search与env.search，只读取原始响应。帧走既有frames.npz。未生成obs-v3附件，此附件开关在task249的同种子控制中已确认不改变CNN结果。",
+  "probe": "每种关键卡最多抽首次与波次>=10后的候选，重用C++ ROLLOUT，共享未来k=0，续走2500tick。强制首动作从种植计数中扣除，根状态随后由现有finally恢复，不回写搜索选择。",
+  "scores": "SEARCH targets为候选已采样未来的均值。逐轮减半会使候选样本数不同，记录接口不输出逐样本值。额外ROLLOUT探针单独给出k=0叶值与学生种植计数。",
+  "coordinates": "行号展示为1–6，原始动作row仍为0–5。突破行取终局最靠左的存活僵尸，未将它当作唯一死因。"
+ },
+ "groups": {
+  "l29_m025": {
+   "games": 8,
+   "wins": 0,
+   "mean_final_wave": 13.625,
+   "overrides": 0,
+   "searches": 756,
+   "planted_types": {
+    "1": 13,
+    "21": 69,
+    "30": 3,
+    "17": 20,
+    "10": 8,
+    "35": 1
+   },
+   "candidate_score": {
+    "min": 0,
+    "median": 0.001131294450412194,
+    "max": 0.020833460614085197
+   },
+   "best_minus_student": {
+    "min": 0.0,
+    "median": 0.0004016279563074932,
+    "max": 0.014594602631404996
+   },
+   "cards": {
+    "10": {
+     "decision_roots": 4102,
+     "legal_roots": 1335,
+     "searched_legal_roots": 338,
+     "candidate_roots": 338,
+     "candidate_actions": 443,
+     "insufficient_sun_roots": 2767,
+     "cooldown_inactive_roots": 104,
+     "student_proposed": 8,
+     "teacher_proposed": 8,
+     "score_above_student_roots": 182,
+     "score_gap_over_002_roots": 0
+    },
+    "35": {
+     "decision_roots": 4102,
+     "legal_roots": 331,
+     "searched_legal_roots": 75,
+     "candidate_roots": 75,
+     "candidate_actions": 75,
+     "insufficient_sun_roots": 2767,
+     "cooldown_inactive_roots": 13,
+     "no_sleeping_target_roots": 2967,
+     "student_proposed": 1,
+     "teacher_proposed": 1,
+     "score_above_student_roots": 19,
+     "score_gap_over_002_roots": 0
+    },
+    "39": {
+     "decision_roots": 4102,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4102,
+     "cooldown_inactive_roots": 0,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    },
+    "42": {
+     "decision_roots": 4102,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4100,
+     "cooldown_inactive_roots": 493,
+     "no_base_roots": 2896,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    },
+    "44": {
+     "decision_roots": 4102,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4102,
+     "cooldown_inactive_roots": 493,
+     "no_base_roots": 4102,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    }
+   },
+   "breaches_by_row_1based": {
+    "5": 3,
+    "4": 3,
+    "3": 2
+   },
+   "per_game": [
+    {
+     "seed": 251029000,
+     "won": false,
+     "final_wave": 17,
+     "final_tick": 33297,
+     "searched": 107,
+     "overrides": 0,
+     "mowers_used": 5,
+     "planted_types": {
+      "1": 1,
+      "21": 8,
+      "30": 1,
+      "17": 2,
+      "10": 1
+     },
+     "max_sun": 150,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0002378125015335778,
+      "max": 0.008673958480358124
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 5,
+      "type": 0,
+      "x": -180.623,
+      "health": 110,
+      "last_root_tick": 33250,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 577,
+       "legal_roots": 236,
+       "searched_legal_roots": 57,
+       "candidate_roots": 57,
+       "candidate_actions": 67,
+       "insufficient_sun_roots": 341,
+       "cooldown_inactive_roots": 13,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 29,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0007647032616659999,
+        "max": 0.0052409605123102665
+       }
+      },
+      "35": {
+       "decision_roots": 577,
+       "legal_roots": 80,
+       "searched_legal_roots": 18,
+       "candidate_roots": 18,
+       "candidate_actions": 18,
+       "insufficient_sun_roots": 341,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 371,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 8,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.00026040058583021164,
+        "median": 0.0005143834423506632,
+        "max": 0.0020473583911856017
+       }
+      },
+      "39": {
+       "decision_roots": 577,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 577,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 577,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 576,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 371,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 577,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 577,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 577,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029000.jsonl"
+    },
+    {
+     "seed": 251029001,
+     "won": false,
+     "final_wave": 10,
+     "final_tick": 22359,
+     "searched": 71,
+     "overrides": 0,
+     "mowers_used": 3,
+     "planted_types": {
+      "1": 2,
+      "21": 9
+     },
+     "max_sun": 100,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0009287894160176317,
+      "max": 0.014594602631404996
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 4,
+      "type": 0,
+      "x": -180.36,
+      "health": 270,
+      "last_root_tick": 22328,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 388,
+       "legal_roots": 137,
+       "searched_legal_roots": 35,
+       "candidate_roots": 35,
+       "candidate_actions": 46,
+       "insufficient_sun_roots": 251,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 34,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0013972487843905887,
+        "max": 0.007339151265720527
+       }
+      },
+      "35": {
+       "decision_roots": 388,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 251,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 388,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 388,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 388,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 388,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 388,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 388,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 388,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 388,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 388,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029001.jsonl"
+    },
+    {
+     "seed": 251029002,
+     "won": false,
+     "final_wave": 15,
+     "final_tick": 31490,
+     "searched": 99,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 2,
+      "21": 9,
+      "10": 2,
+      "17": 5
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.00030252717745800806,
+      "max": 0.00886710942722857
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 3,
+      "type": 0,
+      "x": -180.277,
+      "health": 270,
+      "last_root_tick": 31448,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 551,
+       "legal_roots": 94,
+       "searched_legal_roots": 27,
+       "candidate_roots": 27,
+       "candidate_actions": 51,
+       "insufficient_sun_roots": 457,
+       "cooldown_inactive_roots": 26,
+       "student_proposed": 2,
+       "teacher_proposed": 2,
+       "score_above_student_roots": 18,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.0005713608406949788,
+        "median": 0.0013645431026816368,
+        "max": 0.012810301035642624
+       }
+      },
+      "35": {
+       "decision_roots": 551,
+       "legal_roots": 55,
+       "searched_legal_roots": 15,
+       "candidate_roots": 15,
+       "candidate_actions": 15,
+       "insufficient_sun_roots": 457,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 141,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 8,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.0005469407187774777,
+        "median": 0.0018322346732020378,
+        "max": 0.004343829117715359
+       }
+      },
+      "39": {
+       "decision_roots": 551,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 551,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 551,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 551,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 141,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 551,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 551,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 551,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029002.jsonl"
+    },
+    {
+     "seed": 251029003,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 30986,
+     "searched": 100,
+     "overrides": 0,
+     "mowers_used": 5,
+     "planted_types": {
+      "1": 1,
+      "21": 6,
+      "17": 3,
+      "10": 2,
+      "35": 1
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0004622574488166721,
+      "max": 0.008244904146219293
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 5,
+      "type": 3,
+      "x": -230.193,
+      "health": 480,
+      "last_root_tick": 30973,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 10,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 26,
+        "launch_rate": 150,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": true,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 537,
+       "legal_roots": 206,
+       "searched_legal_roots": 49,
+       "candidate_roots": 49,
+       "candidate_actions": 62,
+       "insufficient_sun_roots": 331,
+       "cooldown_inactive_roots": 26,
+       "student_proposed": 2,
+       "teacher_proposed": 2,
+       "score_above_student_roots": 19,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0010883808718062937,
+        "max": 0.005902473349124193
+       }
+      },
+      "35": {
+       "decision_roots": 537,
+       "legal_roots": 130,
+       "searched_legal_roots": 29,
+       "candidate_roots": 29,
+       "candidate_actions": 29,
+       "insufficient_sun_roots": 331,
+       "cooldown_inactive_roots": 13,
+       "no_sleeping_target_roots": 219,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 2,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0006862177979201078,
+        "max": 0.0016906841192394495
+       }
+      },
+      "39": {
+       "decision_roots": 537,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 537,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 537,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 537,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 148,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 537,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 537,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 537,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029003.jsonl"
+    },
+    {
+     "seed": 251029004,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 32649,
+     "searched": 101,
+     "overrides": 0,
+     "mowers_used": 3,
+     "planted_types": {
+      "1": 1,
+      "21": 5,
+      "30": 2,
+      "17": 3,
+      "10": 2
+     },
+     "max_sun": 150,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0001325734871594857,
+      "max": 0.007820232150455315
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 4,
+      "type": 4,
+      "x": -180.41,
+      "health": 1370,
+      "last_root_tick": 32635,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 561,
+       "legal_roots": 205,
+       "searched_legal_roots": 50,
+       "candidate_roots": 50,
+       "candidate_actions": 68,
+       "insufficient_sun_roots": 356,
+       "cooldown_inactive_roots": 26,
+       "student_proposed": 2,
+       "teacher_proposed": 2,
+       "score_above_student_roots": 21,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0006533180324671168,
+        "max": 0.004220911301672459
+       }
+      },
+      "35": {
+       "decision_roots": 561,
+       "legal_roots": 66,
+       "searched_legal_roots": 13,
+       "candidate_roots": 13,
+       "candidate_actions": 13,
+       "insufficient_sun_roots": 356,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 376,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 1,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.00015511958918068558,
+        "max": 0.0005327809485606849
+       }
+      },
+      "39": {
+       "decision_roots": 561,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 561,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 561,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 560,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 376,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 561,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 561,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 561,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029004.jsonl"
+    },
+    {
+     "seed": 251029005,
+     "won": false,
+     "final_wave": 13,
+     "final_tick": 27376,
+     "searched": 89,
+     "overrides": 0,
+     "mowers_used": 6,
+     "planted_types": {
+      "1": 2,
+      "21": 11,
+      "17": 1
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.00040864061641817284,
+      "max": 0.012338506251884002
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 4,
+      "type": 14,
+      "x": -180.892,
+      "health": 500,
+      "last_root_tick": 27371,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 476,
+       "legal_roots": 115,
+       "searched_legal_roots": 35,
+       "candidate_roots": 35,
+       "candidate_actions": 43,
+       "insufficient_sun_roots": 361,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 18,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.001235667965374887,
+        "max": 0.009403776532659927
+       }
+      },
+      "35": {
+       "decision_roots": 476,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 361,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 476,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 476,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 476,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 476,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 476,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 476,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 476,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 476,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 476,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029005.jsonl"
+    },
+    {
+     "seed": 251029006,
+     "won": false,
+     "final_wave": 14,
+     "final_tick": 30494,
+     "searched": 98,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 2,
+      "21": 12,
+      "17": 3
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0012761900434270501,
+      "max": 0.01268209183278183
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 3,
+      "type": 0,
+      "x": -180.35,
+      "health": 270,
+      "last_root_tick": 30437,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 532,
+       "legal_roots": 168,
+       "searched_legal_roots": 41,
+       "candidate_roots": 41,
+       "candidate_actions": 51,
+       "insufficient_sun_roots": 364,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 26,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0026834532618522644,
+        "max": 0.013032446925838789
+       }
+      },
+      "35": {
+       "decision_roots": 532,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 364,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 532,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 532,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 532,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 532,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 532,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 532,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 532,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 532,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 532,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029006.jsonl"
+    },
+    {
+     "seed": 251029007,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 27458,
+     "searched": 91,
+     "overrides": 0,
+     "mowers_used": 5,
+     "planted_types": {
+      "1": 2,
+      "21": 9,
+      "17": 3,
+      "10": 1
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0005090871903424461,
+      "max": 0.013046003373650214
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 5,
+      "type": 3,
+      "x": -230.287,
+      "health": 480,
+      "last_root_tick": 27443,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 10,
+        "imitater_type": -1,
+        "col": 2,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 88,
+        "launch_rate": 150,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": true,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 480,
+       "legal_roots": 174,
+       "searched_legal_roots": 44,
+       "candidate_roots": 44,
+       "candidate_actions": 55,
+       "insufficient_sun_roots": 306,
+       "cooldown_inactive_roots": 13,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 17,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0010800487361848354,
+        "max": 0.012278916935125986
+       }
+      },
+      "35": {
+       "decision_roots": 480,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 306,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 464,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 480,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 480,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 480,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 480,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 464,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 480,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 480,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 480,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m025/decisions_251029007.jsonl"
+    }
+   ],
+   "probes": [
+    {
+     "seed": 251029000,
+     "root_tick": 1260,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1874594288,
+     "search_mean": 0.0009644539095461369,
+     "leaf_value": 0.00096445391,
+     "leaf_tick": 3780,
+     "leaf_wave": 4,
+     "leaf_sun": 100,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029000,
+     "root_tick": 14220,
+     "root_wave": 10,
+     "root_sun": 100,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 7
+     },
+     "future": 1874815288,
+     "search_mean": 0.0012365521397441626,
+     "leaf_value": 0.00123655214,
+     "leaf_tick": 16748,
+     "leaf_wave": 10,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 7,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029000,
+     "root_tick": 16748,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1874860288,
+     "search_mean": 0.0008959842962212861,
+     "leaf_value": 0.000895984296,
+     "leaf_tick": 19286,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029000,
+     "root_tick": 17048,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1874865288,
+     "search_mean": 0.0007885209051892161,
+     "leaf_value": 0.000788520905,
+     "leaf_tick": 19564,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029001,
+     "root_tick": 1140,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1884592288,
+     "search_mean": 0.002860451117157936,
+     "leaf_value": 0.00286045112,
+     "leaf_tick": 3660,
+     "leaf_wave": 4,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029001,
+     "root_tick": 21548,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 3
+     },
+     "future": 1884946288,
+     "search_mean": 0,
+     "leaf_value": 0.0,
+     "leaf_tick": 22345,
+     "leaf_wave": 10,
+     "leaf_sun": 25,
+     "terminal": true,
+     "result": 2,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 1380,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1894596288,
+     "search_mean": 0.0024579325690865517,
+     "leaf_value": 0.00245793257,
+     "leaf_tick": 3900,
+     "leaf_wave": 4,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 5820,
+     "root_wave": 5,
+     "root_sun": 100,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 0,
+      "col": 0
+     },
+     "future": 1894674288,
+     "search_mean": 0.003740305081009865,
+     "leaf_value": 0.00374030508,
+     "leaf_tick": 8340,
+     "leaf_wave": 6,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 17081,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 6
+     },
+     "future": 1894871288,
+     "search_mean": 0.0013824338093400002,
+     "leaf_value": 0.00138243381,
+     "leaf_tick": 19589,
+     "leaf_wave": 11,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1
+     },
+     "leaf_sleeping_mushrooms": []
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 22500,
+     "root_wave": 12,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 4,
+      "col": 0
+     },
+     "future": 1894966288,
+     "search_mean": 0.0009147287928499281,
+     "leaf_value": 0.000914728793,
+     "leaf_tick": 25021,
+     "leaf_wave": 13,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 1320,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1904595288,
+     "search_mean": 0.0023462825338356197,
+     "leaf_value": 0.00373320072,
+     "leaf_tick": 3840,
+     "leaf_wave": 4,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 10751,
+     "root_wave": 7,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1904758288,
+     "search_mean": 0.0009511164389550686,
+     "leaf_value": 0.000951116439,
+     "leaf_tick": 13271,
+     "leaf_wave": 8,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 18944,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 5
+     },
+     "future": 1904899288,
+     "search_mean": 0.0010904045775532722,
+     "leaf_value": 0.00109040458,
+     "leaf_tick": 21464,
+     "leaf_wave": 10,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 5,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 18944,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 4,
+      "col": 0
+     },
+     "future": 1904899288,
+     "search_mean": 0.0010140592930838466,
+     "leaf_value": 0.00101405929,
+     "leaf_tick": 21464,
+     "leaf_wave": 10,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 1620,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1914600288,
+     "search_mean": 0.0027841110713779926,
+     "leaf_value": 0.00278411107,
+     "leaf_tick": 4140,
+     "leaf_wave": 4,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 19006,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 5
+     },
+     "future": 1914898288,
+     "search_mean": 0.00034185286494903266,
+     "leaf_value": 0.000341852865,
+     "leaf_tick": 21548,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 5,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 23410,
+     "root_wave": 11,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 1914974288,
+     "search_mean": 8.868908480508253e-05,
+     "leaf_value": 8.86890848e-05,
+     "leaf_tick": 25912,
+     "leaf_wave": 12,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": []
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 27731,
+     "root_wave": 13,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1915049288,
+     "search_mean": 0.00029523877310566604,
+     "leaf_value": 0.000295238773,
+     "leaf_tick": 30251,
+     "leaf_wave": 14,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029005,
+     "root_tick": 1140,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1924592288,
+     "search_mean": 0.0035204077139496803,
+     "leaf_value": 0.00352040771,
+     "leaf_tick": 3660,
+     "leaf_wave": 4,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029005,
+     "root_tick": 17560,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 1,
+      "col": 5
+     },
+     "future": 1924878288,
+     "search_mean": 0.0008239469025284052,
+     "leaf_value": 0.000823946903,
+     "leaf_tick": 20080,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 5,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029006,
+     "root_tick": 1080,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1934591288,
+     "search_mean": 0.0034112222492694855,
+     "leaf_value": 0.00330773485,
+     "leaf_tick": 3600,
+     "leaf_wave": 3,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029006,
+     "root_tick": 20051,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 1,
+      "col": 5
+     },
+     "future": 1934922288,
+     "search_mean": 0.0016842354089021683,
+     "leaf_value": 0.00168423541,
+     "leaf_tick": 22571,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 5,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029007,
+     "root_tick": 1380,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1944596288,
+     "search_mean": 0.0017718634335324168,
+     "leaf_value": 0.00177186343,
+     "leaf_tick": 3900,
+     "leaf_wave": 4,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029007,
+     "root_tick": 21788,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 0
+     },
+     "future": 1944951288,
+     "search_mean": 0.0005682524642907083,
+     "leaf_value": 0.000568252464,
+     "leaf_tick": 24329,
+     "leaf_wave": 11,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    }
+   ]
+  },
+  "l29_m050": {
+   "games": 8,
+   "wins": 0,
+   "mean_final_wave": 10.25,
+   "overrides": 0,
+   "searches": 761,
+   "planted_types": {
+    "1": 8,
+    "21": 59,
+    "17": 36,
+    "10": 8,
+    "30": 3,
+    "35": 1
+   },
+   "candidate_score": {
+    "min": 0,
+    "median": 0.0009498081441658239,
+    "max": 0.011239818452546993
+   },
+   "best_minus_student": {
+    "min": 0.0,
+    "median": 0.0003625525860115888,
+    "max": 0.008305453055072576
+   },
+   "cards": {
+    "10": {
+     "decision_roots": 4166,
+     "legal_roots": 1419,
+     "searched_legal_roots": 351,
+     "candidate_roots": 351,
+     "candidate_actions": 482,
+     "insufficient_sun_roots": 2747,
+     "cooldown_inactive_roots": 106,
+     "student_proposed": 8,
+     "teacher_proposed": 8,
+     "score_above_student_roots": 189,
+     "score_gap_over_002_roots": 0
+    },
+    "35": {
+     "decision_roots": 4166,
+     "legal_roots": 274,
+     "searched_legal_roots": 61,
+     "candidate_roots": 61,
+     "candidate_actions": 61,
+     "insufficient_sun_roots": 2747,
+     "cooldown_inactive_roots": 13,
+     "no_sleeping_target_roots": 3324,
+     "student_proposed": 1,
+     "teacher_proposed": 1,
+     "score_above_student_roots": 5,
+     "score_gap_over_002_roots": 0
+    },
+    "39": {
+     "decision_roots": 4166,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4166,
+     "cooldown_inactive_roots": 0,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    },
+    "42": {
+     "decision_roots": 4166,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4165,
+     "cooldown_inactive_roots": 495,
+     "no_base_roots": 3324,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    },
+    "44": {
+     "decision_roots": 4166,
+     "legal_roots": 0,
+     "searched_legal_roots": 0,
+     "candidate_roots": 0,
+     "candidate_actions": 0,
+     "insufficient_sun_roots": 4166,
+     "cooldown_inactive_roots": 495,
+     "no_base_roots": 4166,
+     "student_proposed": 0,
+     "teacher_proposed": 0
+    }
+   },
+   "breaches_by_row_1based": {
+    "1": 1,
+    "2": 1,
+    "6": 4,
+    "5": 1,
+    "4": 1
+   },
+   "per_game": [
+    {
+     "seed": 251029000,
+     "won": false,
+     "final_wave": 10,
+     "final_tick": 30194,
+     "searched": 94,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 1,
+      "21": 3,
+      "17": 5,
+      "10": 3,
+      "30": 2
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.00014282477786764503,
+      "max": 0.0078111908709009486
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 1,
+      "type": 4,
+      "x": -180.385,
+      "health": 1170,
+      "last_root_tick": 30148,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 523,
+       "legal_roots": 208,
+       "searched_legal_roots": 53,
+       "candidate_roots": 53,
+       "candidate_actions": 68,
+       "insufficient_sun_roots": 315,
+       "cooldown_inactive_roots": 39,
+       "student_proposed": 3,
+       "teacher_proposed": 3,
+       "score_above_student_roots": 22,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0005659179344850902,
+        "max": 0.004729155101813376
+       }
+      },
+      "35": {
+       "decision_roots": 523,
+       "legal_roots": 12,
+       "searched_legal_roots": 3,
+       "candidate_roots": 3,
+       "candidate_actions": 3,
+       "insufficient_sun_roots": 315,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 378,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 1,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.0006837737164460123,
+        "median": 0.0009270777518395334,
+        "max": 0.0009455159306526184
+       }
+      },
+      "39": {
+       "decision_roots": 523,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 523,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 523,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 523,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 378,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 523,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 523,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 523,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029000.jsonl"
+    },
+    {
+     "seed": 251029001,
+     "won": false,
+     "final_wave": 9,
+     "final_tick": 24236,
+     "searched": 74,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 1,
+      "21": 6,
+      "17": 4,
+      "10": 1,
+      "35": 1
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0004362728795967996,
+      "max": 0.005396412995954354
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 2,
+      "type": 0,
+      "x": -180.245,
+      "health": 90,
+      "last_root_tick": 24195,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 1,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 421,
+       "legal_roots": 136,
+       "searched_legal_roots": 35,
+       "candidate_roots": 35,
+       "candidate_actions": 53,
+       "insufficient_sun_roots": 285,
+       "cooldown_inactive_roots": 14,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 24,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0008862601534929127,
+        "max": 0.004648408231635888
+       }
+      },
+      "35": {
+       "decision_roots": 421,
+       "legal_roots": 31,
+       "searched_legal_roots": 8,
+       "candidate_roots": 8,
+       "candidate_actions": 8,
+       "insufficient_sun_roots": 285,
+       "cooldown_inactive_roots": 13,
+       "no_sleeping_target_roots": 343,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 3,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0002593755004151414,
+        "max": 0.0003425536851864308
+       }
+      },
+      "39": {
+       "decision_roots": 421,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 421,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 421,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 421,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 343,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 421,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 421,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 421,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029001.jsonl"
+    },
+    {
+     "seed": 251029002,
+     "won": false,
+     "final_wave": 9,
+     "final_tick": 27952,
+     "searched": 89,
+     "overrides": 0,
+     "mowers_used": 3,
+     "planted_types": {
+      "1": 1,
+      "21": 9,
+      "17": 2,
+      "10": 1
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0005433345213532447,
+      "max": 0.007561555888969452
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 6,
+      "type": 2,
+      "x": -180.162,
+      "health": 280,
+      "last_root_tick": 27903,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 2,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 483,
+       "legal_roots": 159,
+       "searched_legal_roots": 43,
+       "candidate_roots": 43,
+       "candidate_actions": 52,
+       "insufficient_sun_roots": 324,
+       "cooldown_inactive_roots": 14,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 21,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0012495741248130798,
+        "max": 0.003589540719985962
+       }
+      },
+      "35": {
+       "decision_roots": 483,
+       "legal_roots": 51,
+       "searched_legal_roots": 12,
+       "candidate_roots": 12,
+       "candidate_actions": 12,
+       "insufficient_sun_roots": 324,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 337,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 0,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.00013519806088879704,
+        "max": 0.0006859131390228868
+       }
+      },
+      "39": {
+       "decision_roots": 483,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 483,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 483,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 483,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 337,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 483,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 483,
+       "cooldown_inactive_roots": 61,
+       "no_base_roots": 483,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029002.jsonl"
+    },
+    {
+     "seed": 251029003,
+     "won": false,
+     "final_wave": 10,
+     "final_tick": 28795,
+     "searched": 93,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 1,
+      "21": 6,
+      "17": 5,
+      "10": 1
+     },
+     "max_sun": 150,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.00031429017932775127,
+      "max": 0.007276852459957202
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 5,
+      "type": 2,
+      "x": -180.419,
+      "health": 420,
+      "last_root_tick": 28780,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 4,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 498,
+       "legal_roots": 215,
+       "searched_legal_roots": 50,
+       "candidate_roots": 50,
+       "candidate_actions": 67,
+       "insufficient_sun_roots": 283,
+       "cooldown_inactive_roots": 13,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 23,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0007240303481618563,
+        "max": 0.00513624120503664
+       }
+      },
+      "35": {
+       "decision_roots": 498,
+       "legal_roots": 74,
+       "searched_legal_roots": 15,
+       "candidate_roots": 15,
+       "candidate_actions": 15,
+       "insufficient_sun_roots": 283,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 332,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 0,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.000119068194180727,
+        "max": 0.0004117004864383489
+       }
+      },
+      "39": {
+       "decision_roots": 498,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 498,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 498,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 497,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 332,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 498,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 498,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 498,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029003.jsonl"
+    },
+    {
+     "seed": 251029004,
+     "won": false,
+     "final_wave": 12,
+     "final_tick": 35785,
+     "searched": 116,
+     "overrides": 0,
+     "mowers_used": 5,
+     "planted_types": {
+      "1": 1,
+      "21": 6,
+      "17": 7,
+      "30": 1,
+      "10": 2
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.00015126859458784264,
+      "max": 0.008305453055072576
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 6,
+      "type": 0,
+      "x": -180.192,
+      "health": 130,
+      "last_root_tick": 35727,
+      "last_row_plants": [
+       {
+        "type": 17,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 620,
+       "legal_roots": 225,
+       "searched_legal_roots": 52,
+       "candidate_roots": 52,
+       "candidate_actions": 82,
+       "insufficient_sun_roots": 395,
+       "cooldown_inactive_roots": 26,
+       "student_proposed": 2,
+       "teacher_proposed": 2,
+       "score_above_student_roots": 24,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0006997379823587835,
+        "max": 0.005450150153289239
+       }
+      },
+      "35": {
+       "decision_roots": 620,
+       "legal_roots": 106,
+       "searched_legal_roots": 23,
+       "candidate_roots": 23,
+       "candidate_actions": 23,
+       "insufficient_sun_roots": 395,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 313,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 1,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0005573871312662959,
+        "max": 0.0011327476240694523
+       }
+      },
+      "39": {
+       "decision_roots": 620,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 620,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 620,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 620,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 313,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 620,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 620,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 620,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029004.jsonl"
+    },
+    {
+     "seed": 251029005,
+     "won": false,
+     "final_wave": 9,
+     "final_tick": 26808,
+     "searched": 81,
+     "overrides": 0,
+     "mowers_used": 2,
+     "planted_types": {
+      "1": 1,
+      "21": 8,
+      "17": 4
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.000684968816737334,
+      "max": 0.008132073368566731
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 6,
+      "type": 3,
+      "x": -230.342,
+      "health": 500,
+      "last_root_tick": 26762,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 463,
+       "legal_roots": 131,
+       "searched_legal_roots": 33,
+       "candidate_roots": 33,
+       "candidate_actions": 47,
+       "insufficient_sun_roots": 332,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 24,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0013600237434729934,
+        "max": 0.007376074170072873
+       }
+      },
+      "35": {
+       "decision_roots": 463,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 332,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 463,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 463,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 463,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 463,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 463,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 463,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 463,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 463,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 463,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029005.jsonl"
+    },
+    {
+     "seed": 251029006,
+     "won": false,
+     "final_wave": 13,
+     "final_tick": 38883,
+     "searched": 122,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 1,
+      "21": 12,
+      "17": 5
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0003808401622033367,
+      "max": 0.005206093502541383
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 4,
+      "type": 0,
+      "x": -180.429,
+      "health": 270,
+      "last_root_tick": 38882,
+      "last_row_plants": [],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 677,
+       "legal_roots": 179,
+       "searched_legal_roots": 46,
+       "candidate_roots": 46,
+       "candidate_actions": 65,
+       "insufficient_sun_roots": 498,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 33,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0011969837360084057,
+        "max": 0.005028430372476578
+       }
+      },
+      "35": {
+       "decision_roots": 677,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 498,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 677,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 677,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 677,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 677,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 677,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 677,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 677,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 677,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 677,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029006.jsonl"
+    },
+    {
+     "seed": 251029007,
+     "won": false,
+     "final_wave": 10,
+     "final_tick": 27642,
+     "searched": 92,
+     "overrides": 0,
+     "mowers_used": 4,
+     "planted_types": {
+      "1": 1,
+      "21": 9,
+      "17": 4
+     },
+     "max_sun": 125,
+     "best_minus_student": {
+      "min": 0.0,
+      "median": 0.0006908858680011083,
+      "max": 0.006418221436130503
+     },
+     "all_chosen_equal_student": true,
+     "breach": {
+      "row_1based": 6,
+      "type": 2,
+      "x": -180.229,
+      "health": 640,
+      "last_root_tick": 27597,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 5,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 481,
+       "legal_roots": 166,
+       "searched_legal_roots": 39,
+       "candidate_roots": 39,
+       "candidate_actions": 48,
+       "insufficient_sun_roots": 315,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "score_above_student_roots": 18,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0,
+        "median": 0.0008562813260747741,
+        "max": 0.00542961402485768
+       }
+      },
+      "35": {
+       "decision_roots": 481,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 315,
+       "cooldown_inactive_roots": 0,
+       "no_sleeping_target_roots": 481,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "39": {
+       "decision_roots": 481,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 481,
+       "cooldown_inactive_roots": 0,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "42": {
+       "decision_roots": 481,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 481,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 481,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      },
+      "44": {
+       "decision_roots": 481,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 481,
+       "cooldown_inactive_roots": 62,
+       "no_base_roots": 481,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l29_m050/decisions_251029007.jsonl"
+    }
+   ],
+   "probes": [
+    {
+     "seed": 251029000,
+     "root_tick": 1260,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1874594288,
+     "search_mean": 0.0021446794271469116,
+     "leaf_value": 0.00214467943,
+     "leaf_tick": 3780,
+     "leaf_wave": 1,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029000,
+     "root_tick": 9931,
+     "root_wave": 3,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1874744288,
+     "search_mean": 0.0009455159306526184,
+     "leaf_value": 0.000945515931,
+     "leaf_tick": 12467,
+     "leaf_wave": 4,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029001,
+     "root_tick": 1140,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1884592288,
+     "search_mean": 0.0027484637685120106,
+     "leaf_value": 0.00274846377,
+     "leaf_tick": 3660,
+     "leaf_wave": 1,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029001,
+     "root_tick": 21327,
+     "root_wave": 8,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1884942288,
+     "search_mean": 0.0002971116919070482,
+     "leaf_value": 0.000325426518,
+     "leaf_tick": 23835,
+     "leaf_wave": 9,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 1380,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1894596288,
+     "search_mean": 0.0023822563234716654,
+     "leaf_value": 0.00238225632,
+     "leaf_tick": 3900,
+     "leaf_wave": 1,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029002,
+     "root_tick": 21934,
+     "root_wave": 8,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1894952288,
+     "search_mean": 0.0006859131390228868,
+     "leaf_value": 0.000685913139,
+     "leaf_tick": 24454,
+     "leaf_wave": 9,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 1320,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1904595288,
+     "search_mean": 0.0023131875786930323,
+     "leaf_value": 0.00231318758,
+     "leaf_tick": 3840,
+     "leaf_wave": 1,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 21786,
+     "root_wave": 8,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 1904949288,
+     "search_mean": 0.0004117004864383489,
+     "leaf_value": 0.000411700486,
+     "leaf_tick": 24303,
+     "leaf_wave": 9,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 27820,
+     "root_wave": 10,
+     "root_sun": 100,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 3
+     },
+     "future": 1905053288,
+     "search_mean": 0,
+     "leaf_value": 0.0,
+     "leaf_tick": 28795,
+     "leaf_wave": 10,
+     "leaf_sun": 50,
+     "terminal": true,
+     "result": 2,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029003,
+     "root_tick": 27820,
+     "root_wave": 10,
+     "root_sun": 100,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 1905053288,
+     "search_mean": 0,
+     "leaf_value": 0.0,
+     "leaf_tick": 28795,
+     "leaf_wave": 10,
+     "leaf_sun": 50,
+     "terminal": true,
+     "result": 2,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 1620,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1914600288,
+     "search_mean": 0.002018230559770018,
+     "leaf_value": 0.00222076289,
+     "leaf_tick": 4140,
+     "leaf_wave": 1,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 16641,
+     "root_wave": 6,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 1,
+      "col": 0
+     },
+     "future": 1914859288,
+     "search_mean": 0.0006030717049725354,
+     "leaf_value": 0.00064150471,
+     "leaf_tick": 19172,
+     "leaf_wave": 7,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": []
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 29672,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 2
+     },
+     "future": 1915084288,
+     "search_mean": 0.0005210983217693865,
+     "leaf_value": 0.000521098322,
+     "leaf_tick": 32192,
+     "leaf_wave": 10,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029004,
+     "root_tick": 29672,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 1915084288,
+     "search_mean": 0.0006166632520034909,
+     "leaf_value": 0.000616663252,
+     "leaf_tick": 32192,
+     "leaf_wave": 10,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029005,
+     "root_tick": 1140,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1924592288,
+     "search_mean": 0.0031438383739441633,
+     "leaf_value": 0.00314383837,
+     "leaf_tick": 3660,
+     "leaf_wave": 1,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029006,
+     "root_tick": 1080,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1934591288,
+     "search_mean": 0.0017182193114422262,
+     "leaf_value": 0.00260065822,
+     "leaf_tick": 3600,
+     "leaf_wave": 1,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "30": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029006,
+     "root_tick": 29250,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 5
+     },
+     "future": 1935079288,
+     "search_mean": 0.001461748421813051,
+     "leaf_value": 0.0013635722,
+     "leaf_tick": 31772,
+     "leaf_wave": 11,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1
+     },
+     "leaf_sleeping_mushrooms": []
+    },
+    {
+     "seed": 251029007,
+     "root_tick": 1380,
+     "root_wave": 0,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 4,
+      "col": 3
+     },
+     "future": 1944596288,
+     "search_mean": 0.0013134611072018743,
+     "leaf_value": 0.00131346111,
+     "leaf_tick": 3900,
+     "leaf_wave": 1,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 5,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 251029007,
+     "root_tick": 25917,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 2
+     },
+     "future": 1945023288,
+     "search_mean": 0,
+     "leaf_value": 0.0,
+     "leaf_tick": 27642,
+     "leaf_wave": 10,
+     "leaf_sun": 25,
+     "terminal": true,
+     "result": 2,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    }
+   ]
+  },
+  "l22_m050": {
+   "games": 4,
+   "wins": 3,
+   "mean_final_wave": 29.25,
+   "overrides": 230,
+   "searches": 1167,
+   "planted_types": {
+    "1": 69,
+    "16": 102,
+    "19": 61,
+    "4": 55,
+    "17": 76,
+    "10": 41,
+    "36": 118,
+    "35": 33,
+    "21": 45,
+    "42": 13
+   },
+   "candidate_score": {
+    "min": 0,
+    "median": 0.9476112723350525,
+    "max": 1
+   },
+   "best_minus_student": {
+    "min": -0.259908702224493,
+    "median": 0.004850447177886963,
+    "max": 0.5455447779968381
+   },
+   "cards": {
+    "10": {
+     "decision_roots": 6124,
+     "legal_roots": 1084,
+     "searched_legal_roots": 370,
+     "candidate_roots": 370,
+     "candidate_actions": 513,
+     "insufficient_sun_roots": 4756,
+     "cooldown_inactive_roots": 589,
+     "student_proposed": 41,
+     "teacher_proposed": 41,
+     "score_above_student_roots": 154,
+     "score_gap_over_002_roots": 40
+    },
+    "35": {
+     "decision_roots": 6124,
+     "legal_roots": 415,
+     "searched_legal_roots": 172,
+     "candidate_roots": 172,
+     "candidate_actions": 237,
+     "insufficient_sun_roots": 4756,
+     "cooldown_inactive_roots": 468,
+     "no_sleeping_target_roots": 2905,
+     "student_proposed": 26,
+     "teacher_proposed": 33,
+     "score_above_student_roots": 80,
+     "score_gap_over_002_roots": 29
+    },
+    "42": {
+     "decision_roots": 6124,
+     "legal_roots": 105,
+     "searched_legal_roots": 32,
+     "candidate_roots": 32,
+     "candidate_actions": 101,
+     "insufficient_sun_roots": 5453,
+     "cooldown_inactive_roots": 1374,
+     "no_base_roots": 465,
+     "student_proposed": 13,
+     "teacher_proposed": 13,
+     "score_above_student_roots": 15,
+     "score_gap_over_002_roots": 1
+    }
+   },
+   "breaches_by_row_1based": {
+    "1": 1
+   },
+   "per_game": [
+    {
+     "seed": 243002000,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 82714,
+     "searched": 332,
+     "overrides": 52,
+     "mowers_used": 0,
+     "planted_types": {
+      "1": 19,
+      "16": 28,
+      "19": 15,
+      "4": 15,
+      "17": 19,
+      "10": 12,
+      "36": 32,
+      "35": 10,
+      "21": 13,
+      "42": 6
+     },
+     "max_sun": 800,
+     "best_minus_student": {
+      "min": -0.08471279342969262,
+      "median": 0.005373398462931334,
+      "max": 0.28803350031375885
+     },
+     "all_chosen_equal_student": false,
+     "breach": null,
+     "cards": {
+      "10": {
+       "decision_roots": 1549,
+       "legal_roots": 485,
+       "searched_legal_roots": 144,
+       "candidate_roots": 144,
+       "candidate_actions": 193,
+       "insufficient_sun_roots": 924,
+       "cooldown_inactive_roots": 183,
+       "student_proposed": 13,
+       "teacher_proposed": 12,
+       "score_above_student_roots": 65,
+       "score_gap_over_002_roots": 13,
+       "search_score": {
+        "min": 0.24202348291873932,
+        "median": 0.9747428596019745,
+        "max": 1
+       }
+      },
+      "35": {
+       "decision_roots": 1549,
+       "legal_roots": 66,
+       "searched_legal_roots": 30,
+       "candidate_roots": 30,
+       "candidate_actions": 38,
+       "insufficient_sun_roots": 924,
+       "cooldown_inactive_roots": 150,
+       "no_sleeping_target_roots": 984,
+       "student_proposed": 10,
+       "teacher_proposed": 10,
+       "score_above_student_roots": 14,
+       "score_gap_over_002_roots": 2,
+       "search_score": {
+        "min": 0.758440375328064,
+        "median": 0.9514526277780533,
+        "max": 0.9956923127174377
+       }
+      },
+      "42": {
+       "decision_roots": 1549,
+       "legal_roots": 74,
+       "searched_legal_roots": 20,
+       "candidate_roots": 20,
+       "candidate_actions": 62,
+       "insufficient_sun_roots": 1129,
+       "cooldown_inactive_roots": 628,
+       "no_base_roots": 98,
+       "student_proposed": 6,
+       "teacher_proposed": 6,
+       "score_above_student_roots": 10,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.8905102014541626,
+        "median": 0.9861414879560471,
+        "max": 0.9963896671930949
+       }
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l22_m050/decisions_243002000.jsonl"
+    },
+    {
+     "seed": 243002001,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 90227,
+     "searched": 271,
+     "overrides": 50,
+     "mowers_used": 1,
+     "planted_types": {
+      "1": 12,
+      "17": 20,
+      "10": 9,
+      "16": 22,
+      "19": 19,
+      "4": 14,
+      "36": 26,
+      "35": 6,
+      "21": 8
+     },
+     "max_sun": 100,
+     "best_minus_student": {
+      "min": -0.07735564808050799,
+      "median": 0.002209991216659546,
+      "max": 0.2642075717449188
+     },
+     "all_chosen_equal_student": false,
+     "breach": null,
+     "cards": {
+      "10": {
+       "decision_roots": 1646,
+       "legal_roots": 98,
+       "searched_legal_roots": 48,
+       "candidate_roots": 48,
+       "candidate_actions": 73,
+       "insufficient_sun_roots": 1548,
+       "cooldown_inactive_roots": 127,
+       "student_proposed": 9,
+       "teacher_proposed": 9,
+       "score_above_student_roots": 18,
+       "score_gap_over_002_roots": 4,
+       "search_score": {
+        "min": 0.04113353416323662,
+        "median": 0.8779608011245728,
+        "max": 1
+       }
+      },
+      "35": {
+       "decision_roots": 1646,
+       "legal_roots": 30,
+       "searched_legal_roots": 26,
+       "candidate_roots": 26,
+       "candidate_actions": 51,
+       "insufficient_sun_roots": 1548,
+       "cooldown_inactive_roots": 83,
+       "no_sleeping_target_roots": 770,
+       "student_proposed": 6,
+       "teacher_proposed": 6,
+       "score_above_student_roots": 17,
+       "score_gap_over_002_roots": 6,
+       "search_score": {
+        "min": 0.29677265882492065,
+        "median": 0.8407287945350012,
+        "max": 0.975230077902476
+       }
+      },
+      "42": {
+       "decision_roots": 1646,
+       "legal_roots": 0,
+       "searched_legal_roots": 0,
+       "candidate_roots": 0,
+       "candidate_actions": 0,
+       "insufficient_sun_roots": 1646,
+       "cooldown_inactive_roots": 64,
+       "no_base_roots": 59,
+       "student_proposed": 0,
+       "teacher_proposed": 0,
+       "search_score": null
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l22_m050/decisions_243002001.jsonl"
+    },
+    {
+     "seed": 243002002,
+     "won": true,
+     "final_wave": 30,
+     "final_tick": 83662,
+     "searched": 317,
+     "overrides": 67,
+     "mowers_used": 1,
+     "planted_types": {
+      "1": 20,
+      "16": 24,
+      "17": 19,
+      "4": 13,
+      "36": 34,
+      "19": 14,
+      "10": 12,
+      "35": 10,
+      "21": 12,
+      "42": 6
+     },
+     "max_sun": 575,
+     "best_minus_student": {
+      "min": -0.259908702224493,
+      "median": 0.004941383997599247,
+      "max": 0.5455447779968381
+     },
+     "all_chosen_equal_student": false,
+     "breach": null,
+     "cards": {
+      "10": {
+       "decision_roots": 1562,
+       "legal_roots": 367,
+       "searched_legal_roots": 123,
+       "candidate_roots": 123,
+       "candidate_actions": 167,
+       "insufficient_sun_roots": 1051,
+       "cooldown_inactive_roots": 169,
+       "student_proposed": 13,
+       "teacher_proposed": 12,
+       "score_above_student_roots": 48,
+       "score_gap_over_002_roots": 17,
+       "search_score": {
+        "min": 0.2131928950548172,
+        "median": 0.9370450973510742,
+        "max": 1
+       }
+      },
+      "35": {
+       "decision_roots": 1562,
+       "legal_roots": 241,
+       "searched_legal_roots": 81,
+       "candidate_roots": 81,
+       "candidate_actions": 104,
+       "insufficient_sun_roots": 1051,
+       "cooldown_inactive_roots": 141,
+       "no_sleeping_target_roots": 588,
+       "student_proposed": 5,
+       "teacher_proposed": 10,
+       "score_above_student_roots": 35,
+       "score_gap_over_002_roots": 14,
+       "search_score": {
+        "min": 0.3810827136039734,
+        "median": 0.9511703252792358,
+        "max": 0.9962419271469116
+       }
+      },
+      "42": {
+       "decision_roots": 1562,
+       "legal_roots": 30,
+       "searched_legal_roots": 11,
+       "candidate_roots": 11,
+       "candidate_actions": 35,
+       "insufficient_sun_roots": 1312,
+       "cooldown_inactive_roots": 524,
+       "no_base_roots": 132,
+       "student_proposed": 6,
+       "teacher_proposed": 6,
+       "score_above_student_roots": 5,
+       "score_gap_over_002_roots": 1,
+       "search_score": {
+        "min": 0.20617793500423431,
+        "median": 0.9655551314353943,
+        "max": 1
+       }
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l22_m050/decisions_243002002.jsonl"
+    },
+    {
+     "seed": 243002003,
+     "won": false,
+     "final_wave": 27,
+     "final_tick": 73208,
+     "searched": 247,
+     "overrides": 61,
+     "mowers_used": 1,
+     "planted_types": {
+      "1": 18,
+      "16": 28,
+      "19": 13,
+      "4": 13,
+      "17": 18,
+      "36": 26,
+      "10": 8,
+      "21": 12,
+      "35": 7,
+      "42": 1
+     },
+     "max_sun": 175,
+     "best_minus_student": {
+      "min": -0.0376398079097271,
+      "median": 0.007322847843170166,
+      "max": 0.25366659462451935
+     },
+     "all_chosen_equal_student": false,
+     "breach": {
+      "row_1based": 1,
+      "type": 4,
+      "x": -180.354,
+      "health": 570,
+      "last_root_tick": 73186,
+      "last_row_plants": [
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 0,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 36,
+        "imitater_type": -1,
+        "col": 1,
+        "row": 0,
+        "health": 300,
+        "max_health": 400,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 7,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 36,
+        "imitater_type": -1,
+        "col": 5,
+        "row": 0,
+        "health": 260,
+        "max_health": 400,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 2,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 4,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 3,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 21,
+        "imitater_type": -1,
+        "col": 6,
+        "row": 0,
+        "health": 300,
+        "max_health": 300,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       },
+       {
+        "type": 36,
+        "imitater_type": -1,
+        "col": 8,
+        "row": 0,
+        "health": 40,
+        "max_health": 400,
+        "state": 0,
+        "state_countdown": 0,
+        "launch_counter": 0,
+        "launch_rate": 0,
+        "shooting_counter": 0,
+        "wake_up_counter": 0,
+        "asleep": false,
+        "squished": false,
+        "target_zombie_id": 0,
+        "bungee_state": 0
+       }
+      ],
+      "last_row_awake_mushroom_melon_count": 0
+     },
+     "cards": {
+      "10": {
+       "decision_roots": 1367,
+       "legal_roots": 134,
+       "searched_legal_roots": 55,
+       "candidate_roots": 55,
+       "candidate_actions": 80,
+       "insufficient_sun_roots": 1233,
+       "cooldown_inactive_roots": 110,
+       "student_proposed": 6,
+       "teacher_proposed": 8,
+       "score_above_student_roots": 23,
+       "score_gap_over_002_roots": 6,
+       "search_score": {
+        "min": 0.4649617671966553,
+        "median": 0.9431885331869125,
+        "max": 0.9982743064562479
+       }
+      },
+      "35": {
+       "decision_roots": 1367,
+       "legal_roots": 78,
+       "searched_legal_roots": 35,
+       "candidate_roots": 35,
+       "candidate_actions": 44,
+       "insufficient_sun_roots": 1233,
+       "cooldown_inactive_roots": 94,
+       "no_sleeping_target_roots": 563,
+       "student_proposed": 5,
+       "teacher_proposed": 7,
+       "score_above_student_roots": 14,
+       "score_gap_over_002_roots": 7,
+       "search_score": {
+        "min": 0.5188790559768677,
+        "median": 0.949757531285286,
+        "max": 0.9945843815803528
+       }
+      },
+      "42": {
+       "decision_roots": 1367,
+       "legal_roots": 1,
+       "searched_legal_roots": 1,
+       "candidate_roots": 1,
+       "candidate_actions": 4,
+       "insufficient_sun_roots": 1366,
+       "cooldown_inactive_roots": 158,
+       "no_base_roots": 176,
+       "student_proposed": 1,
+       "teacher_proposed": 1,
+       "score_above_student_roots": 0,
+       "score_gap_over_002_roots": 0,
+       "search_score": {
+        "min": 0.9760477542877197,
+        "median": 0.9875644942124684,
+        "max": 0.9974216818809509
+       }
+      }
+     },
+     "diagnostic_path": "artifacts/task251/l22_m050/decisions_243002003.jsonl"
+    }
+   ],
+   "probes": [
+    {
+     "seed": 243002000,
+     "root_tick": 4620,
+     "root_wave": 1,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 1
+     },
+     "future": 518452232,
+     "search_mean": 0.24202348291873932,
+     "leaf_value": 0.242023483,
+     "leaf_tick": 7140,
+     "leaf_wave": 2,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "1": 1,
+      "4": 1,
+      "17": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 1,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002000,
+     "root_tick": 17687,
+     "root_wave": 6,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 3,
+      "col": 2
+     },
+     "future": 518703232,
+     "search_mean": 0.8006047010421753,
+     "leaf_value": 0.800604701,
+     "leaf_tick": 20207,
+     "leaf_wave": 7,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "10": 2,
+      "17": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 2,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002000,
+     "root_tick": 25067,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 3,
+      "col": 2
+     },
+     "future": 518846232,
+     "search_mean": 0.7775111198425293,
+     "leaf_value": 0.77751112,
+     "leaf_tick": 27587,
+     "leaf_wave": 11,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1,
+      "35": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002000,
+     "root_tick": 25067,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 2
+     },
+     "future": 518846232,
+     "search_mean": 0.7830471595128378,
+     "leaf_value": 0.809632719,
+     "leaf_tick": 27587,
+     "leaf_wave": 11,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "21": 1,
+      "35": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002000,
+     "root_tick": 31067,
+     "root_wave": 12,
+     "root_sun": 175,
+     "plant_type": 42,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 3,
+      "col": 2
+     },
+     "future": 518958232,
+     "search_mean": 0.9309015274047852,
+     "leaf_value": 0.930901527,
+     "leaf_tick": 33587,
+     "leaf_wave": 13,
+     "leaf_sun": 325,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 42,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002000,
+     "root_tick": 31067,
+     "root_wave": 12,
+     "root_sun": 175,
+     "plant_type": 42,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 5,
+      "col": 0
+     },
+     "future": 518958232,
+     "search_mean": 0.9246628284454346,
+     "leaf_value": 0.924662828,
+     "leaf_tick": 33587,
+     "leaf_wave": 13,
+     "leaf_sun": 200,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1,
+      "21": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 42,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002001,
+     "root_tick": 3240,
+     "root_wave": 1,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 1
+     },
+     "future": 528425232,
+     "search_mean": 0.09340637177228928,
+     "leaf_value": 0.0934063718,
+     "leaf_tick": 5760,
+     "leaf_wave": 2,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 1,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002001,
+     "root_tick": 8700,
+     "root_wave": 3,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 0,
+      "col": 0
+     },
+     "future": 528526232,
+     "search_mean": 0.3061044439673424,
+     "leaf_value": 0.327960759,
+     "leaf_tick": 11231,
+     "leaf_wave": 5,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "10": 1,
+      "17": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002001,
+     "root_tick": 27480,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 4
+     },
+     "future": 528873232,
+     "search_mean": 0.7907145023345947,
+     "leaf_value": 0.790714502,
+     "leaf_tick": 30000,
+     "leaf_wave": 11,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1,
+      "19": 1,
+      "21": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002001,
+     "root_tick": 27480,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 6
+     },
+     "future": 528873232,
+     "search_mean": 0.7227298617362976,
+     "leaf_value": 0.722729862,
+     "leaf_tick": 30000,
+     "leaf_wave": 11,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1,
+      "21": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 1,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 7080,
+     "root_wave": 3,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 1,
+      "col": 5
+     },
+     "future": 538498232,
+     "search_mean": 0.38776451349258423,
+     "leaf_value": 0.387764513,
+     "leaf_tick": 9600,
+     "leaf_wave": 4,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "16": 1,
+      "17": 1,
+      "19": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 2,
+       "col_0based": 5,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 10800,
+     "root_wave": 4,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 3,
+      "col": 2
+     },
+     "future": 538569232,
+     "search_mean": 0.609248973429203,
+     "leaf_value": 0.784380674,
+     "leaf_tick": 13320,
+     "leaf_wave": 5,
+     "leaf_sun": 50,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "16": 1,
+      "17": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 27480,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 538889232,
+     "search_mean": 0.943341851234436,
+     "leaf_value": 0.966280103,
+     "leaf_tick": 30000,
+     "leaf_wave": 12,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "17": 1,
+      "21": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 27480,
+     "root_wave": 10,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 2,
+      "col": 7
+     },
+     "future": 538889232,
+     "search_mean": 0.902404248714447,
+     "leaf_value": 0.902404249,
+     "leaf_tick": 30000,
+     "leaf_wave": 12,
+     "leaf_sun": 0,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "17": 1,
+      "35": 1,
+      "36": 3
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 7,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 46920,
+     "root_wave": 19,
+     "root_sun": 150,
+     "plant_type": 42,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 3,
+      "col": 2
+     },
+     "future": 539257232,
+     "search_mean": 0.9720380902290344,
+     "leaf_value": 0.97203809,
+     "leaf_tick": 49440,
+     "leaf_wave": 19,
+     "leaf_sun": 275,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 42,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002002,
+     "root_tick": 46920,
+     "root_wave": 19,
+     "root_sun": 150,
+     "plant_type": 42,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 5,
+      "col": 0
+     },
+     "future": 539257232,
+     "search_mean": 0.9786628683408102,
+     "leaf_value": 0.97685504,
+     "leaf_tick": 49440,
+     "leaf_wave": 19,
+     "leaf_sun": 275,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {},
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 42,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 9360,
+     "root_wave": 3,
+     "root_sun": 75,
+     "plant_type": 10,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 5,
+      "col": 3
+     },
+     "future": 548542232,
+     "search_mean": 0.6500678658485413,
+     "leaf_value": 0.650067866,
+     "leaf_tick": 11880,
+     "leaf_wave": 4,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "16": 1,
+      "17": 1,
+      "19": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 14160,
+     "root_wave": 5,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 3,
+      "col": 2
+     },
+     "future": 548636232,
+     "search_mean": 0.8106957674026489,
+     "leaf_value": 0.810695767,
+     "leaf_tick": 16680,
+     "leaf_wave": 6,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "10": 1,
+      "16": 1,
+      "17": 1,
+      "19": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 2,
+       "col_0based": 4,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 25260,
+     "root_wave": 10,
+     "root_sun": 100,
+     "plant_type": 10,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 3
+     },
+     "future": 548847232,
+     "search_mean": 0.9030832052230835,
+     "leaf_value": 0.903083205,
+     "leaf_tick": 27780,
+     "leaf_wave": 11,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "10": 1,
+      "16": 1,
+      "17": 1,
+      "35": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 1,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 30000,
+     "root_wave": 11,
+     "root_sun": 75,
+     "plant_type": 35,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 2,
+      "row": 5,
+      "col": 0
+     },
+     "future": 548939232,
+     "search_mean": 0.9460083544254303,
+     "leaf_value": 0.932532549,
+     "leaf_tick": 32520,
+     "leaf_wave": 12,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "10": 1,
+      "16": 1,
+      "36": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 59040,
+     "root_wave": 22,
+     "root_sun": 175,
+     "plant_type": 42,
+     "phase": 0,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 3,
+      "col": 2
+     },
+     "future": 549474232,
+     "search_mean": 0.9760477542877197,
+     "leaf_value": 0.98933804,
+     "leaf_tick": 61560,
+     "leaf_wave": 23,
+     "leaf_sun": 25,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "4": 1,
+      "21": 2
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 42,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 10,
+       "asleep": true,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 6,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    },
+    {
+     "seed": 243002003,
+     "root_tick": 59040,
+     "root_wave": 22,
+     "root_sun": 175,
+     "plant_type": 42,
+     "phase": 1,
+     "action": {
+      "type": "plant",
+      "packet": 4,
+      "row": 5,
+      "col": 3
+     },
+     "future": 549474232,
+     "search_mean": 0.9974216818809509,
+     "leaf_value": 0.996986687,
+     "leaf_tick": 61560,
+     "leaf_wave": 23,
+     "leaf_sun": 75,
+     "terminal": false,
+     "result": 0,
+     "student_followup_types": {
+      "17": 1,
+      "35": 1,
+      "36": 1
+     },
+     "leaf_sleeping_mushrooms": [
+      {
+       "row_1based": 4,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 0,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 5,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 3,
+       "type": 42,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 6,
+       "col_0based": 2,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      },
+      {
+       "row_1based": 3,
+       "col_0based": 6,
+       "type": 10,
+       "asleep": false,
+       "wake_counter": 0
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "student_control": {
+  "games": 8,
+  "wins": 0,
+  "compared_fields": [
+   "won",
+   "final_wave",
+   "final_tick",
+   "decisions",
+   "planted_types",
+   "planted_slots",
+   "mowers_used"
+  ],
+  "identical_games": 8,
+  "per_game": [
+   {
+    "seed": 251029000,
+    "won": false,
+    "final_wave": 10,
+    "final_tick": 30194,
+    "decisions": 523,
+    "planted_types": {
+     "1": 1,
+     "21": 3,
+     "17": 5,
+     "10": 3,
+     "30": 2
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 3,
+     "9": 5,
+     "3": 3,
+     "7": 2
+    },
+    "mowers_used": 4
+   },
+   {
+    "seed": 251029001,
+    "won": false,
+    "final_wave": 9,
+    "final_tick": 24236,
+    "decisions": 421,
+    "planted_types": {
+     "1": 1,
+     "21": 6,
+     "17": 4,
+     "10": 1,
+     "35": 1
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 6,
+     "9": 4,
+     "3": 1,
+     "2": 1
+    },
+    "mowers_used": 4
+   },
+   {
+    "seed": 251029002,
+    "won": false,
+    "final_wave": 9,
+    "final_tick": 27952,
+    "decisions": 483,
+    "planted_types": {
+     "1": 1,
+     "21": 9,
+     "17": 2,
+     "10": 1
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 9,
+     "9": 2,
+     "3": 1
+    },
+    "mowers_used": 3
+   },
+   {
+    "seed": 251029003,
+    "won": false,
+    "final_wave": 10,
+    "final_tick": 28795,
+    "decisions": 498,
+    "planted_types": {
+     "1": 1,
+     "21": 6,
+     "17": 5,
+     "10": 1
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 6,
+     "9": 5,
+     "3": 1
+    },
+    "mowers_used": 4
+   },
+   {
+    "seed": 251029004,
+    "won": false,
+    "final_wave": 12,
+    "final_tick": 35785,
+    "decisions": 620,
+    "planted_types": {
+     "1": 1,
+     "21": 6,
+     "17": 7,
+     "30": 1,
+     "10": 2
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 6,
+     "9": 7,
+     "7": 1,
+     "3": 2
+    },
+    "mowers_used": 5
+   },
+   {
+    "seed": 251029005,
+    "won": false,
+    "final_wave": 9,
+    "final_tick": 26808,
+    "decisions": 463,
+    "planted_types": {
+     "1": 1,
+     "21": 8,
+     "17": 4
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 8,
+     "9": 4
+    },
+    "mowers_used": 2
+   },
+   {
+    "seed": 251029006,
+    "won": false,
+    "final_wave": 13,
+    "final_tick": 38883,
+    "decisions": 677,
+    "planted_types": {
+     "1": 1,
+     "21": 12,
+     "17": 5
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 12,
+     "9": 5
+    },
+    "mowers_used": 4
+   },
+   {
+    "seed": 251029007,
+    "won": false,
+    "final_wave": 10,
+    "final_tick": 27642,
+    "decisions": 481,
+    "planted_types": {
+     "1": 1,
+     "21": 9,
+     "17": 4
+    },
+    "planted_slots": {
+     "0": 1,
+     "8": 9,
+     "9": 4
+    },
+    "mowers_used": 4
+   }
+  ]
+ },
+ "coverage_diagnosis": {
+  "winter_melon": "所有8268个逐决策根都少于300阳光，且没有西瓜底座，冰西瓜零合法、零候选。其升级所有权已声明。",
+  "gloom": "只有3个根达到150阳光，这3个根均没有大喷菇。其余根阳光不足150。忧郁菇零合法、零候选。冷却也会在开局限制它，但无法解释中后期的资源不足。",
+  "coffee": "136/136合法搜索根被覆盖，无合法候选漏项。合法但未搜索的根受min_gap约束，独立计数见逐局cards。",
+  "combo": "C++已具备大喷菇→忧郁菇、西瓜→冰西瓜两步候选，生产combo_candidates=0关闭。组合只从当前合法底座候选扩展，不会主动解决缺少经济的问题，也没有蘑菇→咖啡豆或三步链候选。"
+ },
+ "continuation": {
+  "summary": {
+   "10": {
+    "candidates_sampled": 28,
+    "leaf_value": {
+     "min": 0.0,
+     "median": 0.00172804942,
+     "max": 0.00373320072
+    },
+    "followup_planted_types": {
+     "17": 4,
+     "30": 7,
+     "21": 8
+    },
+    "terminal_samples": 3
+   },
+   "35": {
+    "candidates_sampled": 15,
+    "leaf_value": {
+     "min": 0.0,
+     "median": 0.000685913139,
+     "max": 0.00374030508
+    },
+    "followup_planted_types": {
+     "21": 1
+    },
+    "terminal_samples": 1
+   },
+   "39": {
+    "candidates_sampled": 0,
+    "leaf_value": null,
+    "followup_planted_types": {},
+    "terminal_samples": 0
+   },
+   "42": {
+    "candidates_sampled": 0,
+    "leaf_value": null,
+    "followup_planted_types": {},
+    "terminal_samples": 0
+   },
+   "44": {
+    "candidates_sampled": 0,
+    "leaf_value": null,
+    "followup_planted_types": {},
+    "terminal_samples": 0
+   }
+  },
+  "affordable_sleeping_example": {
+   "seed": 251029000,
+   "root_tick": 1260,
+   "root_wave": 0,
+   "root_sun": 75,
+   "plant_type": 10,
+   "phase": 0,
+   "action": {
+    "type": "plant",
+    "packet": 3,
+    "row": 4,
+    "col": 3
+   },
+   "future": 1874594288,
+   "search_mean": 0.0009644539095461369,
+   "leaf_value": 0.00096445391,
+   "leaf_tick": 3780,
+   "leaf_wave": 4,
+   "leaf_sun": 100,
+   "terminal": false,
+   "result": 0,
+   "student_followup_types": {},
+   "leaf_sleeping_mushrooms": [
+    {
+     "row_1based": 5,
+     "col_0based": 3,
+     "type": 10,
+     "asleep": true,
+     "wake_counter": 0
+    }
+   ]
+  },
+  "evidence": "示例：0.25倍seed251029000，tick1260强制大喷菇，学生续走至3780仍有100阳光且蘑菇睡眠、苏醒计时0，未补咖啡豆，叶值低于0.001，精确值见示例。",
+  "interpretation": "局部支持“不会完成前置动作→续走看不到收益→老师不选”。本批更直接的限制是叶值差均未越过0.02。升级链无合法样本，不能据此判定学生面对可升级底座时会拒绝升级。",
+  "value_network_limit": "学生已有睡眠输入，不能把不会用咖啡豆解释为学生看不见睡眠。叶网v2与静态网v1缺少睡眠特征，是可检查的数据/表示缺口，当前实验未将它与训练分布、续走策略的影响分离。"
+ },
+ "prior_records": {
+  "task246": {
+   "path": "../vnbranch/MEMORY/docs/task246-vn-branch.json",
+   "lines": "5923–5931",
+   "level29_multiplier": 0.25,
+   "wins": 0,
+   "games": 32
+  },
+  "task249": {
+   "path": "../l22diag/MEMORY/docs/task249-l22-teacher-gap.json",
+   "level22_teacher_wins": 15,
+   "games": 16,
+   "student_wins": 0,
+   "note": "task249的r119等历史学生与本次冻结d65模型不同，历史胜率不作为本次配对控制。"
+  }
+ },
+ "human_comparison": {
+  "completed": false,
+  "source": "台式机 ~/PvZ-search/artifacts/student/frames_v2/human/user_l29*",
+  "reason": "本次连接仍被拒绝，Mac指定缓存中无该录像。未进行HF转移，未改动或删除人类原档。"
+ },
+ "recommendations": [
+  {
+   "rank": 1,
+   "direction": "同卡组示范起点格与学生数据",
+   "action": "取人类L29录像，或由GPT在原C++接口产生成功示范，从经济形成前和组合完成前的状态分层采集，再训练学生。",
+   "expected_benefit": "高。直接补当前1–2向日葵、零睡莲、无西瓜的状态分布缺口，使搜索续走有机会完成多步链。尚无本任务干预胜率，不能给胜率增幅。",
+   "cost": "依赖录像或新示范。准备约0.5–1人日，加一轮既有学生训练。首轮只取少量起点与种子，成本随已有采集预算控制。"
+  },
+  {
+   "rank": 2,
+   "direction": "L29分支价值数据及分数尺度",
+   "action": "用能完成该卡组的示范/学得策略产生成功与失败分支标签，补叶网训练，包含睡眠与已苏醒局面。再以同根续走结果比较绝对门槛和相对门槛。",
+   "expected_benefit": "高。当前1517次搜索的最佳差值全小于0.02，恢复可区分的叶值是让老师覆盖学生的直接条件。单纯降低门槛可能放大错误排序，收益未测。",
+   "cost": "一轮分支采集与价值网训练，预计数小时至1个实验日，取决于是否走到真实终局。复用C++和现有训练入口，无新增规则策略。"
+  },
+  {
+   "rank": 3,
+   "direction": "学得的组合续走策略",
+   "action": "在少量真实根上，比较当前学生与已经学会该卡组的示范克隆模型续走；后者能完成咖啡豆或升级时，再评估替换或混合续走。",
+   "expected_benefit": "中到高。可直接解除28个大喷菇探针中零咖啡豆的局部闭环，也能检验升级链是否被当前学生低估。依赖先获得能完成链的策略。",
+   "cost": "模型准备依赖第1项。同一候选使用两种续走时，该部分模拟与推理约增加一倍。先抽样真实根，无需整批重跑。"
+  },
+  {
+   "rank": 4,
+   "direction": "结构性候选覆盖",
+   "action": "先诊断既有combo_candidates的两步升级候选，再评估从引擎合法性/前置依赖扩展蘑菇与咖啡豆的组合候选。只扩展可比较的搜索计划，不固定该种哪张卡。",
+   "expected_benefit": "中。补多步可见性。当前西瓜始终买不起，单独打开升级组合无法补经济前提，不能预期独自解决0胜。",
+   "cost": "现有两步开关试验成本低。新咖啡豆/三步计划需要C++实现与小规模诊断，每个升级计划最多等待5000tick再续走2500tick，相比普通2500tick候选最坏约3倍模拟长度。"
+  }
+ ],
+ "code_evidence": [
+  {
+   "path": "src/main.cpp",
+   "lines": "1001–1023,643–805",
+   "finding": "SEARCH与公开ROLLOUT共享RunRollout，首动作后使用学生直到叶子。"
+  },
+  {
+   "path": "src/main.cpp",
+   "lines": "1155–1192",
+   "finding": "每张当前合法卡保留静态评分最高格位，再加入等待与学生动作。"
+  },
+  {
+   "path": "src/main.cpp",
+   "lines": "916–919,1218–1264,1033–1100",
+   "finding": "升级组合表和候选开关，组合等待期间不让学生消耗预留阳光。"
+  },
+  {
+   "path": "src/main.cpp",
+   "lines": "973–977,1471–1533",
+   "finding": "严格best-policy>0.02，随后才有独立验证及覆盖。"
+  },
+  {
+   "path": "src/LawnApp.cpp",
+   "lines": "2334–2355",
+   "finding": "观察与搜索共用EnvironmentLegalPlants。"
+  },
+  {
+   "path": "src/Lawn/SeedPacket.cpp",
+   "lines": "686–723",
+   "finding": "CanPickUp检查卡牌active、阳光与升级前置。"
+  },
+  {
+   "path": "src/Lawn/Board.cpp",
+   "lines": "2818–2831,2952–2960,9380–9393",
+   "finding": "咖啡豆需睡眠目标，升级需实际底座。"
+  },
+  {
+   "path": "src/ConstEnums.h",
+   "lines": "1035–1081",
+   "finding": "36是大蒜，19是缠绕海草，29才是杨桃。L22卡组没有杨桃。"
+  }
+ ],
+ "reproduction": {
+  "command": "python3 scripts/task251_teacher_chain.py --workers 2",
+  "resume": "按games.jsonl跳过完成局，--groups可选l29_m025,l29_m050,l22_m050,l29_student。本目录续跑使用报告列出的同一冻结模型。",
+  "raw_directory": "artifacts/task251/",
+  "frames": "artifacts/task251/frames/",
+  "resources": "最多两个对局worker，未重建引擎、未训练模型、未部署，未主动暂停或停止采集。临时文件均放artifacts/task251/work。",
+  "timing": "运行期间观测到本任务引擎多次处于T状态，恢复仅针对本任务PID。games.seconds含暂停时间，不用作吞吐估计。"
+ },
+ "limitations": [
+  "L29每倍率8局用于机制诊断，不能据此估计总体胜率置信区间或宣称人类卡组不可通关。",
+  "本批没有升级合法状态，升级续走的能力上限与因果归因尚未直接检验。",
+  "没有人类录像对照，当前未分离关卡敌人构成与卡组替换的影响。",
+  "候选均值与有限续走只能说明当前评估结果，不能当作动作真实长期收益。"
+ ]
+}
