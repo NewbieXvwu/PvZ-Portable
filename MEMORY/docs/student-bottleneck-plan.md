@@ -1803,3 +1803,5 @@
   - 已写好可续跑驱动 `task254_experiment.py`：开局根、学生候选 2→4、按训练种子正率逐批调倍率（>80% ×1.25、<40% ×0.8），每关最多三批。估算 4 worker 28.5–42.8 小时，磁盘峰值约 10 GB。
   - 主控在 tmux `task254-collect` 拉起 `--phase collect --workers 4`（nice 10）。Mac 现用电池，看门狗已冻结，插电后自动继续。
   - 重训的原数据问题等标签采完再定：可从 finetune-t3 起点只用新标签加蒸馏，或重新生成轨迹特征。
+- 11-07 22:17 CST **r142 晋升**并激活，现任 r142。22:22 **屋顶叶值路由上线**（autodeploy-roofroute2，deploy26 36041dd3，exit 0）：qc.active=36041dd3，控制器与 search_play 都带 `--value-routes`（BACKGROUND_5_ROOF → task252 finetune-t3，相对 0.02），看门狗已起。Mac 采集照常投递。
+- 11-07 08:04 EST Mac 插电，采集与 task254 自动恢复；task254 已开 16 局。
