@@ -1784,3 +1784,8 @@
   - 模型经 HF 送到台式机 `artifacts/value_net/task252_finetune_t3/model.pt`，sha256 4988616b… 已核对，远端已删。
   - 布 `autodeploy-roofroute`：等 r141 出结论后 `deploy26.py --revision b46ac44d`。回退参数 `--value-routes {}`。
   - Mac 采集只采白天 / 夜间 / 泳池，不受影响。
+- 11-07 派 **task254**（vnbalance，Codex，≤4 worker）：
+  - 先用现有数据查雾关变差（L31 / 36 / 37）是否也是“分支标签正率极高”；
+  - 再在泳池和雾的高倍率上补平衡的分支标签（正率 40%–80%），沿用 task246 的微调配方重训，温度按地形拟合；
+  - 离线明显好于 finetune 才跑整局：泳池加雾面板对生产，屋顶对 finetune-t3。
+  - 任务书写明可续跑、单局失败不终止整批，长流水线不放进 exec 后台。
