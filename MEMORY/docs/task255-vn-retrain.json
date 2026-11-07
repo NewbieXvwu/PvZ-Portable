@@ -1,0 +1,586 @@
+{
+ "task": "task255",
+ "date": "2026-11-07",
+ "branch": "vnretrain",
+ "base_commit": "bbfe3aa5",
+ "status": "重训入口已实现，小规模试训通过。台式机原存档留存尚未核实，未执行重建、完整重训或部署。",
+ "original_data": {
+  "provenance": "task243 从台式机 frames_v2 的66515份元数据中按地形和胜负固定抽样4000局，剔除138个首操作tick不符的存档，task246使用余下3862局。终局标签来自各原局结果，特征由 task239_export 重放原动作带，调用 C++ leaf_values 导出编码2。每局最多96行，历史实际370603行。",
+  "split": {
+   "unit": "地形+原局种子，分支继承原局划分",
+   "train": 2700,
+   "validation": 575,
+   "test": 587,
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbranch/artifacts/task246/split.json"
+  },
+  "retained": {
+   "task243_selection": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vn6full/artifacts/task243/selection.tsv",
+   "task243_export_summary": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vn6full/artifacts/task243/features/summary.json",
+   "task246_plan": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbranch/artifacts/task246/plan.json",
+   "terminal_labels": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbranch/artifacts/task246/branch-labels.json",
+   "terminal_labels_coverage": {
+    "formal_games": 96,
+    "roots": 280,
+    "labels": 7128,
+    "nonterminal_leaf_features_missing": 7102
+   },
+   "note": "终局分支标签仍保存在汇总JSON中，缺失的是训练特征及逐局目录。汇总另含诊断根，恢复时须按正式plan筛选。"
+  },
+  "mac_inventory": {
+   "method": "仅检查清单对应的frames.npz是否存在，未读取或重放整局。mac197相对路径同时尝试去掉mac197前缀。",
+   "matched_selection_archives": 0,
+   "checked_roots": [
+    "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vn6full/artifacts/task243/corpus",
+    "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbranch/artifacts/task246/corpus",
+    "/Users/newbiexvwu/PvZAgent/artifacts/student/frames_v2",
+    "/Users/newbiexvwu/PvZAgent/artifacts/search",
+    "/Users/newbiexvwu/PvZAgent/artifacts/human_demo",
+    "/Users/newbiexvwu/pvz-mac-collect",
+    "/Users/newbiexvwu/pvz-mac-collect/frames_v2",
+    "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnretrain/artifacts/student/frames_v2"
+   ],
+   "limit": "在已知语料位置未找到匹配存档，未扫描整块磁盘。"
+  },
+  "desktop_inventory": {
+   "status": "未核实",
+   "expected_root": "~/PvZ-search/artifacts/student/frames_v2",
+   "transport": "ssh -p 22222 newbiexvwu@127.0.0.1 wsl -d Ubuntu -e nice -n 19 python3 -",
+   "attempts": 4,
+   "result": "连接被拒绝，远程命令未执行。没有据此认定台式机数据已删除。"
+  },
+  "feature_rebuild_cost": {
+   "requires": "恢复原动作带与元数据，沿用保存的划分和原局种子，不生成新对局。调用现有 task239_export.py，编码2由production.bin头部决定。",
+   "historical_basis": "MEMORY/docs/task239-vn6.json:665：151局、4进程约10分钟，约15.6个工作秒/局。该记录中的4000局4.3小时是四进程估计。",
+   "estimated_worker_hours": 16.735333333333333,
+   "estimated_four_worker_wall_hours": 4.183833333333333,
+   "caveat": "换算约单进程16.7小时、四进程4.2小时。历史先导为64行/局，当前需96行且采集负载高，只能作为量级参考，实际可能更慢。未执行基准、重放或特征计算。"
+  },
+  "branch_rebuild_cost": {
+   "full_relabel_worker_seconds": 316244.1461888299,
+   "full_relabel_worker_hours": 87.84559616356387,
+   "full_relabel_four_worker_ideal_hours": 21.961399040890967,
+   "per_game_seconds_range": [
+    176.9846459160035,
+    10060.072375292002
+   ],
+   "saved_terminal_continuation_seconds": 316051.1290624259,
+   "other_collector_seconds": 193.01712640398182,
+   "cheap_recovery": "如源存档恢复，可保留已有终局结果，用原动作、future_seed及冻结模型，经已有env.rollout和leaf_values路径补叶特征。历史总耗时减已保存终局续走耗时约193秒，可望把计算降至分钟量级，另加取回存档和写盘时间。此差额并非本次恢复实测，现有collector仍会续走终局，若选此恢复路线需在原实现增加复用保存标签的参数。",
+   "decision": "本任务不执行恢复，不添加未选用的重建入口。"
+  },
+  "evidence": [
+   "scripts/task239_export.py:66",
+   "scripts/task239_export.py:96",
+   "scripts/task246_collect.py:64",
+   "scripts/value_teacher_feasibility.py:68",
+   "scripts/value_teacher_feasibility.py:80",
+   "scripts/task246_experiment.py:142",
+   "MEMORY/docs/task246-vn-branch.json:11",
+   "MEMORY/docs/task239-vn6.json:664",
+   "MEMORY/2026-11-04.md:15"
+  ]
+ },
+ "selected_route": {
+  "entry": "scripts/task246_train.py --task task254 --new-labels <task254目录>",
+  "init": "冻结的finetune-t3.pt，已固化原T=3。新拟合的温度作用于本次微调后的logits，不再额外除以3。",
+  "training_data": "仅使用new-plan.json列出的、有complete.json的局，读取其rows.npz和逐根labels.json。保持采样前冻结的partition，不纳入进行中的局，不需要--original。",
+  "episode_labels": "本路线不使用轨迹终局行，原轨迹缺失不再阻塞训练。",
+  "roof_retention": "现有按地形模型路由继续适用。balanced-roof.pt原样复制冻结的finetune-t3.pt，不让泳池/雾的更新影响屋顶输出。没有屋顶特征时，无须增加蒸馏损失与教师前向。",
+  "untrained_terrains": "未提供标签的非屋顶地形保留production.pt。完整采集后泳池与雾各自拟合验证集温度，白天/夜间保留原生产模型。",
+  "hyperparameters": {
+   "encoder": 2,
+   "width": 64,
+   "epochs": 16,
+   "lr": 0.0001,
+   "weight_decay": 0.0001,
+   "dropout": 0,
+   "batch_size": 512,
+   "seed": 246,
+   "decision_fraction": 1,
+   "device": "cpu",
+   "threads": 1
+  },
+  "reuse": [
+   "task239_train.run_arm",
+   "task243_train.pack / predict",
+   "task244_experiment.tempered_model",
+   "task246_train.candidate_rows / balanced_report"
+  ],
+  "calibration": "逐地形仅用验证局拟合原温度网格。调用tempered_model将温度固化进head.2权重与bias，使用方温度为1。",
+  "offline": "沿用task254排序准入条件，补充测试集log loss/Brier/AUC。小样本只验证流程，不判效果，不进入整局面板。",
+  "scope": "只改scripts/task246_train.py。vnbalance仅作为只读标签源。训练目录要求独立且首次使用，防止旧分片混入。"
+ },
+ "smoke_test": {
+  "passed": true,
+  "processes": 1,
+  "threads": 1,
+  "device": "cpu",
+  "epochs": 1,
+  "games": 12,
+  "levels": [
+   21,
+   22,
+   23
+  ],
+  "terrain": "pool",
+  "rows": 384,
+  "rows_by_split": {
+   "train": 192,
+   "validation": 96,
+   "test": 96
+  },
+  "games_by_split": {
+   "train": 6,
+   "validation": 3,
+   "test": 3
+  },
+  "games_used": [
+   12200,
+   12201,
+   12202,
+   12203,
+   12300,
+   12301,
+   12302,
+   12303,
+   12100,
+   12101,
+   12102,
+   12103
+  ],
+  "seconds": 1.2588660717010498,
+  "temperature": 1.5,
+  "checks": {
+   "temperature_head_max_error": 0,
+   "saved_inference_max_error": 0,
+   "roof_file_identical": true
+  },
+  "scope": "读取已完成的新分支标签、训练、验证集拟合温度、固化模型、读取固化模型、离线测试与候选排序均跑通。当前完成数据未含雾，雾实数据链路尚未覆盖。",
+  "offline": {
+   "task": "task254",
+   "training": {
+    "finetune": {
+     "encoder": 2,
+     "width": 64,
+     "best_epoch": 0,
+     "best_validation": 0.6738722150524458,
+     "history": [
+      {
+       "epoch": 0,
+       "fit": 0.6944388747215271,
+       "validation": 0.6738722150524458
+      }
+     ],
+     "all_holdout": {
+      "n": 96,
+      "wins": 75,
+      "log_loss": 0.6738722324371338,
+      "brier": 0.2406821995973587,
+      "auc": 0.44761904761904764,
+      "accuracy": 0.5208333333333334,
+      "mean_prediction": 0.5846099853515625,
+      "actual": 0.78125
+     },
+     "by_terrain": {
+      "pool": {
+       "n": 96,
+       "wins": 75,
+       "log_loss": 0.6738722324371338,
+       "brier": 0.2406821995973587,
+       "auc": 0.44761904761904764,
+       "accuracy": 0.5208333333333334,
+       "mean_prediction": 0.5846099853515625,
+       "actual": 0.78125
+      }
+     }
+    }
+   },
+   "calibration": {
+    "pool": {
+     "temperature": 1.5,
+     "validation_rows": 96,
+     "validation_loss": 0.6682916283607483,
+     "grid": {
+      "0.25": 1.06429922580719,
+      "0.5": 0.7498710751533508,
+      "0.75": 0.6901679039001465,
+      "1.0": 0.6738722324371338,
+      "1.5": 0.6682916283607483,
+      "2.0": 0.6698603630065918,
+      "3.0": 0.6744793057441711,
+      "4.0": 0.6779579520225525,
+      "6.0": 0.6822257041931152,
+      "8.0": 0.6846572756767273
+     }
+    }
+   },
+   "ranking": {
+    "21": {
+     "finetune": {
+      "pair_accuracy": 0.26666666666666666,
+      "pairs": 15,
+      "positions": 1
+     },
+     "production": {
+      "pair_accuracy": 0.26666666666666666,
+      "pairs": 15,
+      "positions": 1
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0.26666666666666666,
+      "pairs": 15,
+      "positions": 1
+     },
+     "balanced": {
+      "pair_accuracy": 0.26666666666666666,
+      "pairs": 15,
+      "positions": 1
+     }
+    },
+    "22": {
+     "finetune": {
+      "pair_accuracy": 0.8,
+      "pairs": 15,
+      "positions": 1
+     },
+     "production": {
+      "pair_accuracy": 0.8,
+      "pairs": 15,
+      "positions": 1
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0.8666666666666667,
+      "pairs": 15,
+      "positions": 1
+     },
+     "balanced": {
+      "pair_accuracy": 0.8,
+      "pairs": 15,
+      "positions": 1
+     }
+    },
+    "23": {
+     "finetune": {
+      "pair_accuracy": 0.782608695652174,
+      "pairs": 23,
+      "positions": 1
+     },
+     "production": {
+      "pair_accuracy": 0.8260869565217391,
+      "pairs": 23,
+      "positions": 1
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0.8260869565217391,
+      "pairs": 23,
+      "positions": 1
+     },
+     "balanced": {
+      "pair_accuracy": 0.782608695652174,
+      "pairs": 23,
+      "positions": 1
+     }
+    },
+    "all": {
+     "finetune": {
+      "pair_accuracy": 0.6415094339622641,
+      "pairs": 53,
+      "positions": 3
+     },
+     "production": {
+      "pair_accuracy": 0.660377358490566,
+      "pairs": 53,
+      "positions": 3
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0.6792452830188679,
+      "pairs": 53,
+      "positions": 3
+     },
+     "balanced": {
+      "pair_accuracy": 0.6415094339622641,
+      "pairs": 53,
+      "positions": 3
+     }
+    },
+    "day": {
+     "finetune": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "production": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "balanced": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     }
+    },
+    "night": {
+     "finetune": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "production": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "balanced": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     }
+    },
+    "pool": {
+     "finetune": {
+      "pair_accuracy": 0.6415094339622641,
+      "pairs": 53,
+      "positions": 3
+     },
+     "production": {
+      "pair_accuracy": 0.660377358490566,
+      "pairs": 53,
+      "positions": 3
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0.6792452830188679,
+      "pairs": 53,
+      "positions": 3
+     },
+     "balanced": {
+      "pair_accuracy": 0.6415094339622641,
+      "pairs": 53,
+      "positions": 3
+     }
+    },
+    "fog": {
+     "finetune": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "production": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "balanced": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     }
+    },
+    "roof": {
+     "finetune": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "production": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "finetune-t3": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     },
+     "balanced": {
+      "pair_accuracy": 0,
+      "pairs": 0,
+      "positions": 0
+     }
+    }
+   },
+   "ranking_by_origin": {
+    "original": {
+     "pool": {
+      "finetune": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "production": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "finetune-t3": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "balanced": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      }
+     },
+     "fog": {
+      "finetune": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "production": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "finetune-t3": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "balanced": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      }
+     }
+    },
+    "new": {
+     "pool": {
+      "finetune": {
+       "pair_accuracy": 0.6415094339622641,
+       "pairs": 53,
+       "positions": 3
+      },
+      "production": {
+       "pair_accuracy": 0.660377358490566,
+       "pairs": 53,
+       "positions": 3
+      },
+      "finetune-t3": {
+       "pair_accuracy": 0.6792452830188679,
+       "pairs": 53,
+       "positions": 3
+      },
+      "balanced": {
+       "pair_accuracy": 0.6415094339622641,
+       "pairs": 53,
+       "positions": 3
+      }
+     },
+     "fog": {
+      "finetune": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "production": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "finetune-t3": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      },
+      "balanced": {
+       "pair_accuracy": 0,
+       "pairs": 0,
+       "positions": 0
+      }
+     }
+    }
+   },
+   "eligible_for_panel": false,
+   "gate": "pool/fog >= production and >= finetune-t3 +0.05; L21/22/24/31/36/37 have held-out pairs, >= production and > finetune-t3",
+   "split_games": {
+    "train": 6,
+    "validation": 3,
+    "test": 3
+   },
+   "heldout": {
+    "finetune": {
+     "n": 96,
+     "wins": 78,
+     "log_loss": 0.6465792655944824,
+     "brier": 0.22820496559143066,
+     "auc": 0.45975783475783477,
+     "accuracy": 0.5520833333333334,
+     "mean_prediction": 0.5898020267486572,
+     "actual": 0.8125
+    },
+    "production": {
+     "n": 96,
+     "wins": 78,
+     "log_loss": 1.4255539178848267,
+     "brier": 0.48415884375572205,
+     "auc": 0.521011396011396,
+     "accuracy": 0.3541666666666667,
+     "mean_prediction": 0.2639310956001282,
+     "actual": 0.8125
+    },
+    "finetune-t3": {
+     "n": 96,
+     "wins": 78,
+     "log_loss": 0.6758265495300293,
+     "brier": 0.24177615344524384,
+     "auc": 0.469017094017094,
+     "accuracy": 0.5520833333333334,
+     "mean_prediction": 0.5616958737373352,
+     "actual": 0.8125
+    },
+    "balanced": {
+     "n": 96,
+     "wins": 78,
+     "log_loss": 0.6498787999153137,
+     "brier": 0.2290544956922531,
+     "auc": 0.45975783475783477,
+     "accuracy": 0.5520833333333334,
+     "mean_prediction": 0.5618657469749451,
+     "actual": 0.8125
+    }
+   },
+   "route": "finetune-t3 + new branches only",
+   "frozen_terrains": {
+    "day": "production.pt",
+    "night": "production.pt",
+    "fog": "production.pt",
+    "roof": "finetune-t3.pt"
+   },
+   "source": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbalance/artifacts/task254",
+   "device": "cpu",
+   "seconds": 1.2588660717010498
+  }
+ },
+ "reproduction": {
+  "when": "主控确认task254全部采集结束后，在vnretrain工作树执行。使用本任务新增的直接训练入口，task254_experiment.py旧train分支仍要求--original。",
+  "command": "cd /Users/newbiexvwu/PvZAgent/.claude/worktrees/vnretrain\nmkdir -p artifacts/task255/work\nulimit -f 2000000\nTMPDIR=\"$PWD/artifacts/task255/work\" PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 PVZ_NO_POPUP=1 timeout 300 nice -n 19 /Users/newbiexvwu/pvz-torch-venv/bin/python scripts/task246_train.py --data artifacts/task255/retrain --task task254 --new-labels /Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbalance/artifacts/task254 --device cpu --epochs 16",
+  "output": "artifacts/task255/retrain/offline.json 和 models/{finetune,balanced-pool,balanced-fog,balanced-roof,balanced-day,balanced-night}.pt",
+  "directory_requirement": "artifacts/task255/retrain须为新目录。prepare_new_labels拒绝复用已有features/packed/branches/models目录，不会覆盖旧训练结果。",
+  "resource": "单进程、单线程CPU、nice19、300秒上限。全量仅有有限的新分支行，预计为分钟量级，未在本轮运行。模型和大数组留在gitignored artifacts。",
+  "inference": "balanced-*的温度已固化，推理温度1。屋顶原样沿用finetune-t3，继续使用task252既定的相对0.02门槛，Boss路由保持原生产配置。",
+  "acceptance": "离线通过只代表可安排既有新种子整局面板。屋顶输出保留不能替代泳池/雾的整局效果证据。本任务没有运行面板或部署。"
+ },
+ "cleanup": {
+  "remaining": "artifacts/task255/report.json",
+  "removed": "试训模型、NPZ链接、memmap、工作目录及日志，结论与试训指标已内嵌本报告。"
+ },
+ "production_deployed": false
+}

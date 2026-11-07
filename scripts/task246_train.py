@@ -4,6 +4,7 @@ from collections import defaultdict
 import gc
 import json
 from pathlib import Path
+import shutil
 import sys
 import time
 
@@ -18,6 +19,29 @@ from train_value_branches import pair_accuracy
 from pvz_value_net import load_value_net
 from value_teacher_feasibility import write_json
 from task244_experiment import tempered_model
+
+
+def prepare_new_labels(base, source):
+    """Read completed task254 games into an isolated, branch-only training directory."""
+    if base == source or source in base.parents or base in source.parents:
+        raise ValueError('--data and --new-labels must be separate directories')
+    if any((base/name).exists() for name in ('features', 'packed', 'branches', 'models')):
+        raise ValueError('--new-labels requires a fresh --data directory')
+    jobs = [j for j in json.loads((source/'new-plan.json').read_text())['jobs']
+            if (source/'branches'/f"game_{j['game']:04d}"/'complete.json').exists()]
+    if not jobs:
+        raise ValueError('no completed games in --new-labels')
+    for name in ('features', 'branches', 'models'):
+        (base/name).mkdir(parents=True, exist_ok=True)
+    split = {key: [] for key in ('train', 'validation', 'test')}
+    for job in jobs:
+        directory = f"game_{job['game']:04d}"
+        (base/'branches'/directory).symlink_to(source/'branches'/directory)
+        split[job['partition']].append([job['terrain'], job['probe_seed']])
+    for name in ('production.pt', 'roof.pt', 'finetune-t3.pt'):
+        shutil.copy2(source/'models'/name, base/'models'/name)
+    write_json(base/'plan.json', dict(jobs=jobs))
+    write_json(base/'split.json', split)
 
 
 def rank(prob, data, mask):
@@ -89,9 +113,13 @@ def balanced_report(base, data, jobs, columns, train, val, test, predictions, tr
     raw_logits = predict(data, {t:base/'models/finetune.pt' for t in TERRAINS}, device, logits=True)
     offset = 0
     for name in TERRAINS:
+        if name not in data:
+            continue
         rows = data[name]
         logits = raw_logits[offset:offset+len(rows['y'])]
         mask = np.array([(name, int(seed)) in val for seed in rows['seed']])
+        if not mask.any():
+            raise ValueError(f'{name}: no validation games for temperature fitting')
         losses = {}
         for temperature in (.25, .5, .75, 1., 1.5, 2., 3., 4., 6., 8.):
             loss = np.logaddexp(0, logits/temperature) - rows['y']*logits/temperature
@@ -130,6 +158,9 @@ def balanced_report(base, data, jobs, columns, train, val, test, predictions, tr
                   gate='pool/fog >= production and >= finetune-t3 +0.05; L21/22/24/31/36/37 '
                        'have held-out pairs, >= production and > finetune-t3',
                   split_games=dict(train=len(train), validation=len(val), test=len(test)))
+    test_mask = np.array([(t, int(s)) in test for t in data for s in data[t]['seed']])
+    report['heldout'] = {name: metrics(prob[test_mask], columns['y'][test_mask])
+                         for name, prob in predictions.items()} if test_mask.any() else {}
     write_json(base/'offline.json', report)
     print(json.dumps(report, ensure_ascii=False), flush=True)
 
@@ -139,8 +170,14 @@ def main():
     p.add_argument('--data',type=Path,required=True)
     p.add_argument('--epochs',type=int,default=16)
     p.add_argument('--task',choices=('task246','task254'),default='task246')
+    p.add_argument('--new-labels',type=Path,
+        help='read completed task254 labels; train from finetune-t3 without original task246 data')
+    p.add_argument('--device',choices=('cpu','mps'),help='default: MPS when available')
     args=p.parse_args();base=args.data.resolve();started=time.time()
     torch.set_num_threads(1)
+    if args.new_labels:
+        if args.task != 'task254':p.error('--new-labels requires --task task254')
+        prepare_new_labels(base, args.new_labels.resolve())
     features=base/'features'
     jobs=json.loads((base/'plan.json').read_text())['jobs']
     selected={j['game'] for j in jobs}
@@ -153,21 +190,22 @@ def main():
     data=load_rows(base/'packed')
     split=json.loads((base/'split.json').read_text())
     train,val,test=({tuple(x) for x in split[k]} for k in ('train','validation','test'))
-    terrain=np.concatenate([[t]*len(data[t]['y']) for t in TERRAINS])
-    columns={k:np.concatenate([data[t][k] for t in TERRAINS]) for k in
+    terrain=np.concatenate([[t]*len(data[t]['y']) for t in TERRAINS if t in data])
+    columns={k:np.concatenate([data[t][k] for t in TERRAINS if t in data]) for k in
         ('seed','game','source','candidate','op','future','level','y','truth','live_fraction','terminal_win_fraction')}
     test_mask=np.array([(t,int(s)) in test for t,s in zip(terrain,columns['seed'])])
-    device=torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    device=torch.device(args.device or ('mps' if torch.backends.mps.is_available() else 'cpu'))
     predictions={};training={}
-    arms = [('finetune',base/'models/production.pt')]
+    arms = [('finetune',base/'models'/('finetune-t3.pt' if args.new_labels else 'production.pt'))]
+    decision_fraction = 1. if args.new_labels else .5
     if args.task == 'task246': arms.append(('scratch',None))
     for name,init in arms:
         state=load_value_net(init).state_dict() if init else None
         report,checkpoint,prob,_=run_arm(data,2,64,246,args.epochs,device,train,val,lr=1e-4,
-            dropout=0,weight_decay=1e-4,init_state=state,batch_size=512,decision_fraction=.5)
+            dropout=0,weight_decay=1e-4,init_state=state,batch_size=512,decision_fraction=decision_fraction)
         checkpoint['state_dict']={k:v.cpu() for k,v in checkpoint['state_dict'].items()}
         checkpoint.update(task=args.task,trained_on=sorted({s for _,s in train|val}),
-            validation_seeds=sorted({s for _,s in val}),decision_fraction=.5,init=str(init) if init else None)
+            validation_seeds=sorted({s for _,s in val}),decision_fraction=decision_fraction,init=str(init) if init else None)
         torch.save(checkpoint,base/'models'/f'{name}.pt')
         predictions[name]=prob
         training[name]=report
@@ -179,6 +217,16 @@ def main():
             paths={t:base/'models'/('roof.pt' if name=='production' and t=='roof' else f'{name}.pt') for t in TERRAINS}
             predictions[name]=predict(data,paths,device)
         balanced_report(base,data,jobs,columns,train,val,test,predictions,training,device)
+        if args.new_labels:
+            # Preserve the existing terrain routing: roof keeps the frozen production leaf.
+            frozen = {t: 'finetune-t3.pt' if t == 'roof' else 'production.pt'
+                      for t in TERRAINS if t not in data}
+            for terrain, model in frozen.items():
+                shutil.copy2(base/'models'/model, base/f'models/balanced-{terrain}.pt')
+            report = json.loads((base/'offline.json').read_text())
+            report.update(route='finetune-t3 + new branches only', frozen_terrains=frozen,
+                          source=str(args.new_labels.resolve()), device=str(device), seconds=time.time()-started)
+            write_json(base/'offline.json', report)
         return
     for name in ('production','task244'):
         paths={t:base/'models'/('roof.pt' if name=='production' and t=='roof' else
