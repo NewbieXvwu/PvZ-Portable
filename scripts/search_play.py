@@ -78,13 +78,34 @@ ROOF_BACKGROUNDS = frozenset({"BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
 PRIOR_BACKGROUNDS = frozenset({"BACKGROUND_4_FOG", "BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
 
 
-def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str:
-    """Roof levels (and the boss) score leaves with ``--value-roof``; every other terrain keeps ``--value``."""
-    if not roof_value_path:
-        return value_path
+def parse_value_routes(text: str) -> dict:
+    """A checkpoint and its override margin form one background-specific setting."""
+    from pvz_constants import background_types
+    routes = json.loads(text)
+    if not isinstance(routes, dict):
+        raise argparse.ArgumentTypeError("value routes must be a JSON object")
+    for background, route in routes.items():
+        if (background not in background_types().values() or not isinstance(route, dict)
+                or set(route) != {"value", "margin_relative"}
+                or not isinstance(route["value"], str) or not route["value"]
+                or type(route["margin_relative"]) not in (int, float)
+                or not math.isfinite(route["margin_relative"]) or route["margin_relative"] < 0):
+            raise argparse.ArgumentTypeError("each background requires value and finite nonnegative margin_relative")
+    return routes
+
+
+def _leaf_route(value_path, roof_value_path, task, routes=None, margin_relative=0.0):
     from pvz_constants import background_for_level
-    roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
-    return roof_value_path if roof else value_path
+    background = background_for_level(int(task["level"]))
+    if background in (routes or {}):
+        route = routes[background]
+        return route["value"], route["margin_relative"]
+    value = roof_value_path if roof_value_path and background in ROOF_BACKGROUNDS else value_path
+    return value, margin_relative
+
+
+def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str:
+    return _leaf_route(value_path, roof_value_path, task)[0]
 
 
 def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
@@ -820,6 +841,8 @@ def parser():
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--value-roof", help="value net that scores the leaves on roof levels 41-50 "
                    "(including the boss); default --value")
+    p.add_argument("--value-routes", type=parse_value_routes, default={},
+                   help='JSON background -> {"value": checkpoint, "margin_relative": R}; overrides --value-roof')
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
     p.add_argument("--task-json", help="inline curriculum task definition (task193; no derived manifest)")
@@ -947,7 +970,8 @@ def main() -> None:
     task_definition = (json.loads(args.task_json) if args.task_json else
                        load_training_task(Path(args.manifest), args.task_id))
     task_seeds = task_definition["seeds"]
-    args.leaf_value = _leaf_value(args.value, args.value_roof, task_definition)
+    args.leaf_value, args.margin_relative = _leaf_route(
+        args.value, args.value_roof, task_definition, args.value_routes, args.margin_relative)
     args.rollout_policy = _terrain_policy(args.rollout_policy, args.rollout_policy_gpt, task_definition)
     if args.seed_list:
         seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]

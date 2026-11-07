@@ -82,6 +82,7 @@ from pvz_training_pack import (filter_sources, pack_flags, pack_options, fingerp
                                segment_contracts, segment_options, segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
+from search_play import parse_value_routes  # noqa: E402
 
 
 def _recalibrate_current_incumbent(state, source):
@@ -1125,6 +1126,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
             *(['--value-roof', str(args.value_roof)] if getattr(args, 'value_roof', None) else []),
+            *(['--value-routes', json.dumps(args.value_routes)] if getattr(args, 'value_routes', None) else []),
             '--manifest', str(manifest), '--task-id', task_id,
             *(['--task-json', json.dumps(task_definition)] if task_definition is not None else []),
             *seed_args,
@@ -2631,6 +2633,8 @@ def main() -> None:
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--value-roof', type=Path,
                         help='leaf value net for roof levels 41-50 (including the boss); default --value')
+    parser.add_argument('--value-routes', type=parse_value_routes, default={},
+                        help='background-specific leaf checkpoint and relative margin (JSON)')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,

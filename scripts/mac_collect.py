@@ -42,6 +42,7 @@ def snapshot(payload):
     head = dict(revision=revision, student=state['student'], round=state['round'],
         value=option('--value', str(root.parents[2] / 'artifacts/value_net/v5/model.pt')),
         value_roof=option('--value-roof'), rollout_policy_gpt=option('--rollout-policy-gpt'),
+        value_routes=json.loads(option('--value-routes', '{}')),
         static=option('--static-value', str(root.parents[2] / 'artifacts/hard/value_branch1/model.pt')),
         frames=option('--frames', str(root.parents[2] / 'artifacts/student/frames_v2')),
         obs_v3='--obs-v3' in argv)
@@ -187,6 +188,12 @@ def inputs(args, state, group, label):
                          ('gptbc.pt', state['rollout_policy_gpt']), ('value_roof.pt', state['value_roof'])):
         if source and not (directory / name).exists():
             files[name] = source
+    routes = {}
+    for background, route in state.get('value_routes', {}).items():
+        name = 'value_route_' + hashlib.sha1(route['value'].encode()).hexdigest()[:12] + '.pt'
+        if not (directory / name).exists():
+            files[name] = route['value']
+        routes[background] = dict(route, value=str(directory / name))
     shutil.rmtree(directory / 'demo', ignore_errors=True)
     if group.get('demo_archive'):
         # Only numerical replay files; game assets never enter HF.
@@ -207,7 +214,7 @@ def inputs(args, state, group, label):
     for previous in directory.glob('student_*.pt'):
         if previous.name != student_name:
             previous.unlink()
-    return directory, directory / student_name
+    return directory, directory / student_name, routes
 
 
 def play(payload):
@@ -294,7 +301,7 @@ def run(args):
         label = f'mac197_{seed}_fast_search'
         folder = args.cache / label
         folder.mkdir()
-        model, student = inputs(args, state, group, label)
+        model, student, value_routes = inputs(args, state, group, label)
         task = group['task']
         deck_seeds = {}
         if not group.get('demo_archive'):
@@ -305,6 +312,7 @@ def run(args):
             save_candidates=group.get('save_candidates', 0), max_actions=args.max_actions if args.profile else None,
             args=dict(rollout_policy=str(student), value=str(model / 'value.pt'), static_value=str(model / 'static.pt'),
                 rollout_policy_gpt=str(model / 'gptbc.pt'), value_roof=str(model / 'value_roof.pt'),
+                value_routes=value_routes,
                 executable=str(args.executable), resource_dir=str(args.resource_dir), frames=str(folder / 'frames'),
                 out=str(folder / 'games'), workers=args.workers, native_games=True, obs_v3=state['obs_v3']))
         if group.get('demo_archive'):
