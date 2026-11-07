@@ -1733,3 +1733,4 @@
   - `~/.codex/config.toml` 的 `[model_providers.custom]` 里已经没有指向 localhost:8317 的 base_url，现在走 auth.json 直连；auth.json 修改于 11-05 21:57 EST。
   - 聚合服务 cliproxyapi 仍在监听 8317。凭据和配置归用户管，主控不改。
   - task250 改用 dshjob（DeepSeek v4.1 flash，session-9ccfd0a9）运行。
+- 11-07 用户回来了：Mac 和台式机的 Tailscale 都崩溃了。用户 12 点才能到台式机前，先搁置。恢复后主控检查：qc 是否还在跑（断网本身不影响 WSL 内生产，除非机器重启过）、看门狗、Mac 采集能否自动接上；Codex 401 等用户处理。
