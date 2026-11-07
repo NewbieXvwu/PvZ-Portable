@@ -1805,3 +1805,7 @@
   - 重训的原数据问题等标签采完再定：可从 finetune-t3 起点只用新标签加蒸馏，或重新生成轨迹特征。
 - 11-07 22:17 CST **r142 晋升**并激活，现任 r142。22:22 **屋顶叶值路由上线**（autodeploy-roofroute2，deploy26 36041dd3，exit 0）：qc.active=36041dd3，控制器与 search_play 都带 `--value-routes`（BACKGROUND_5_ROOF → task252 finetune-t3，相对 0.02），看门狗已起。Mac 采集照常投递。
 - 11-07 08:04 EST Mac 插电，采集与 task254 自动恢复；task254 已开 16 局。
+- 11-07 派 **task255**（vnretrain，Codex，1 进程）：task246 原数据已删，为 task254 准备重训路线。
+  - 查轨迹特征与分支标签能否便宜重建；
+  - 实现不依赖原分支标签的方案，例如 finetune-t3 起点、新平衡标签加轨迹终局标签、屋顶蒸馏，只扩展 task246_train；
+  - 用已完成的少量新标签试训跑通流水线，不动 vnbalance、不跑新对局。
