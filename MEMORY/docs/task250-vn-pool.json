@@ -1,0 +1,615 @@
+{
+ "task": "task250",
+ "title": "分支监督价值网在泳池高倍率关的退步机制、一次门槛修复尝试与地形路由估算",
+ "status": "完成，未部署；门槛修复只在L22过关，L21/L24仍未过，未跑新种子整局面板",
+ "branch": "vnpool",
+ "base_commit": "22ea92c9",
+ "inputs": {
+  "panel": "task246同一面板，9关×32对同种子；生产=frozen production v5 + roof v5roof + 绝对0.02门槛；候选=finetune-t3（T=3，相对门槛0.02，下限0.001）",
+  "panel_source": "MEMORY/docs/task246-vn-branch.json；artifacts/task246/panel-production, panel-finetune-t3",
+  "branch_labels": "task246同根分支语料（96局，280根，7102行，7128条终局标签）",
+  "models": {
+   "production.pt": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+   "finetune-t3.pt": "4988616b62baf76ff3b4688fe3bdabc00816451d0bc65318f1409f70f0cac0d6",
+   "finetune.pt": "70decf6260d3e5cbc843f9ab7b28dc1b75b7fe2135ea91f18131469a61c8441f",
+   "roof.pt": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8",
+   "static.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+   "student.pt": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57",
+   "gptbc.pt": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "engine": {
+   "path": "~/pvz-mac-collect/build-vnbranch/pvz-portable",
+   "sha256": "d2776e81ddc6bff9e2e23eaae2d5984a5a48ac904b47495f37679f1329def9ea",
+   "note": "task246面板实际用build-vn6；两版C++只差RunRollout返回student_history字段，搜索行为相同。本轮诊断/新实验统一用build-vnbranch，未改引擎"
+  }
+ },
+ "protocol": {
+  "diagnostic": "沿生产老师实际前缀逐步同根比较两套SEARCH，直到第一次终动作不同；取两边SEARCH候选的并集，在共同根上按(future=(decision_seed*1000+k) mod 2^32, k<4)续走到共同叶，两网对同一叶打分；8个根再各自用生产老师finish_teacher续走到真实终局，用4个共同未来的胜负判断哪边动作更好",
+  "first_divergence_roots": {
+   "L21": 13,
+   "L22": 10,
+   "L24": 14,
+   "L23": 11,
+   "note": "L21含1个先导根+12个生产赢/候选输配对；L23为候选赢/生产输配对，作对照"
+  },
+  "quick_gate": "L21/L22/L24各16对（task246面板偶数种子），对照同种子现有生产结果；每关净胜差>=-1/16、单侧McNemar不显著变差、合并CI下界>=-1/16才算过关；过关才跑新种子整局面板",
+  "routing_estimate": "只用task246现有面板：L33/L47用finetune-t3，其余7关用生产；按局配对自举/精确McNemar",
+  "margin_definition": "生产固定0.02绝对；候选SearchMargin=max(0.001, 0.02×最佳候选值)。T=3只作用在价值头(logit/3)，是单调变换，不改变同一叶上的排序，只改变差值的绝对尺度与验证/接管门槛的相对严格度"
+ },
+ "panel_reference": {
+  "9": {
+   "terrain": "day",
+   "multiplier": 0.75,
+   "production": 28,
+   "candidate": 30,
+   "gain": 4,
+   "harm": 2,
+   "mcnemar_worse_p": 0.890625
+  },
+  "14": {
+   "terrain": "night",
+   "multiplier": 2.0,
+   "production": 32,
+   "candidate": 32,
+   "gain": 0,
+   "harm": 0,
+   "mcnemar_worse_p": 1.0
+  },
+  "22": {
+   "terrain": "pool",
+   "multiplier": 0.5,
+   "production": 29,
+   "candidate": 21,
+   "gain": 2,
+   "harm": 10,
+   "mcnemar_worse_p": 0.019287109375
+  },
+  "23": {
+   "terrain": "pool",
+   "multiplier": 1.0,
+   "production": 20,
+   "candidate": 29,
+   "gain": 11,
+   "harm": 2,
+   "mcnemar_worse_p": 0.998291015625
+  },
+  "33": {
+   "terrain": "fog",
+   "multiplier": 0.5,
+   "production": 15,
+   "candidate": 21,
+   "gain": 9,
+   "harm": 3,
+   "mcnemar_worse_p": 0.980712890625
+  },
+  "47": {
+   "terrain": "roof",
+   "multiplier": 0.5,
+   "production": 29,
+   "candidate": 32,
+   "gain": 3,
+   "harm": 0,
+   "mcnemar_worse_p": 1.0
+  },
+  "21": {
+   "terrain": "pool",
+   "multiplier": 1.75,
+   "production": 25,
+   "candidate": 14,
+   "gain": 2,
+   "harm": 13,
+   "mcnemar_worse_p": 0.003692626953125
+  },
+  "24": {
+   "terrain": "pool",
+   "multiplier": 1.5,
+   "production": 15,
+   "candidate": 6,
+   "gain": 5,
+   "harm": 14,
+   "mcnemar_worse_p": 0.0317840576171875
+  },
+  "27": {
+   "terrain": "pool",
+   "multiplier": 1.25,
+   "production": 20,
+   "candidate": 23,
+   "gain": 10,
+   "harm": 7,
+   "mcnemar_worse_p": 0.8338470458984375
+  }
+ },
+ "diagnosis": {
+  "first_divergence": {
+   "21": {
+    "roots": 13,
+    "prod_override_rate": 0.6923076923076923,
+    "cand_override_rate": 0.46153846153846156,
+    "same_top": 13,
+    "cand_final_is_top": 2,
+    "prod_final_is_top": 1,
+    "cand_spread_median": 0.013539712691393379,
+    "prod_spread_median": 0.0332524677371023,
+    "mismatches": []
+   },
+   "22": {
+    "roots": 10,
+    "prod_override_rate": 0.3,
+    "cand_override_rate": 0.7,
+    "same_top": 10,
+    "cand_final_is_top": 4,
+    "prod_final_is_top": 2,
+    "cand_spread_median": 0.022594961947899547,
+    "prod_spread_median": 0.01712124247730612,
+    "mismatches": []
+   },
+   "24": {
+    "roots": 14,
+    "prod_override_rate": 0.5,
+    "cand_override_rate": 0.6428571428571429,
+    "same_top": 14,
+    "cand_final_is_top": 2,
+    "prod_final_is_top": 1,
+    "cand_spread_median": 0.014126064894700106,
+    "prod_spread_median": 0.019125008165708297,
+    "mismatches": []
+   },
+   "23": {
+    "roots": 11,
+    "prod_override_rate": 0.9090909090909091,
+    "cand_override_rate": 0.09090909090909091,
+    "same_top": 11,
+    "cand_final_is_top": 0,
+    "prod_final_is_top": 8,
+    "cand_spread_median": 0.00869513271910124,
+    "prod_spread_median": 0.047844738671685205,
+    "mismatches": []
+   }
+  },
+  "terminal_truth": {
+   "roots": {
+    "l21-246106004-finetune-t3": {
+     "tick": 1740,
+     "level": 21,
+     "seed": 246106004,
+     "prod_action": "4@r3c2",
+     "cand_action": "1@r0c5",
+     "prod_wins": 4,
+     "cand_wins": 3,
+     "futures": 4
+    },
+    "l21-246106013-finetune-t3": {
+     "tick": 1440,
+     "level": 21,
+     "seed": 246106013,
+     "prod_action": "4@r3c2",
+     "cand_action": "wait",
+     "prod_wins": 1,
+     "cand_wins": 2,
+     "futures": 4
+    },
+    "l22-246102002-finetune-t3": {
+     "tick": 780,
+     "level": 22,
+     "seed": 246102002,
+     "prod_action": "wait",
+     "cand_action": "0@r0c5",
+     "prod_wins": 4,
+     "cand_wins": 3,
+     "futures": 4
+    },
+    "l22-246102013-finetune-t3": {
+     "tick": 1080,
+     "level": 22,
+     "seed": 246102013,
+     "prod_action": "0@r0c0",
+     "cand_action": "0@r0c5",
+     "prod_wins": 3,
+     "cand_wins": 3,
+     "futures": 4
+    },
+    "l23-246103011-finetune-t3": {
+     "tick": 780,
+     "level": 23,
+     "seed": 246103011,
+     "prod_action": "1@r2c0",
+     "cand_action": "0@r0c0",
+     "prod_wins": 4,
+     "cand_wins": 3,
+     "futures": 4
+    },
+    "l23-246103013-finetune-t3": {
+     "tick": 780,
+     "level": 23,
+     "seed": 246103013,
+     "prod_action": "0@r1c0",
+     "cand_action": "0@r0c0",
+     "prod_wins": 3,
+     "cand_wins": 2,
+     "futures": 4
+    },
+    "l24-246107000-finetune-t3": {
+     "tick": 1140,
+     "level": 24,
+     "seed": 246107000,
+     "prod_action": "0@r0c0",
+     "cand_action": "0@r0c5",
+     "prod_wins": 1,
+     "cand_wins": 3,
+     "futures": 4
+    },
+    "l24-246107014-finetune-t3": {
+     "tick": 1200,
+     "level": 24,
+     "seed": 246107014,
+     "prod_action": "0@r0c0",
+     "cand_action": "0@r0c5",
+     "prod_wins": 0,
+     "cand_wins": 1,
+     "futures": 4
+    }
+   },
+   "aggregate": {
+    "prod_wins": 20,
+    "cand_wins": 20,
+    "futures": 32
+   }
+  },
+  "board_building": {
+   "21": {
+    "same": {
+     "n": 17,
+     "production": {
+      "plants_per_decision": 0.12063619023062883,
+      "col0_per_decision": 0.015611280750946716,
+      "front_per_decision": 0.05911652190844226
+     },
+     "candidate": {
+      "plants_per_decision": 0.11914862429808502,
+      "col0_per_decision": 0.01591338740792071,
+      "front_per_decision": 0.05782294661753616
+     }
+    },
+    "gain": {
+     "n": 2,
+     "production": {
+      "plants_per_decision": 0.12851544350847421,
+      "col0_per_decision": 0.007233905015857625,
+      "front_per_decision": 0.06239823849059653
+     },
+     "candidate": {
+      "plants_per_decision": 0.11480152690198352,
+      "col0_per_decision": 0.02051170544321229,
+      "front_per_decision": 0.05438984320262859
+     }
+    },
+    "harm": {
+     "n": 13,
+     "production": {
+      "plants_per_decision": 0.11768875578865494,
+      "col0_per_decision": 0.01953745450366674,
+      "front_per_decision": 0.05859855501080277
+     },
+     "candidate": {
+      "plants_per_decision": 0.11822176700403408,
+      "col0_per_decision": 0.004738035808036298,
+      "front_per_decision": 0.05851878293075898
+     }
+    }
+   },
+   "22": {
+    "same": {
+     "n": 20,
+     "production": {
+      "plants_per_decision": 0.09638134811061974,
+      "col0_per_decision": 0.011774213511960696,
+      "front_per_decision": 0.05855357950092663
+     },
+     "candidate": {
+      "plants_per_decision": 0.09605447416964027,
+      "col0_per_decision": 0.011248378214216325,
+      "front_per_decision": 0.05323674814001506
+     }
+    },
+    "harm": {
+     "n": 10,
+     "production": {
+      "plants_per_decision": 0.09525738102328205,
+      "col0_per_decision": 0.010063894889810583,
+      "front_per_decision": 0.057791869563626516
+     },
+     "candidate": {
+      "plants_per_decision": 0.07481234546941193,
+      "col0_per_decision": 0.006644432980335077,
+      "front_per_decision": 0.040572813721660016
+     }
+    },
+    "gain": {
+     "n": 2,
+     "production": {
+      "plants_per_decision": 0.10476341342445655,
+      "col0_per_decision": 0.01316496659255362,
+      "front_per_decision": 0.06405969777717431
+     },
+     "candidate": {
+      "plants_per_decision": 0.09263799444805718,
+      "col0_per_decision": 0.010242075895198339,
+      "front_per_decision": 0.05196642962527882
+     }
+    }
+   },
+   "24": {
+    "harm": {
+     "n": 14,
+     "production": {
+      "plants_per_decision": 0.12160389955215371,
+      "col0_per_decision": 0.023481067318101498,
+      "front_per_decision": 0.04186761366155577
+     },
+     "candidate": {
+      "plants_per_decision": 0.129085967692111,
+      "col0_per_decision": 0.03309489189494794,
+      "front_per_decision": 0.0399105153781663
+     }
+    },
+    "gain": {
+     "n": 5,
+     "production": {
+      "plants_per_decision": 0.1257867603664227,
+      "col0_per_decision": 0.027308014999420087,
+      "front_per_decision": 0.04088022228002372
+     },
+     "candidate": {
+      "plants_per_decision": 0.11980136876290162,
+      "col0_per_decision": 0.025973987839992295,
+      "front_per_decision": 0.040295800576872695
+     }
+    },
+    "same": {
+     "n": 13,
+     "production": {
+      "plants_per_decision": 0.1288531357918003,
+      "col0_per_decision": 0.03032751804839693,
+      "front_per_decision": 0.040660764966685414
+     },
+     "candidate": {
+      "plants_per_decision": 0.12809929337527098,
+      "col0_per_decision": 0.03294851492248018,
+      "front_per_decision": 0.0394954072429049
+     }
+    }
+   },
+   "23": {
+    "gain": {
+     "n": 11,
+     "production": {
+      "plants_per_decision": 0.09803570273233896,
+      "col0_per_decision": 0.01531353529889881,
+      "front_per_decision": 0.03617737077451591
+     },
+     "candidate": {
+      "plants_per_decision": 0.0993184031030372,
+      "col0_per_decision": 0.017838832658280176,
+      "front_per_decision": 0.04201884959527388
+     }
+    },
+    "same": {
+     "n": 19,
+     "production": {
+      "plants_per_decision": 0.08746971222407963,
+      "col0_per_decision": 0.013828992807612918,
+      "front_per_decision": 0.038359336772801185
+     },
+     "candidate": {
+      "plants_per_decision": 0.09595640555691289,
+      "col0_per_decision": 0.01811659990308663,
+      "front_per_decision": 0.04055173857547135
+     }
+    },
+    "harm": {
+     "n": 2,
+     "production": {
+      "plants_per_decision": 0.08061531064038518,
+      "col0_per_decision": 0.012544533942609303,
+      "front_per_decision": 0.04038147517071344
+     },
+     "candidate": {
+      "plants_per_decision": 0.09422783439736718,
+      "col0_per_decision": 0.01555822543264518,
+      "front_per_decision": 0.0346536905333209
+     }
+    }
+   }
+  },
+  "branch_labels": {
+   "21": {
+    "wins": 524,
+    "labels": 540,
+    "win_rate": 0.9703703703703703
+   },
+   "22": {
+    "wins": 485,
+    "labels": 600,
+    "win_rate": 0.8083333333333333
+   },
+   "24": {
+    "wins": 614,
+    "labels": 628,
+    "win_rate": 0.9777070063694268
+   },
+   "23": {
+    "wins": 494,
+    "labels": 584,
+    "win_rate": 0.8458904109589042
+   }
+  },
+  "offline": {
+   "source": "MEMORY/docs/task246-vn-branch.json::offline",
+   "pool_ranking_pair_accuracy": {
+    "production": 0.5783,
+    "finetune": 0.506,
+    "finetune-t3": 0.494
+   },
+   "fog_ranking_pair_accuracy": {
+    "production": 0.75,
+    "finetune-t3": 0.9375
+   },
+   "roof_ranking_pair_accuracy": {
+    "production": 0.6329,
+    "finetune-t3": 0.6709
+   },
+   "pool_auc": {
+    "production": 0.7208,
+    "finetune": 0.7334,
+    "finetune-t3": 0.7334
+   },
+   "pool_log_loss": {
+    "production": 1.1874,
+    "finetune": 0.7217,
+    "finetune-t3": 0.6059
+   }
+  },
+  "mechanism": {
+   "one_line": "不是'第一次分歧选错'：48个首次分歧里两网48/48对最佳候选的判断一致，8个根的终局真值两边20/32对20/32打平；退步来自接管门槛在不同价值尺度下相对严格度不同，以及L21/L24高倍率分支标签几乎全为正、网络学不到会输的分支",
+   "marginal_strictness": "接管是否发生取决于 margin/叶间离散度（按首次分歧根的4未来叶值中位数，约）：L22生产0.02/0.017≈1.17，候选0.009/0.0226≈0.40（明显更松，过度接管）；L24生产≈1.05，候选≈0.83（略松）；L21生产≈0.60，候选≈1.00（更紧，少接管）；L23生产≈0.42，候选≈1.61（最紧，几乎不接管）",
+   "l22": "首次分歧10/10两网最佳候选相同；候选终动作70%是接管（生产30%），典型是把向日葵从r0c0挪到r0c5。L22 246102002真值：生产wait 4/4，候选0@r0c5 3/4。把门槛改成绝对0.02后16对从9胜回到13胜（生产14），单关过关——证明L22主要是相对门槛在低价值段太松",
+   "l24": "首次分歧14/14最佳候选相同，候选接管64%（生产50%），其中4个根是把向日葵r0c0→r0c5；但真值不一致（246107000候选3/4>生产1/4，246107014候选1/4>生产0/4），所以L24的损失不是这些单点造成。L24分支标签97.8%为正，是三个退步关里标签最偏的",
+   "l21": "首次分歧13/13最佳候选相同，候选接管46%（生产69%），典型是生产种土豆雷/寒冰射手防守，候选wait或继续种向日葵。L21 246106004真值生产土豆雷4/4>候选向日葵3/4，但246106013反向（1/4<2/4）。L21分支标签97.0%为正，网络对高倍率早期防守/会输分支几乎没有区分信号；绝对门槛只把16对从8胜抬到9胜",
+   "l23_crosscheck": "L23是同一机制的另一面：候选接管率9%（生产91%），保住学生的r0c0向日葵，而生产常接管到r1c0。L23分支标签84.6%为正，比L21/L24更有信号；所以'少接管'在这里是收益，在L22低价值段则是损失",
+   "whole_game_signature": "整局统计支持'后期滚雪球'而非单点：L21退步配对里候选每决策种到第0列的量0.005 vs 生产0.020（少4倍），总种值/决策相同0.118；L22退步配对每决策0.075 vs 0.095、前场0.041 vs 0.058；L24没有干净的列/总量签名，说明L24更偏标签/价值质量而不是位置",
+   "data_limit": "分支标签的正率是事实（按关卡统计labels），但无法从已删除的task243存档里核实这些源局的具体倍率；因此'高倍率状态在标签里缺失'是强相关解释，不是逐局倍率核对后的因果证明"
+  },
+  "limits": [
+   "首次分歧的8个根终局真值合计20/32对20/32，说明task244式'首次分歧定位'不能单独解释这次面板退步；它定位到的是门槛/排序差异的表现，不是损失发生点",
+   "每个根4个共同未来只能分辨较大的胜负差；单根±1/4不应单独下结论，本轮只把它当聚合证据",
+   "L24两个根的真值反而支持候选动作，因此L24的退步不能归因于'向日葵r0c5'这一条"
+  ]
+ },
+ "repair_attempt": {
+  "type": "只改接管门槛（不手写策略规则）：保留T=3与finetune-t3，把SearchMargin从相对0.02改成生产同款绝对0.02；另测相对0.05与T=1+绝对0.02作对照",
+  "protocol": "L21/L22/L24各16对，task246面板偶数种子，对照同种子现有生产结果",
+  "production_wins": {
+   "L21": 11,
+   "L22": 14,
+   "L24": 9
+  },
+  "baseline_finetune_t3": {
+   "L21": 8,
+   "L22": 9,
+   "L24": 3
+  },
+  "results": [
+   {
+    "label": "abs0.02-T3",
+    "margin": "absolute 0.02",
+    "temperature": 3,
+    "L21": 9,
+    "L22": 13,
+    "L24": 5,
+    "net": {
+     "L21": -2,
+     "L22": -1,
+     "L24": -4
+    },
+    "note": "L22过单关门槛（13/16 vs 14/16，McNemar单侧p=0.5）；L21/L24不过"
+   },
+   {
+    "label": "rel0.05-T3",
+    "margin": "relative 0.05",
+    "temperature": 3,
+    "L21": 8,
+    "L22": 12,
+    "L24": 7,
+    "net": {
+     "L21": -3,
+     "L22": -2,
+     "L24": -2
+    },
+    "note": "L24最好但仍差2；L21无改善"
+   },
+   {
+    "label": "abs0.02-T1",
+    "margin": "absolute 0.02",
+    "temperature": 1,
+    "L21": 7,
+    "L22": 11,
+    "L24": 5,
+    "net": {
+     "L21": -4,
+     "L22": -3,
+     "L24": -4
+    },
+    "note": "去掉T=3整体更差，说明T=3的校准不是主要问题"
+   }
+  ],
+  "verdict": "未过关：没有任何一个配置让L21/L22/L24同时达到每关-1/16。最好的是T3+绝对0.02：L22修好（9→13），L21只+1、L24只+2。按验收规则不进入新种子整局面板",
+  "what_it_proves": "L22的退步确实是相对门槛在低价值段太松：改成生产同款绝对0.02后从-5回到-1并过单关门槛。L21/L24的剩余差距不是同一个旋钮能修的",
+  "reproduction": {
+   "l22_abs": "python3 scripts/task250_experiment.py --phase quick --label m000-t3-l22 --model finetune-t3 --margin-relative 0 --levels 22 --stride 2 --pairs 16 --workers 1",
+   "all_abs": "python3 scripts/task250_experiment.py --phase quick --label m000-t3 --model finetune-t3 --margin-relative 0 --stride 2 --pairs 16 --workers 2",
+   "diagnose": "python3 scripts/task250_diagnose.py --level 22 --seed 246102002 --candidate finetune-t3 --futures 4 --max-candidates 5 [--no-terminal]"
+  }
+ },
+ "terrain_routing": {
+  "estimate_from_task246_panel": {
+   "pairs": 288,
+   "candidate_wins": 222,
+   "incumbent_wins": 213,
+   "gain": 12,
+   "harm": 3,
+   "both_win": 210,
+   "both_lose": 63,
+   "delta_rate": 0.03125,
+   "ci95": [
+    0.0039859847813433665,
+    0.059242689710855535
+   ],
+   "mcnemar_worse_p": 0.996307373046875,
+   "mcnemar_two_sided_p": 0.03515625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true
+  },
+  "per_level": {
+   "L33": {
+    "production": 15,
+    "candidate": 21
+   },
+   "L47": {
+    "production": 29,
+    "candidate": 32
+   }
+  },
+  "interpretation": "L33/L47用新网、其余7关用生产网：222/288 vs 213/288，+9（+3.125%），95%CI [0.40%, 5.92%]，精确McNemar双侧p=0.035；12个翻转是收益、3个是损失。其余关不变，所以每关非劣自动满足",
+  "caveat": "这是在同一面板上事后选的路由，不是新种子确认；L33新种子生产对照12/32、L47 31/32已跑，但候选臂未完成：19:21 Mac转电池，power_watch按既定策略冻结了采集pgid和所有headless引擎，本轮没有绕过该策略，也没有改采集状态。因此只报现有面板估算",
+  "production_change": {
+   "one_implementation": "scripts/search_play.py:79 _leaf_value 现在只区分 value / value-roof；在同一函数里加雾关分支（BACKGROUND_4_FOG），或把它改成一张terrain→value路径表，只保留这一处路由。不要另写一份按关卡判断",
+   "flags": "新增 --value-fog（或 --value-map fog=...,roof=...）；部署配置里 --value 仍是production.pt，--value-fog/--value-roof 指向finetune-t3.pt，--static-value 仍是production static，学生/GPT先验不变",
+   "rollback": "去掉 --value-fog/--value-roof 即回到生产；不涉及C++改动，也不改 _terrain_policy（雾/屋顶本来就走GPT先验）",
+   "precondition": "上生产前用新种子段只跑L33/L47两关的候选臂确认；本轮未做"
+  }
+ },
+ "recommendation": {
+  "deploy_finetune_t3_on_all_terrain": false,
+  "deploy_threshold_fix": false,
+  "recommended": "保持生产v5/v5roof不变；如果要做地形路由，只把雾关(L33)和屋顶(L47)的叶值换到finetune-t3，其余用生产。先在L33/L47新种子上补候选臂确认，再按上面的单点实现接 --value-fog/--value-roof",
+  "why": "整局面板候选208 vs 生产213，三个泳池关显著退步；唯一稳定为正的是雾/屋顶。门槛修复只修好L22，L21/L24的标签正率97-98%，需要补高倍率负样本/重训，不是调参能解决",
+  "next_data_work": "若还要继续救泳池：在1.5–1.75倍、且从会输的中后盘根采样分支标签（当前L21/L24标签97-98%为正），或对高倍率行做排序损失加权；这是数据工作，不是本轮的低成本门槛尝试"
+ },
+ "resources": {
+  "mac_workers_max": 4,
+  "used_workers": 3,
+  "collector": "未暂停、未停止、未改配置；19:21后采集被既有power_watch按电池策略冻结，与本轮无关",
+  "engine_readonly": true,
+  "pytest_runs": 0,
+  "artifacts_peak_bytes": 203423744,
+  "intermediates": "artifacts/task250/work、逐局games/log与无终局诊断原始json已清理；保留models、analysis.json、8个终局真值json、快速验证summary/report",
+  "retained_artifact_bytes": 11534336,
+  "retained": "models + analysis.json + 8个终局真值json + 快速验证outcomes/report"
+ },
+ "reproduction": {
+  "diagnose_all": "python3 scripts/task250_diag_driver.py --jobs 21:246106004 ... --workers 3 --futures 4 --max-candidates 5 [--terminal]",
+  "quick": "python3 scripts/task250_experiment.py --phase quick --label m000-t3 --model finetune-t3 --margin-relative 0 --stride 2 --pairs 16 --workers 2",
+  "panel": "python3 scripts/task250_experiment.py --phase panel --label route-finetune-t3 --model finetune-t3 --levels 33,47 --pairs 32 --seed-start 250200000 --workers 3",
+  "analysis": "artifacts/task250/analysis.json"
+ }
+}
