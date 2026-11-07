@@ -1774,3 +1774,4 @@
   - 实打 42/42 通关：9 族最晚档 18/18；**L29 两族全 7 档 28/28，最早从第 11–13 波接手**。对比老师从开局打 L29 用户 1，0.25 倍都是 0/32。
   - 新格合计长期约 13.5 局 / 轮，出自示范池 192 局的份额。
   - 部署：9 份原档（meta / frames / ticks，3.3 MB 数值文件）经 HF 送到台式机，解压到 cq/artifacts/human_demo/raw/（18 → 27 个种子目录），远端已删。布 `autodeploy-userstarts`，等 r140 出结论后 `deploy26.py --revision 221b9998`。
+- 11-07 16:50 CST r140 否（现任 r138）；**task253 上线**（autodeploy-userstarts，deploy26 221b9998，exit 0），9 个用户录像起点格已加入课程。
