@@ -1775,3 +1775,12 @@
   - 新格合计长期约 13.5 局 / 轮，出自示范池 192 局的份额。
   - 部署：9 份原档（meta / frames / ticks，3.3 MB 数值文件）经 HF 送到台式机，解压到 cq/artifacts/human_demo/raw/（18 → 27 个种子目录），远端已删。布 `autodeploy-userstarts`，等 r140 出结论后 `deploy26.py --revision 221b9998`。
 - 11-07 16:50 CST r140 否（现任 r138）；**task253 上线**（autodeploy-userstarts，deploy26 221b9998，exit 0），9 个用户录像起点格已加入课程。
+- 11-07 **task252 结题**（fogroute d30e58c1）。新种子，每关 32 对，生产对 finetune-t3：
+  - **屋顶 5 关全部通过并显著变好**：L41 32 对 22、L42 24 对 15、L43 21 对 13、L47 29 对 21、L48 26 对 22；合计 132 对 93 / 160，+24.4pp，95% 区间 [+14.9, +33.3]，p≈6e-7。
+  - **雾 9 关不过**：合计 152 对 149 / 288；L31 8 对 18、L37 9 对 19 显著变差，L36 -7；L34 +13、L38 +7、L40 +14。
+  - 草案：`--value-routes` 按背景同时路由检查点和相对门槛，唯一选择点在 `search_play._leaf_route`；温度 3 已固化进检查点输出层，C++ 用现有的 SearchMargin。
+- **上生产**：草案三方合并到 pkg238 b46ac44d，test_value_routes 等 11 项通过。
+  - 普通屋顶 BACKGROUND_5_ROOF 用 finetune-t3 加相对 0.02；Boss 仍用 v5roof；其余地形不变。
+  - 模型经 HF 送到台式机 `artifacts/value_net/task252_finetune_t3/model.pt`，sha256 4988616b… 已核对，远端已删。
+  - 布 `autodeploy-roofroute`：等 r141 出结论后 `deploy26.py --revision b46ac44d`。回退参数 `--value-routes {}`。
+  - Mac 采集只采白天 / 夜间 / 泳池，不受影响。
