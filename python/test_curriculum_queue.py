@@ -1141,6 +1141,11 @@ class BFromIncumbentTest(unittest.TestCase):
 class DemoStartCellsTest(unittest.TestCase):
     """task71：示范起点格——档位是起点决策号，未来随机流走 RESEED。"""
 
+    USER_STARTS = {f'{recording}_start' for recording in (
+        'user_l8_6596e4f15278', 'user_l16_01f254aecad7', 'user_l18_972426a44b9d',
+        'user_l22_b1c5f7f57380', 'user_l23_73e2cd96e5e6', 'user_l28_c47e8a89cf4a',
+        'user_l29_0257d51bd462', 'user_l29_c08db8116248', 'user_l33_17619f8c84f1')}
+
     def setUp(self):
         self.archive_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.archive_dir.cleanup)
@@ -1272,6 +1277,27 @@ class DemoStartCellsTest(unittest.TestCase):
         self.assertEqual(len(lines), 1)
         self.assertIn('ladder', lines[0])
 
+    def test_user_start_cells_load_descending_disjoint_seeds(self):
+        from pvz_promotion import SEED_POOLS_V2
+
+        manifest = ROOT / 'configs/human_demo_tasks.json'
+        cells, manifests = load_demo_start_cells(manifest)
+        self.assertTrue(self.USER_STARTS <= cells.keys())
+        inventory = json.loads((ROOT / 'MEMORY/docs/gate-seed-inventory.json').read_text())
+        used = {seed for base, spec in cells.items() if base not in self.USER_STARTS
+                for seed in spec['seeds']}
+        for base in sorted(self.USER_STARTS):
+            spec = cells[base]
+            self.assertEqual(manifests[base], manifest)
+            self.assertEqual(spec['mult_index'], 0)
+            self.assertEqual(len(spec['ladder']), 7)
+            self.assertTrue(all(a > b for a, b in zip(spec['ladder'], spec['ladder'][1:])))
+            self.assertEqual(len(spec['seeds']), 256)
+            self.assertFalse(used.intersection(spec['seeds']), base)
+            for low, high in [*inventory['occupied'], *SEED_POOLS_V2, START_SEED_POOL]:
+                self.assertFalse(any(low <= seed < high for seed in spec['seeds']), (base, low, high))
+            used.update(spec['seeds'])
+
     def test_registered_manifest_start_cells(self):
         manifest = ROOT / 'configs/human_demo_tasks.json'
         archives = [task['demo_start']['archive'] for task in json.loads(manifest.read_text())['tasks']
@@ -1301,7 +1327,7 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_pool_30_orig_m100', 'demo_storm_40_orig_m100',
                                       'demo_boss_50_orig_m100',
                                       # task112: L25 小僵尸泳池 / L45 蹦极闪电战的原生传送带起点格
-                                      'demo_pool_25_orig_m100', 'demo_roof_45_orig_m100'})
+                                      'demo_pool_25_orig_m100', 'demo_roof_45_orig_m100'} | self.USER_STARTS)
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 1, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
