@@ -1,0 +1,4585 @@
+{
+ "task": "task252",
+ "title": "雾关全面确认与屋顶叶值路由生产草案",
+ "date": "2026-11-07",
+ "status": "完整面板与定向测试完成，草案已写入分支，未部署",
+ "branch": "fogroute",
+ "base_commit": "30b4bec9",
+ "inputs": {
+  "student": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/student.pt",
+   "bytes": 5467950,
+   "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+  },
+  "gptbc": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/gptbc.pt",
+   "bytes": 737326,
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "static": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/static.pt",
+   "bytes": 584603,
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "production": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/production.pt",
+   "bytes": 611739,
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "roof": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/roof.pt",
+   "bytes": 588955,
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "finetune-t3": {
+   "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/finetune-t3.pt",
+   "bytes": 604743,
+   "sha256": "4988616b62baf76ff3b4688fe3bdabc00816451d0bc65318f1409f70f0cac0d6"
+  },
+  "engine": {
+   "path": "/Users/newbiexvwu/pvz-mac-collect/build-vnbranch/pvz-portable",
+   "bytes": 4051648,
+   "sha256": "d2776e81ddc6bff9e2e23eaae2d5984a5a48ac904b47495f37679f1329def9ea"
+  }
+ },
+ "protocol": {
+  "runner": "scripts/task252_experiment.py -> task250_experiment.run_arm -> search_play.py -> C++ SEARCH",
+  "production": {
+   "value": "production.pt",
+   "roof": "roof.pt",
+   "temperature": 1,
+   "margin": "绝对0.02；--margin-relative 0"
+  },
+  "candidate": {
+   "value": "finetune-t3.pt",
+   "temperature": 3,
+   "margin": "相对0.02，C++下限0.001"
+  },
+  "shared": {
+   "student": "student.pt",
+   "fog_roof_prior": "gptbc.pt",
+   "static": "static.pt",
+   "verify_samples": 9,
+   "student_candidates": 2,
+   "per_card": 1,
+   "samples": 3,
+   "horizon": 2500,
+   "min_gap": 300,
+   "sim_skip": 61,
+   "dagger_beta": 1
+  },
+  "fog": "沿用task245的九关卡组和已校准倍率，固定32对新种子，不重选倍率",
+  "roof": "预先选择L41/L42/L43/L47/L48，卡组沿用gate_v8；仅生产结果决定倍率。先8局，2–6胜时补齐32局，保留7–25胜的倍率。候选在倍率冻结后开始，选定倍率的32局生产结果直接用于正式配对",
+  "calibration": "未夹定难度区间时倍率乘1.25或0.8；已有过易与过难点时取中点。L42切换取点方式时中断的3局仅留作校准记录，不入正式面板",
+  "seeds": "全为252开头新段，与task245/246/250隔离。雾=252100000+level*1000+k；屋顶校准=252000000+level*1000+round*100+k；正式屋顶用选定轮的32种子，详见panel",
+  "pairing": "同关卡、卡组、倍率、reset种子及搜索未来种子，生产与候选配对比较",
+  "acceptance": "每关净差>=-2/32且单侧精确McNemar变差p>=0.05；每地形合并配对95%区间下界>=-2/32（-6.25个百分点）",
+  "interval": "复用task243_teacher.paired / pvz_promotion.paired_interval：相关性修正Wilson配对区间",
+  "improvement": "同时报告单侧变好p及双侧精确McNemar p；显著变好按净差>0且双侧p<0.05"
+ },
+ "panel": {
+  "tasks": [
+   {
+    "task_id": "task252_l31",
+    "level": 31,
+    "deck": [
+     8,
+     9,
+     10,
+     12,
+     15,
+     16,
+     19,
+     23,
+     25,
+     42
+    ],
+    "zombie_count_multiplier": 2.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l31_fog_good",
+    "seeds": [
+     252131000,
+     252131001,
+     252131002,
+     252131003,
+     252131004,
+     252131005,
+     252131006,
+     252131007,
+     252131008,
+     252131009,
+     252131010,
+     252131011,
+     252131012,
+     252131013,
+     252131014,
+     252131015,
+     252131016,
+     252131017,
+     252131018,
+     252131019,
+     252131020,
+     252131021,
+     252131022,
+     252131023,
+     252131024,
+     252131025,
+     252131026,
+     252131027,
+     252131028,
+     252131029,
+     252131030,
+     252131031
+    ]
+   },
+   {
+    "task_id": "task252_l32",
+    "level": 32,
+    "deck": [
+     8,
+     9,
+     10,
+     15,
+     16,
+     19,
+     25,
+     27,
+     36,
+     42
+    ],
+    "zombie_count_multiplier": 1.25,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l32_fog_good",
+    "seeds": [
+     252132000,
+     252132001,
+     252132002,
+     252132003,
+     252132004,
+     252132005,
+     252132006,
+     252132007,
+     252132008,
+     252132009,
+     252132010,
+     252132011,
+     252132012,
+     252132013,
+     252132014,
+     252132015,
+     252132016,
+     252132017,
+     252132018,
+     252132019,
+     252132020,
+     252132021,
+     252132022,
+     252132023,
+     252132024,
+     252132025,
+     252132026,
+     252132027,
+     252132028,
+     252132029,
+     252132030,
+     252132031
+    ]
+   },
+   {
+    "task_id": "task252_l33",
+    "level": 33,
+    "deck": [
+     9,
+     8,
+     16,
+     10,
+     42,
+     43,
+     24,
+     36,
+     5,
+     17
+    ],
+    "zombie_count_multiplier": 0.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l33_fog_user",
+    "seeds": [
+     252133000,
+     252133001,
+     252133002,
+     252133003,
+     252133004,
+     252133005,
+     252133006,
+     252133007,
+     252133008,
+     252133009,
+     252133010,
+     252133011,
+     252133012,
+     252133013,
+     252133014,
+     252133015,
+     252133016,
+     252133017,
+     252133018,
+     252133019,
+     252133020,
+     252133021,
+     252133022,
+     252133023,
+     252133024,
+     252133025,
+     252133026,
+     252133027,
+     252133028,
+     252133029,
+     252133030,
+     252133031
+    ]
+   },
+   {
+    "task_id": "task252_l34",
+    "level": 34,
+    "deck": [
+     5,
+     8,
+     9,
+     16,
+     19,
+     23,
+     25,
+     43
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l34_fog_good",
+    "seeds": [
+     252134000,
+     252134001,
+     252134002,
+     252134003,
+     252134004,
+     252134005,
+     252134006,
+     252134007,
+     252134008,
+     252134009,
+     252134010,
+     252134011,
+     252134012,
+     252134013,
+     252134014,
+     252134015,
+     252134016,
+     252134017,
+     252134018,
+     252134019,
+     252134020,
+     252134021,
+     252134022,
+     252134023,
+     252134024,
+     252134025,
+     252134026,
+     252134027,
+     252134028,
+     252134029,
+     252134030,
+     252134031
+    ]
+   },
+   {
+    "task_id": "task252_l36",
+    "level": 36,
+    "deck": [
+     4,
+     8,
+     9,
+     14,
+     16,
+     17,
+     18,
+     19,
+     23,
+     25
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l36_fog_good",
+    "seeds": [
+     252136000,
+     252136001,
+     252136002,
+     252136003,
+     252136004,
+     252136005,
+     252136006,
+     252136007,
+     252136008,
+     252136009,
+     252136010,
+     252136011,
+     252136012,
+     252136013,
+     252136014,
+     252136015,
+     252136016,
+     252136017,
+     252136018,
+     252136019,
+     252136020,
+     252136021,
+     252136022,
+     252136023,
+     252136024,
+     252136025,
+     252136026,
+     252136027,
+     252136028,
+     252136029,
+     252136030,
+     252136031
+    ]
+   },
+   {
+    "task_id": "task252_l37",
+    "level": 37,
+    "deck": [
+     3,
+     8,
+     9,
+     15,
+     16,
+     19,
+     25,
+     29,
+     31,
+     43
+    ],
+    "zombie_count_multiplier": 2.0,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l37_fog_good",
+    "seeds": [
+     252137000,
+     252137001,
+     252137002,
+     252137003,
+     252137004,
+     252137005,
+     252137006,
+     252137007,
+     252137008,
+     252137009,
+     252137010,
+     252137011,
+     252137012,
+     252137013,
+     252137014,
+     252137015,
+     252137016,
+     252137017,
+     252137018,
+     252137019,
+     252137020,
+     252137021,
+     252137022,
+     252137023,
+     252137024,
+     252137025,
+     252137026,
+     252137027,
+     252137028,
+     252137029,
+     252137030,
+     252137031
+    ]
+   },
+   {
+    "task_id": "task252_l38",
+    "level": 38,
+    "deck": [
+     0,
+     3,
+     6,
+     8,
+     9,
+     16,
+     17,
+     19,
+     23,
+     25
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l38_fog_good",
+    "seeds": [
+     252138000,
+     252138001,
+     252138002,
+     252138003,
+     252138004,
+     252138005,
+     252138006,
+     252138007,
+     252138008,
+     252138009,
+     252138010,
+     252138011,
+     252138012,
+     252138013,
+     252138014,
+     252138015,
+     252138016,
+     252138017,
+     252138018,
+     252138019,
+     252138020,
+     252138021,
+     252138022,
+     252138023,
+     252138024,
+     252138025,
+     252138026,
+     252138027,
+     252138028,
+     252138029,
+     252138030,
+     252138031
+    ]
+   },
+   {
+    "task_id": "task252_l39",
+    "level": 39,
+    "deck": [
+     8,
+     9,
+     10,
+     15,
+     16,
+     19,
+     23,
+     25,
+     27,
+     31
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "configs/gate_v8_panel.json:task222_l39_fog_good",
+    "seeds": [
+     252139000,
+     252139001,
+     252139002,
+     252139003,
+     252139004,
+     252139005,
+     252139006,
+     252139007,
+     252139008,
+     252139009,
+     252139010,
+     252139011,
+     252139012,
+     252139013,
+     252139014,
+     252139015,
+     252139016,
+     252139017,
+     252139018,
+     252139019,
+     252139020,
+     252139021,
+     252139022,
+     252139023,
+     252139024,
+     252139025,
+     252139026,
+     252139027,
+     252139028,
+     252139029,
+     252139030,
+     252139031
+    ]
+   },
+   {
+    "task_id": "task252_l40",
+    "level": 40,
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "zombie_count_multiplier": 1.5,
+    "terrain": "fog",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "scripts/pvz_tasks.py:good_deck_for_level(40) -> deck_for_level(40), task208 has no L40 entry",
+    "seeds": [
+     252140000,
+     252140001,
+     252140002,
+     252140003,
+     252140004,
+     252140005,
+     252140006,
+     252140007,
+     252140008,
+     252140009,
+     252140010,
+     252140011,
+     252140012,
+     252140013,
+     252140014,
+     252140015,
+     252140016,
+     252140017,
+     252140018,
+     252140019,
+     252140020,
+     252140021,
+     252140022,
+     252140023,
+     252140024,
+     252140025,
+     252140026,
+     252140027,
+     252140028,
+     252140029,
+     252140030,
+     252140031
+    ]
+   },
+   {
+    "task_id": "task252_l41",
+    "level": 41,
+    "deck": [
+     1,
+     2,
+     10,
+     17,
+     30,
+     32,
+     33,
+     35,
+     37,
+     42
+    ],
+    "zombie_count_multiplier": 0.75,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     252041000,
+     252041001,
+     252041002,
+     252041003,
+     252041004,
+     252041005,
+     252041006,
+     252041007,
+     252041008,
+     252041009,
+     252041010,
+     252041011,
+     252041012,
+     252041013,
+     252041014,
+     252041015,
+     252041016,
+     252041017,
+     252041018,
+     252041019,
+     252041020,
+     252041021,
+     252041022,
+     252041023,
+     252041024,
+     252041025,
+     252041026,
+     252041027,
+     252041028,
+     252041029,
+     252041030,
+     252041031
+    ]
+   },
+   {
+    "task_id": "task252_l42",
+    "level": 42,
+    "deck": [
+     1,
+     2,
+     17,
+     30,
+     32,
+     33,
+     34,
+     37,
+     39,
+     44
+    ],
+    "zombie_count_multiplier": 1.373291,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     252042700,
+     252042701,
+     252042702,
+     252042703,
+     252042704,
+     252042705,
+     252042706,
+     252042707,
+     252042708,
+     252042709,
+     252042710,
+     252042711,
+     252042712,
+     252042713,
+     252042714,
+     252042715,
+     252042716,
+     252042717,
+     252042718,
+     252042719,
+     252042720,
+     252042721,
+     252042722,
+     252042723,
+     252042724,
+     252042725,
+     252042726,
+     252042727,
+     252042728,
+     252042729,
+     252042730,
+     252042731
+    ]
+   },
+   {
+    "task_id": "task252_l43",
+    "level": 43,
+    "deck": [
+     1,
+     2,
+     3,
+     5,
+     17,
+     20,
+     30,
+     32,
+     33,
+     34
+    ],
+    "zombie_count_multiplier": 1.464844,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     252043300,
+     252043301,
+     252043302,
+     252043303,
+     252043304,
+     252043305,
+     252043306,
+     252043307,
+     252043308,
+     252043309,
+     252043310,
+     252043311,
+     252043312,
+     252043313,
+     252043314,
+     252043315,
+     252043316,
+     252043317,
+     252043318,
+     252043319,
+     252043320,
+     252043321,
+     252043322,
+     252043323,
+     252043324,
+     252043325,
+     252043326,
+     252043327,
+     252043328,
+     252043329,
+     252043330,
+     252043331
+    ]
+   },
+   {
+    "task_id": "task252_l47",
+    "level": 47,
+    "deck": [
+     1,
+     33,
+     41,
+     [
+      48,
+      1
+     ],
+     39,
+     44,
+     37,
+     4,
+     17,
+     30
+    ],
+    "zombie_count_multiplier": 0.9375,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "user",
+    "seeds": [
+     252047100,
+     252047101,
+     252047102,
+     252047103,
+     252047104,
+     252047105,
+     252047106,
+     252047107,
+     252047108,
+     252047109,
+     252047110,
+     252047111,
+     252047112,
+     252047113,
+     252047114,
+     252047115,
+     252047116,
+     252047117,
+     252047118,
+     252047119,
+     252047120,
+     252047121,
+     252047122,
+     252047123,
+     252047124,
+     252047125,
+     252047126,
+     252047127,
+     252047128,
+     252047129,
+     252047130,
+     252047131
+    ]
+   },
+   {
+    "task_id": "task252_l48",
+    "level": 48,
+    "deck": [
+     1,
+     2,
+     3,
+     5,
+     17,
+     20,
+     30,
+     32,
+     33,
+     34
+    ],
+    "zombie_count_multiplier": 1.220703,
+    "terrain": "roof",
+    "wave_cap": null,
+    "playthrough": 2,
+    "preplanted": [],
+    "pairs": 32,
+    "deck_source": "task208",
+    "seeds": [
+     252048400,
+     252048401,
+     252048402,
+     252048403,
+     252048404,
+     252048405,
+     252048406,
+     252048407,
+     252048408,
+     252048409,
+     252048410,
+     252048411,
+     252048412,
+     252048413,
+     252048414,
+     252048415,
+     252048416,
+     252048417,
+     252048418,
+     252048419,
+     252048420,
+     252048421,
+     252048422,
+     252048423,
+     252048424,
+     252048425,
+     252048426,
+     252048427,
+     252048428,
+     252048429,
+     252048430,
+     252048431
+    ]
+   }
+  ]
+ },
+ "per_level": {
+  "31": {
+   "pairs": 32,
+   "candidate_wins": 8,
+   "incumbent_wins": 18,
+   "gain": 1,
+   "harm": 11,
+   "both_win": 7,
+   "both_lose": 13,
+   "delta_rate": -0.3125,
+   "ci95": [
+    -0.4781350457735671,
+    -0.10986854679404351
+   ],
+   "mcnemar_worse_p": 0.003173828125,
+   "mcnemar_two_sided_p": 0.00634765625,
+   "point_noninferior_margin_2_of_32": false,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.999755859375,
+   "net_wins": -10,
+   "eligible": false
+  },
+  "32": {
+   "pairs": 32,
+   "candidate_wins": 17,
+   "incumbent_wins": 19,
+   "gain": 4,
+   "harm": 6,
+   "both_win": 13,
+   "both_lose": 9,
+   "delta_rate": -0.0625,
+   "ci95": [
+    -0.2500309459805411,
+    0.13269441311521535
+   ],
+   "mcnemar_worse_p": 0.376953125,
+   "mcnemar_two_sided_p": 0.75390625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.828125,
+   "net_wins": -2,
+   "eligible": true
+  },
+  "33": {
+   "pairs": 32,
+   "candidate_wins": 17,
+   "incumbent_wins": 17,
+   "gain": 7,
+   "harm": 7,
+   "both_win": 10,
+   "both_lose": 8,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.22424344307536231,
+    0.22424344307536231
+   ],
+   "mcnemar_worse_p": 0.604736328125,
+   "mcnemar_two_sided_p": 1.0,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.604736328125,
+   "net_wins": 0,
+   "eligible": true
+  },
+  "34": {
+   "pairs": 32,
+   "candidate_wins": 19,
+   "incumbent_wins": 6,
+   "gain": 14,
+   "harm": 1,
+   "both_win": 5,
+   "both_lose": 12,
+   "delta_rate": 0.40625,
+   "ci95": [
+    0.18704674601139507,
+    0.5735442537405512
+   ],
+   "mcnemar_worse_p": 0.999969482421875,
+   "mcnemar_two_sided_p": 0.0009765625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.00048828125,
+   "net_wins": 13,
+   "eligible": true
+  },
+  "36": {
+   "pairs": 32,
+   "candidate_wins": 9,
+   "incumbent_wins": 16,
+   "gain": 8,
+   "harm": 15,
+   "both_win": 1,
+   "both_lose": 8,
+   "delta_rate": -0.21875,
+   "ci95": [
+    -0.4689054839202311,
+    0.07112033392347755
+   ],
+   "mcnemar_worse_p": 0.10501980781555176,
+   "mcnemar_two_sided_p": 0.21003961563110352,
+   "point_noninferior_margin_2_of_32": false,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.95343017578125,
+   "net_wins": -7,
+   "eligible": false
+  },
+  "37": {
+   "pairs": 32,
+   "candidate_wins": 9,
+   "incumbent_wins": 19,
+   "gain": 3,
+   "harm": 13,
+   "both_win": 6,
+   "both_lose": 10,
+   "delta_rate": -0.3125,
+   "ci95": [
+    -0.5068052820718507,
+    -0.07220608175047985
+   ],
+   "mcnemar_worse_p": 0.0106353759765625,
+   "mcnemar_two_sided_p": 0.021270751953125,
+   "point_noninferior_margin_2_of_32": false,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.9979095458984375,
+   "net_wins": -10,
+   "eligible": false
+  },
+  "38": {
+   "pairs": 32,
+   "candidate_wins": 29,
+   "incumbent_wins": 22,
+   "gain": 8,
+   "harm": 1,
+   "both_win": 21,
+   "both_lose": 2,
+   "delta_rate": 0.21875,
+   "ci95": [
+    0.032797995725267204,
+    0.3947783340296013
+   ],
+   "mcnemar_worse_p": 0.998046875,
+   "mcnemar_two_sided_p": 0.0390625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.01953125,
+   "net_wins": 7,
+   "eligible": true
+  },
+  "39": {
+   "pairs": 32,
+   "candidate_wins": 16,
+   "incumbent_wins": 18,
+   "gain": 5,
+   "harm": 7,
+   "both_win": 11,
+   "both_lose": 9,
+   "delta_rate": -0.0625,
+   "ci95": [
+    -0.2660702372318068,
+    0.14955499965381586
+   ],
+   "mcnemar_worse_p": 0.38720703125,
+   "mcnemar_two_sided_p": 0.7744140625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.80615234375,
+   "net_wins": -2,
+   "eligible": true
+  },
+  "40": {
+   "pairs": 32,
+   "candidate_wins": 28,
+   "incumbent_wins": 14,
+   "gain": 15,
+   "harm": 1,
+   "both_win": 13,
+   "both_lose": 3,
+   "delta_rate": 0.4375,
+   "ci95": [
+    0.2130642627226165,
+    0.607324776134059
+   ],
+   "mcnemar_worse_p": 0.9999847412109375,
+   "mcnemar_two_sided_p": 0.000518798828125,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.0002593994140625,
+   "net_wins": 14,
+   "eligible": true
+  },
+  "41": {
+   "pairs": 32,
+   "candidate_wins": 32,
+   "incumbent_wins": 22,
+   "gain": 10,
+   "harm": 0,
+   "both_win": 22,
+   "both_lose": 0,
+   "delta_rate": 0.3125,
+   "ci95": [
+    0.14170883969248319,
+    0.4856667830095541
+   ],
+   "mcnemar_worse_p": 1.0,
+   "mcnemar_two_sided_p": 0.001953125,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.0009765625,
+   "net_wins": 10,
+   "eligible": true
+  },
+  "42": {
+   "pairs": 32,
+   "candidate_wins": 24,
+   "incumbent_wins": 15,
+   "gain": 12,
+   "harm": 3,
+   "both_win": 12,
+   "both_lose": 5,
+   "delta_rate": 0.28125,
+   "ci95": [
+    0.04671239399917043,
+    0.4763370137454651
+   ],
+   "mcnemar_worse_p": 0.996307373046875,
+   "mcnemar_two_sided_p": 0.03515625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.017578125,
+   "net_wins": 9,
+   "eligible": true
+  },
+  "43": {
+   "pairs": 32,
+   "candidate_wins": 21,
+   "incumbent_wins": 13,
+   "gain": 12,
+   "harm": 4,
+   "both_win": 9,
+   "both_lose": 7,
+   "delta_rate": 0.25,
+   "ci95": [
+    0.006546940255724082,
+    0.4557136481857186
+   ],
+   "mcnemar_worse_p": 0.9893646240234375,
+   "mcnemar_two_sided_p": 0.076812744140625,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.0384063720703125,
+   "net_wins": 8,
+   "eligible": true
+  },
+  "47": {
+   "pairs": 32,
+   "candidate_wins": 29,
+   "incumbent_wins": 21,
+   "gain": 11,
+   "harm": 3,
+   "both_win": 18,
+   "both_lose": 0,
+   "delta_rate": 0.25,
+   "ci95": [
+    0.023763564963770578,
+    0.4466873413570608
+   ],
+   "mcnemar_worse_p": 0.9935302734375,
+   "mcnemar_two_sided_p": 0.057373046875,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": true,
+   "mcnemar_better_p": 0.0286865234375,
+   "net_wins": 8,
+   "eligible": true
+  },
+  "48": {
+   "pairs": 32,
+   "candidate_wins": 26,
+   "incumbent_wins": 22,
+   "gain": 7,
+   "harm": 3,
+   "both_win": 19,
+   "both_lose": 3,
+   "delta_rate": 0.125,
+   "ci95": [
+    -0.07586918606649265,
+    0.3147967512871712
+   ],
+   "mcnemar_worse_p": 0.9453125,
+   "mcnemar_two_sided_p": 0.34375,
+   "point_noninferior_margin_2_of_32": true,
+   "ci_noninferior_margin_2_of_32": false,
+   "mcnemar_better_p": 0.171875,
+   "net_wins": 4,
+   "eligible": true
+  }
+ },
+ "terrains": {
+  "fog": {
+   "pooled": {
+    "pairs": 288,
+    "candidate_wins": 152,
+    "incumbent_wins": 149,
+    "gain": 65,
+    "harm": 62,
+    "both_win": 87,
+    "both_lose": 74,
+    "delta_rate": 0.010416666666666666,
+    "ci95": [
+     -0.0661538680237486,
+     0.08680467257621988
+    ],
+    "mcnemar_worse_p": 0.6386064584271067,
+    "mcnemar_two_sided_p": 0.8592278156599698,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": false,
+    "mcnemar_better_p": 0.4296139078299849
+   },
+   "complete": true,
+   "eligible": false,
+   "significantly_better": false,
+   "per_level_vetoes": [
+    "31",
+    "36",
+    "37"
+   ]
+  },
+  "roof": {
+   "pooled": {
+    "pairs": 160,
+    "candidate_wins": 132,
+    "incumbent_wins": 93,
+    "gain": 52,
+    "harm": 13,
+    "both_win": 80,
+    "both_lose": 15,
+    "delta_rate": 0.24375,
+    "ci95": [
+     0.1493155507408293,
+     0.33250197094768436
+    ],
+    "mcnemar_worse_p": 0.9999998606882828,
+    "mcnemar_two_sided_p": 1.1688116132369713e-06,
+    "point_noninferior_margin_2_of_32": true,
+    "ci_noninferior_margin_2_of_32": true,
+    "mcnemar_better_p": 5.844058066184856e-07
+   },
+   "complete": true,
+   "eligible": true,
+   "significantly_better": true,
+   "per_level_vetoes": []
+  }
+ },
+ "calibration": {
+  "41": [
+   {
+    "multiplier": 0.75,
+    "pilot_wins": 5,
+    "pilot_seeds": [
+     252041000,
+     252041001,
+     252041002,
+     252041003,
+     252041004,
+     252041005,
+     252041006,
+     252041007
+    ],
+    "wins": 22,
+    "seeds": [
+     252041000,
+     252041001,
+     252041002,
+     252041003,
+     252041004,
+     252041005,
+     252041006,
+     252041007,
+     252041008,
+     252041009,
+     252041010,
+     252041011,
+     252041012,
+     252041013,
+     252041014,
+     252041015,
+     252041016,
+     252041017,
+     252041018,
+     252041019,
+     252041020,
+     252041021,
+     252041022,
+     252041023,
+     252041024,
+     252041025,
+     252041026,
+     252041027,
+     252041028,
+     252041029,
+     252041030,
+     252041031
+    ],
+    "selected": true,
+    "next_multiplier": 0.6
+   }
+  ],
+  "42": [
+   {
+    "multiplier": 0.5,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252042000,
+     252042001,
+     252042002,
+     252042003,
+     252042004,
+     252042005,
+     252042006,
+     252042007
+    ],
+    "selected": false,
+    "next_multiplier": 0.625
+   },
+   {
+    "multiplier": 0.625,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252042100,
+     252042101,
+     252042102,
+     252042103,
+     252042104,
+     252042105,
+     252042106,
+     252042107
+    ],
+    "selected": false,
+    "next_multiplier": 0.78125
+   },
+   {
+    "multiplier": 0.78125,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252042200,
+     252042201,
+     252042202,
+     252042203,
+     252042204,
+     252042205,
+     252042206,
+     252042207
+    ],
+    "selected": false,
+    "next_multiplier": 0.976562
+   },
+   {
+    "multiplier": 0.976562,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252042300,
+     252042301,
+     252042302,
+     252042303,
+     252042304,
+     252042305,
+     252042306,
+     252042307
+    ],
+    "selected": false,
+    "next_multiplier": 1.220703
+   },
+   {
+    "multiplier": 1.220703,
+    "pilot_wins": 6,
+    "pilot_seeds": [
+     252042400,
+     252042401,
+     252042402,
+     252042403,
+     252042404,
+     252042405,
+     252042406,
+     252042407
+    ],
+    "wins": 28,
+    "seeds": [
+     252042400,
+     252042401,
+     252042402,
+     252042403,
+     252042404,
+     252042405,
+     252042406,
+     252042407,
+     252042408,
+     252042409,
+     252042410,
+     252042411,
+     252042412,
+     252042413,
+     252042414,
+     252042415,
+     252042416,
+     252042417,
+     252042418,
+     252042419,
+     252042420,
+     252042421,
+     252042422,
+     252042423,
+     252042424,
+     252042425,
+     252042426,
+     252042427,
+     252042428,
+     252042429,
+     252042430,
+     252042431
+    ],
+    "selected": false,
+    "next_multiplier": 1.525879
+   },
+   {
+    "multiplier": 1.525879,
+    "pilot_wins": 2,
+    "pilot_seeds": [
+     252042500,
+     252042501,
+     252042502,
+     252042503,
+     252042504,
+     252042505,
+     252042506,
+     252042507
+    ],
+    "wins": 5,
+    "seeds": [
+     252042500,
+     252042501,
+     252042502,
+     252042503,
+     252042504,
+     252042505,
+     252042506,
+     252042507,
+     252042508,
+     252042509,
+     252042510,
+     252042511,
+     252042512,
+     252042513,
+     252042514,
+     252042515,
+     252042516,
+     252042517,
+     252042518,
+     252042519,
+     252042520,
+     252042521,
+     252042522,
+     252042523,
+     252042524,
+     252042525,
+     252042526,
+     252042527,
+     252042528,
+     252042529,
+     252042530,
+     252042531
+    ],
+    "selected": false,
+    "next_multiplier": 1.220703
+   },
+   {
+    "multiplier": 1.220703,
+    "pilot_wins": 3,
+    "pilot_seeds": [
+     252042600,
+     252042601,
+     252042602
+    ],
+    "selected": false,
+    "interrupted": true,
+    "next_multiplier": 1.373291,
+    "reason": "改为已有过易/过难倍率之间取中点，部分旧倍率对局不进入正式比较"
+   },
+   {
+    "multiplier": 1.373291,
+    "pilot_wins": 4,
+    "pilot_seeds": [
+     252042700,
+     252042701,
+     252042702,
+     252042703,
+     252042704,
+     252042705,
+     252042706,
+     252042707
+    ],
+    "wins": 15,
+    "seeds": [
+     252042700,
+     252042701,
+     252042702,
+     252042703,
+     252042704,
+     252042705,
+     252042706,
+     252042707,
+     252042708,
+     252042709,
+     252042710,
+     252042711,
+     252042712,
+     252042713,
+     252042714,
+     252042715,
+     252042716,
+     252042717,
+     252042718,
+     252042719,
+     252042720,
+     252042721,
+     252042722,
+     252042723,
+     252042724,
+     252042725,
+     252042726,
+     252042727,
+     252042728,
+     252042729,
+     252042730,
+     252042731
+    ],
+    "selected": true,
+    "next_multiplier": 1.098633
+   }
+  ],
+  "43": [
+   {
+    "multiplier": 0.75,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252043000,
+     252043001,
+     252043002,
+     252043003,
+     252043004,
+     252043005,
+     252043006,
+     252043007
+    ],
+    "selected": false,
+    "next_multiplier": 0.9375
+   },
+   {
+    "multiplier": 0.9375,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252043100,
+     252043101,
+     252043102,
+     252043103,
+     252043104,
+     252043105,
+     252043106,
+     252043107
+    ],
+    "selected": false,
+    "next_multiplier": 1.171875
+   },
+   {
+    "multiplier": 1.171875,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252043200,
+     252043201,
+     252043202,
+     252043203,
+     252043204,
+     252043205,
+     252043206,
+     252043207
+    ],
+    "selected": false,
+    "next_multiplier": 1.464844
+   },
+   {
+    "multiplier": 1.464844,
+    "pilot_wins": 4,
+    "pilot_seeds": [
+     252043300,
+     252043301,
+     252043302,
+     252043303,
+     252043304,
+     252043305,
+     252043306,
+     252043307
+    ],
+    "wins": 13,
+    "seeds": [
+     252043300,
+     252043301,
+     252043302,
+     252043303,
+     252043304,
+     252043305,
+     252043306,
+     252043307,
+     252043308,
+     252043309,
+     252043310,
+     252043311,
+     252043312,
+     252043313,
+     252043314,
+     252043315,
+     252043316,
+     252043317,
+     252043318,
+     252043319,
+     252043320,
+     252043321,
+     252043322,
+     252043323,
+     252043324,
+     252043325,
+     252043326,
+     252043327,
+     252043328,
+     252043329,
+     252043330,
+     252043331
+    ],
+    "selected": true,
+    "next_multiplier": 1.171875
+   }
+  ],
+  "47": [
+   {
+    "multiplier": 0.75,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252047000,
+     252047001,
+     252047002,
+     252047003,
+     252047004,
+     252047005,
+     252047006,
+     252047007
+    ],
+    "selected": false,
+    "next_multiplier": 0.9375
+   },
+   {
+    "multiplier": 0.9375,
+    "pilot_wins": 4,
+    "pilot_seeds": [
+     252047100,
+     252047101,
+     252047102,
+     252047103,
+     252047104,
+     252047105,
+     252047106,
+     252047107
+    ],
+    "wins": 21,
+    "seeds": [
+     252047100,
+     252047101,
+     252047102,
+     252047103,
+     252047104,
+     252047105,
+     252047106,
+     252047107,
+     252047108,
+     252047109,
+     252047110,
+     252047111,
+     252047112,
+     252047113,
+     252047114,
+     252047115,
+     252047116,
+     252047117,
+     252047118,
+     252047119,
+     252047120,
+     252047121,
+     252047122,
+     252047123,
+     252047124,
+     252047125,
+     252047126,
+     252047127,
+     252047128,
+     252047129,
+     252047130,
+     252047131
+    ],
+    "selected": true,
+    "next_multiplier": 0.75
+   }
+  ],
+  "48": [
+   {
+    "multiplier": 0.5,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252048000,
+     252048001,
+     252048002,
+     252048003,
+     252048004,
+     252048005,
+     252048006,
+     252048007
+    ],
+    "selected": false,
+    "next_multiplier": 0.625
+   },
+   {
+    "multiplier": 0.625,
+    "pilot_wins": 7,
+    "pilot_seeds": [
+     252048100,
+     252048101,
+     252048102,
+     252048103,
+     252048104,
+     252048105,
+     252048106,
+     252048107
+    ],
+    "selected": false,
+    "next_multiplier": 0.78125
+   },
+   {
+    "multiplier": 0.78125,
+    "pilot_wins": 8,
+    "pilot_seeds": [
+     252048200,
+     252048201,
+     252048202,
+     252048203,
+     252048204,
+     252048205,
+     252048206,
+     252048207
+    ],
+    "selected": false,
+    "next_multiplier": 0.976562
+   },
+   {
+    "multiplier": 0.976562,
+    "pilot_wins": 6,
+    "pilot_seeds": [
+     252048300,
+     252048301,
+     252048302,
+     252048303,
+     252048304,
+     252048305,
+     252048306,
+     252048307
+    ],
+    "wins": 26,
+    "seeds": [
+     252048300,
+     252048301,
+     252048302,
+     252048303,
+     252048304,
+     252048305,
+     252048306,
+     252048307,
+     252048308,
+     252048309,
+     252048310,
+     252048311,
+     252048312,
+     252048313,
+     252048314,
+     252048315,
+     252048316,
+     252048317,
+     252048318,
+     252048319,
+     252048320,
+     252048321,
+     252048322,
+     252048323,
+     252048324,
+     252048325,
+     252048326,
+     252048327,
+     252048328,
+     252048329,
+     252048330,
+     252048331
+    ],
+    "selected": false,
+    "next_multiplier": 1.220703
+   },
+   {
+    "multiplier": 1.220703,
+    "pilot_wins": 5,
+    "pilot_seeds": [
+     252048400,
+     252048401,
+     252048402,
+     252048403,
+     252048404,
+     252048405,
+     252048406,
+     252048407
+    ],
+    "wins": 22,
+    "seeds": [
+     252048400,
+     252048401,
+     252048402,
+     252048403,
+     252048404,
+     252048405,
+     252048406,
+     252048407,
+     252048408,
+     252048409,
+     252048410,
+     252048411,
+     252048412,
+     252048413,
+     252048414,
+     252048415,
+     252048416,
+     252048417,
+     252048418,
+     252048419,
+     252048420,
+     252048421,
+     252048422,
+     252048423,
+     252048424,
+     252048425,
+     252048426,
+     252048427,
+     252048428,
+     252048429,
+     252048430,
+     252048431
+    ],
+    "selected": true,
+    "next_multiplier": 0.976562
+   }
+  ]
+ },
+ "pairs": [
+  {
+   "level": 31,
+   "seed": 252131002,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131001,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131000,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131003,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131005,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131004,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131006,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131007,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131009,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131010,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131008,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131011,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131012,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131013,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131014,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131016,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131017,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131015,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131018,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131021,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131019,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131020,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131022,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131023,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131024,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131025,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131026,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131028,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131027,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131029,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 31,
+   "seed": 252131030,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 31,
+   "seed": 252131031,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132000,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132001,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132005,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132004,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132006,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132007,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132008,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132010,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132011,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132009,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132012,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132014,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132013,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132015,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132017,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132016,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132018,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132020,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132019,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132021,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132023,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132022,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132024,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132026,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132025,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132027,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132029,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 32,
+   "seed": 252132030,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 32,
+   "seed": 252132031,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133001,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133000,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133004,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133005,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133006,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133008,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133007,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133010,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133009,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133011,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133014,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133012,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133013,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133015,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133017,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133016,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133019,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133018,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133020,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133022,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133021,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133023,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133025,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133024,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133026,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133027,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133029,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 33,
+   "seed": 252133028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133031,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 33,
+   "seed": 252133030,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134001,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134000,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134005,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134004,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134008,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134007,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134006,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134009,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134010,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134011,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134014,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134012,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134013,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134015,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134017,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134016,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134018,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134019,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134021,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134020,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134023,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134022,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134024,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134025,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134026,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134027,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134029,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 34,
+   "seed": 252134031,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 34,
+   "seed": 252134030,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136000,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136001,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136003,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136004,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136006,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136002,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136007,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136008,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136009,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136010,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136005,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136011,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136013,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136012,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136014,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136016,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136015,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136017,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136020,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136018,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136021,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136022,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136019,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136024,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136026,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136023,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136027,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136028,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 36,
+   "seed": 252136025,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136030,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136029,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 36,
+   "seed": 252136031,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137000,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137001,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137002,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137005,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137004,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137008,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137007,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137006,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137010,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137009,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137011,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137012,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137013,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137015,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137014,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137016,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137017,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137018,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137019,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137020,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137021,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137023,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137022,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137024,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137026,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137027,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137025,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137028,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137029,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 37,
+   "seed": 252137030,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 37,
+   "seed": 252137031,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138000,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138001,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138003,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138005,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138004,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138006,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138008,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138007,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138010,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138009,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138011,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138012,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138013,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138014,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138015,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138016,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138017,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138018,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138019,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138020,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138021,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138022,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138023,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138024,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138025,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138026,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138027,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138028,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 38,
+   "seed": 252138030,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138029,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 38,
+   "seed": 252138031,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139001,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139000,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139005,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139004,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139006,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139009,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139008,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139007,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139010,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139011,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139012,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139013,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139014,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139016,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139015,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139017,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139018,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139020,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139019,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139021,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139022,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139023,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139025,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139024,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139026,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139027,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 39,
+   "seed": 252139029,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139030,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 39,
+   "seed": 252139031,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140002,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140000,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140001,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140005,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140004,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140007,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140006,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140008,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140009,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140010,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140011,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140012,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140013,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140016,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140014,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140017,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140019,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140015,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140018,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140020,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140021,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140022,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140024,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140023,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140025,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140026,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140027,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140029,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 40,
+   "seed": 252140028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140030,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 40,
+   "seed": 252140031,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041000,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041002,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041001,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041003,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041004,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041005,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041006,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041007,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041008,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041009,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041011,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041010,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041012,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041013,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041014,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041015,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041016,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041017,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041018,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041019,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041020,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041021,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041022,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041024,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041023,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041025,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 41,
+   "seed": 252041026,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041027,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041028,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041029,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041030,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 41,
+   "seed": 252041031,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042702,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042701,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042700,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042703,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042704,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042705,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042707,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042706,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042708,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042710,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042709,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042711,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042712,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042714,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042713,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042715,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042717,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042716,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042718,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042720,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042719,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042721,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042722,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042723,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042726,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042724,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042725,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042728,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 42,
+   "seed": 252042727,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042729,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042731,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 42,
+   "seed": 252042730,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043301,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043300,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043302,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043303,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043304,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043305,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043306,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043308,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043307,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043309,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043311,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043310,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043312,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043313,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043314,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043315,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043316,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043317,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043318,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043319,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043320,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043323,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043321,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043324,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043322,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043326,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043325,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043327,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 43,
+   "seed": 252043329,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043328,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043330,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 43,
+   "seed": 252043331,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047100,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047101,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047102,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047103,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047105,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047104,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047107,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047108,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047106,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047111,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047109,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047110,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047112,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047113,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047114,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047115,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047116,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047117,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047118,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047119,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047120,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047121,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047122,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047123,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047125,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047124,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047126,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047127,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047128,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 47,
+   "seed": 252047131,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047129,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 47,
+   "seed": 252047130,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048401,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048400,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048402,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048403,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048404,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048405,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048408,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048406,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048407,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048409,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048410,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048411,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048412,
+   "candidate": false,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048413,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048414,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048415,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048416,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048417,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048419,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048418,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048420,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048421,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048422,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048425,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048423,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048424,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048426,
+   "candidate": false,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048427,
+   "candidate": true,
+   "production": false
+  },
+  {
+   "level": 48,
+   "seed": 252048428,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048429,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048430,
+   "candidate": true,
+   "production": true
+  },
+  {
+   "level": 48,
+   "seed": 252048431,
+   "candidate": true,
+   "production": true
+  }
+ ],
+ "recommendation": {
+  "fog": "不建议按雾地形统一换网。L31/L36/L37净差超过容忍下限，其中L31/L37显著变差；合并区间下界也未达标",
+  "roof": "建议仅普通屋顶BACKGROUND_5_ROOF使用finetune-t3（T=3）和相对0.02门槛。五关全部通过，合并显著变好",
+  "evidence_scope": "屋顶证据为L41/L42/L43/L47/L48共160新对；Boss L50跳过，草案保留其原v5roof。雾九关共288新对"
+ },
+ "production_draft": {
+  "deployed": false,
+  "routes": {
+   "BACKGROUND_5_ROOF": {
+    "value": "{repo}/artifacts/value_net/task252_finetune_t3/model.pt",
+    "margin_relative": 0.02
+   }
+  },
+  "checkpoint": {
+   "source": {
+    "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnpool/artifacts/task250/models/finetune-t3.pt",
+    "bytes": 604743,
+    "sha256": "4988616b62baf76ff3b4688fe3bdabc00816451d0bc65318f1409f70f0cac0d6"
+   },
+   "destination": "{repo}/artifacts/value_net/task252_finetune_t3/model.pt",
+   "preparation": "实际部署前经Hugging Face transfer将同SHA检查点放到目标位置，权重不入git"
+  },
+  "authority": "scripts/search_play.py::_leaf_route 唯一选择模型及对应门槛；_leaf_value保留现有调用约定并委托同一函数",
+  "transport": [
+   "qc_launch.command保存默认屋顶路由和显式回退配置",
+   "curriculum_queue.command_for透传同一JSON表",
+   "mac_collect.snapshot保存表，inputs取回模型并将路径改为本地缓存路径，保留margin_relative"
+  ],
+  "temperature": "finetune-t3.pt的task244_temperature=3，task244_experiment.tempered_model已将输出层head.2的权重和偏置除以3。C++ LOAD_VALUE_NET读取该权重，经EnvironmentValueNet的线性输出和sigmoid推理；T=3随检查点选中，无需再传温度参数或再次缩放",
+  "cpp_margin": "SEARCH接收marginRelative（src/main.cpp:2333,2390），唯一公式SearchMargin（src/main.cpp:951）为R<=0时绝对0.02，R>0时max(0.001,R*bestValue)。模型和R在Python任务级一起选中，C++搜索实现保持单一",
+  "default_others": "雾及其余普通地形用原production；Boss仍走原--value-roof/v5roof及绝对0.02",
+  "rollback_arguments": [
+   "--value-routes",
+   "{}"
+  ]
+ },
+ "tests": {
+  "command": "ulimit -f 2000000; timeout 300 env TMPDIR=\"$PWD/artifacts/task252/work\" OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 python3 -m pytest python/test_value_routes.py -k value_routes -q --basetemp artifacts/task252/pytest",
+  "result": "10 passed in 0.06s",
+  "scope": "模型和门槛同时选择、雾/L35/泳池/白天/Boss默认路径、旧调用约定、队列透传、统一启动默认及回退、Mac模型下载与本地路径转换"
+ },
+ "resources": {
+  "worker_limit": 3,
+  "engine_read_only": true,
+  "run_mode": "前台运行，已完成对局读结论缓存续跑"
+ },
+ "reproduction": {
+  "command": "python3 scripts/task252_experiment.py --workers 3",
+  "source_fog_panel": "../fogvalue/MEMORY/docs/task245-fog-value.json",
+  "models": "../vnpool/artifacts/task250/models",
+  "data": "artifacts/task252",
+  "resume": "复用outcomes.json和search_play的已完成局键，不重放旧对局"
+ }
+}

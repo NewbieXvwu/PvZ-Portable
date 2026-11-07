@@ -1,15 +1,23 @@
 #!/usr/bin/env python3
 """The production collector launch command, shared by deployment and watchdog."""
 import argparse
+import json
 from pathlib import Path
 import shlex
 import subprocess
+
+from search_play import parse_value_routes
 
 
 def command(args):
     root, worktree = args.repo, args.worktree or args.repo / '.claude/worktrees/cq'
     python = args.python or Path.home() / '.venvs/ml/bin/python3'
     imports = root / '.claude/worktrees/llmimport'
+    routes = getattr(args, 'value_routes', None)
+    if routes is None:
+        # task252: the checkpoint already contains the T=3 output-head weights.
+        routes = {'BACKGROUND_5_ROOF': dict(
+            value=str(root / 'artifacts/value_net/task252_finetune_t3/model.pt'), margin_relative=.02)}
     return [str(python), str(worktree / 'scripts/curriculum_queue.py'),
         *(['--review-share', str(args.review_share)] if args.review_share is not None else []),
         '--state', str(args.logs / 'curriculum_state.json'), '--log', str(args.logs / 'curriculum.log'),
@@ -38,6 +46,7 @@ def command(args):
         '--rollout-policy-gpt', str(root / 'artifacts/student/gptbc_s1/model.pt'),
         '--value', str(root / 'artifacts/value_net/v5/model.pt'),
         '--value-roof', str(root / 'artifacts/value_net/v5roof/model.pt'),
+        '--value-routes', json.dumps(routes),
         '--static-value', str(root / 'artifacts/hard/value_branch1/model.pt')]
 
 
@@ -53,6 +62,8 @@ def main():
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--rounds', type=int, default=100)
     parser.add_argument('--review-share', type=float)
+    parser.add_argument('--value-routes', type=parse_value_routes,
+                        help='override the task252 roof route; {} restores production leaf values')
     parser.add_argument('--b-init', type=Path)
     parser.add_argument('--b-initial-epochs', type=int)
     parser.add_argument('--b-epochs', type=int)
