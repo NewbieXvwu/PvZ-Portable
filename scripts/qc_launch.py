@@ -6,8 +6,6 @@ from pathlib import Path
 import shlex
 import subprocess
 
-from search_play import parse_value_routes
-
 
 def command(args):
     root, worktree = args.repo, args.worktree or args.repo / '.claude/worktrees/cq'
@@ -64,7 +62,9 @@ def main():
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--rounds', type=int, default=100)
     parser.add_argument('--review-share', type=float)
-    parser.add_argument('--value-routes', type=parse_value_routes,
+    # Standard library only: deploy26 runs this file from a partial install (changed files only),
+    # so importing search_play failed there on 11-07. curriculum_queue validates the routes.
+    parser.add_argument('--value-routes', type=json.loads,
                         help='override the task252 roof route; {} restores production leaf values')
     parser.add_argument('--b-init', type=Path)
     parser.add_argument('--b-initial-epochs', type=int)

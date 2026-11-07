@@ -246,13 +246,14 @@ def test_deploy26_backup_restores_removed_files_and_original_symlink(tmp_path):
     assert not new.exists()
 
 
-def test_deploy26_rollback_launch_uses_original_recipe(tmp_path, monkeypatch):
+def test_deploy26_rollback_launch_uses_restored_launcher(tmp_path, monkeypatch):
     import deploy26
     calls = []
     monkeypatch.setattr(deploy26.subprocess, 'run', lambda command, **kw: calls.append(command))
     args = SimpleNamespace(repo=tmp_path, logs=tmp_path / 'logs')
-    worktree = tmp_path / 'cq'
-    deploy26.launch(tmp_path / 'install', args, worktree, rollback=True)
-    command, = calls
-    assert command[command.index('--alternate-recipe') + 1] == str(
-        worktree / 'recipes/dw4i2_v2timer_seed2cold.json')
+    worktree, installation = tmp_path / 'cq', tmp_path / 'install'
+    deploy26.launch(installation, args, worktree, rollback=True)
+    deploy26.launch(installation, args, worktree)
+    rollback, forward = calls
+    assert rollback[1] == str(worktree / 'scripts/qc_launch.py') and '--recipe' not in rollback
+    assert forward[1] == str(installation / 'scripts/qc_launch.py')

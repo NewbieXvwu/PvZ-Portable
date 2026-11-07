@@ -65,14 +65,11 @@ def start_watchdog(logs):
 
 
 def launch(installation, args, worktree, rollback=False):
-    command = [sys.executable, str(installation / 'scripts/qc_launch.py'),
-        '--repo', str(args.repo), '--worktree', str(worktree), '--logs', str(args.logs),
-        '--python', sys.executable]
-    if rollback:
-        command += ['--recipe', str(worktree / 'recipes/dw4i2_v2timer.json'),
-                    '--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json'),
-                    '--no-a-restart']
-    subprocess.run(command, check=True)
+    # A rollback has restored the previous worktree, whose own launcher defaults are the previous
+    # production settings; the new installation's launcher may not even run against it (11-07).
+    launcher = (worktree if rollback else installation) / 'scripts/qc_launch.py'
+    subprocess.run([sys.executable, str(launcher), '--repo', str(args.repo), '--worktree', str(worktree),
+                    '--logs', str(args.logs), '--python', sys.executable], check=True)
 
 
 def stop_collection(worktree, logs, record):
