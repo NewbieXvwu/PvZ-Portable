@@ -1,0 +1,311 @@
+{
+ "task": "task254",
+ "branch": "vnbalance",
+ "production_deployed": false,
+ "mechanism": {
+  "22": {
+   "terrain": "pool",
+   "panel_multiplier": 0.5,
+   "games": 8,
+   "roots": 24,
+   "labels": 600,
+   "wins": 485,
+   "positive_rate": 0.8083333333333333,
+   "mixed_roots": 8,
+   "archives": [
+    "mac197/mac197_1970078900_fast_search/seed_1970078907/mac197_1970078900_fast_search",
+    "mac197/mac197_1970020604_fast_search/seed_1970020605/mac197_1970020604_fast_search",
+    "mac197/mac197_1970021420_fast_search/seed_1970021431/mac197_1970021420_fast_search",
+    "mac197/mac197_1970083412_fast_search/seed_1970083422/mac197_1970083412_fast_search",
+    "mac197/mac197_1970023412_fast_search/seed_1970023413/mac197_1970023412_fast_search",
+    "seed_5305180/c78p22p9km125_o0_review1_o24_fast_search",
+    "mac197/mac197_1970078900_fast_search/seed_1970078901/mac197_1970078900_fast_search",
+    "mac197/mac197_1970020604_fast_search/seed_1970020612/mac197_1970020604_fast_search"
+   ],
+   "source_multiplier_verified": false
+  },
+  "23": {
+   "terrain": "pool",
+   "panel_multiplier": 1.0,
+   "games": 8,
+   "roots": 24,
+   "labels": 584,
+   "wins": 494,
+   "positive_rate": 0.8458904109589042,
+   "mixed_roots": 13,
+   "archives": [
+    "mac197/mac197_1970084132_fast_search/seed_1970084133/mac197_1970084132_fast_search",
+    "seed_200020366/c89rd193l23m050_o114_review1_o138_fast_search",
+    "mac197/mac197_1970076668_fast_search/seed_1970076668/mac197_1970076668_fast_search",
+    "seed_210101408/c80opening119l23scoreboardm100_o1404_b0_fast_search",
+    "seed_210101820/c97opening119l23scoreboardm100_o1812_b0_fast_search",
+    "seed_2020629/c84p23p9km100_o608_fast_search",
+    "seed_210101285/c75opening119l23scoreboardm100_o1284_b0_fast_search",
+    "mac197/mac197_1970015372_fast_search/seed_1970015376/mac197_1970015372_fast_search"
+   ],
+   "source_multiplier_verified": false
+  },
+  "21": {
+   "terrain": "pool",
+   "panel_multiplier": 1.75,
+   "games": 8,
+   "roots": 22,
+   "labels": 540,
+   "wins": 524,
+   "positive_rate": 0.9703703703703703,
+   "mixed_roots": 5,
+   "archives": [
+    "seed_200020105/c89rd193l21m050_o114_fast_search",
+    "mac197/mac197_1970000084_fast_search/seed_1970000091/mac197_1970000084_fast_search",
+    "mac197/mac197_1970083076_fast_search/seed_1970083089/mac197_1970083076_fast_search",
+    "mac197/mac197_1970000084_fast_search/seed_1970000093/mac197_1970000084_fast_search",
+    "mac197/mac197_1970083076_fast_search/seed_1970083091/mac197_1970083076_fast_search",
+    "mac197/mac197_1970082308_fast_search/seed_1970082311/mac197_1970082308_fast_search",
+    "seed_200020014/c74rd193l21m075_o24_fast_search",
+    "seed_200020197/c104rd193l21m050_o204_review1_o228_fast_search"
+   ],
+   "source_multiplier_verified": false
+  },
+  "24": {
+   "terrain": "pool",
+   "panel_multiplier": 1.5,
+   "games": 8,
+   "roots": 24,
+   "labels": 628,
+   "wins": 614,
+   "positive_rate": 0.9777070063694268,
+   "mixed_roots": 11,
+   "archives": [
+    "mac197/mac197_1970017652_fast_search/seed_1970017656/mac197_1970017652_fast_search",
+    "seed_210201752/c95opening119l24scoreboardm100_o1752_b0_fast_search",
+    "seed_210201762/c95opening119l24scoreboardm100_o1752_b0_fast_search",
+    "seed_210202170/c112opening119l24scoreboardm100_o2160_b0_fast_search",
+    "seed_210201944/c103opening119l24scoreboardm100_o1944_b0_fast_search",
+    "mac197/mac197_1970021132_fast_search/seed_1970021136/mac197_1970021132_fast_search",
+    "mac197/mac197_1970012996_fast_search/seed_1970012998/mac197_1970012996_fast_search",
+    "seed_210201911/c101opening119l24scoreboardm100_o1896_b1_fast_search"
+   ],
+   "source_multiplier_verified": false
+  },
+  "27": {
+   "terrain": "pool",
+   "panel_multiplier": 1.25,
+   "games": 4,
+   "roots": 12,
+   "labels": 340,
+   "wins": 285,
+   "positive_rate": 0.8382352941176471,
+   "mixed_roots": 12,
+   "archives": [
+    "seed_2061284/c76p27p9km100_o1280_fast_search",
+    "mac197/mac197_1970005652_fast_search/seed_1970005659/mac197_1970005652_fast_search",
+    "mac197/mac197_1970006012_fast_search/seed_1970006020/mac197_1970006012_fast_search",
+    "mac197/mac197_1970075492_fast_search/seed_1970075499/mac197_1970075492_fast_search"
+   ],
+   "source_multiplier_verified": false
+  },
+  "31": {
+   "terrain": "fog",
+   "panel_multiplier": 2.0,
+   "games": 6,
+   "roots": 14,
+   "labels": 384,
+   "wins": 320,
+   "positive_rate": 0.8333333333333334,
+   "mixed_roots": 5,
+   "archives": [
+    "seed_49500049/c114foguserv2l31snowm200_o30_fast_search",
+    "seed_49300245/c79foguserv2l31snowm150_o222_fast_search",
+    "seed_200041216/c110rd193l31m050_o234_fast_search",
+    "seed_200020638/c95rd193l31m050_o144_fast_search",
+    "seed_200020597/c90rd193l31m075_o114_fast_search",
+    "seed_49300264/c84foguserv2l31snowm150_o252_fast_search"
+   ],
+   "source_multiplier_verified": false,
+   "panel_net_wins": -10,
+   "panel_worse_p": 0.003173828125
+  },
+  "32": {
+   "terrain": "fog",
+   "panel_multiplier": 1.25,
+   "games": 2,
+   "roots": 5,
+   "labels": 144,
+   "wins": 128,
+   "positive_rate": 0.8888888888888888,
+   "mixed_roots": 3,
+   "archives": [
+    "seed_200009776/c74rd193l32m050_o48_fast_search",
+    "seed_200009963/c105rd193l32m050_o228_fast_search"
+   ],
+   "source_multiplier_verified": false,
+   "panel_net_wins": -2,
+   "panel_worse_p": 0.376953125
+  },
+  "33": {
+   "terrain": "fog",
+   "panel_multiplier": 0.5,
+   "games": 2,
+   "roots": 6,
+   "labels": 160,
+   "wins": 99,
+   "positive_rate": 0.61875,
+   "mixed_roots": 4,
+   "archives": [
+    "seed_200038423/c111rd193l33m050_o258_fast_search",
+    "seed_200010143/c91rd193l33m050_o138_fast_search"
+   ],
+   "source_multiplier_verified": false,
+   "panel_net_wins": 0,
+   "panel_worse_p": 0.604736328125
+  },
+  "34": {
+   "terrain": "fog",
+   "panel_multiplier": 1.5,
+   "games": 2,
+   "roots": 6,
+   "labels": 168,
+   "wins": 120,
+   "positive_rate": 0.7142857142857143,
+   "mixed_roots": 5,
+   "archives": [
+    "seed_200010455/c101rd193l34m050_o198_fast_search",
+    "seed_200010483/c106rd193l34m050_o228_fast_search"
+   ],
+   "source_multiplier_verified": false,
+   "panel_net_wins": 13,
+   "panel_worse_p": 0.999969482421875
+  },
+  "36": {
+   "terrain": "fog",
+   "panel_multiplier": 1.5,
+   "games": 0,
+   "roots": 0,
+   "labels": 0,
+   "wins": 0,
+   "positive_rate": null,
+   "mixed_roots": 0,
+   "archives": [],
+   "source_multiplier_verified": false,
+   "panel_net_wins": -7,
+   "panel_worse_p": 0.10501980781555176
+  },
+  "37": {
+   "terrain": "fog",
+   "panel_multiplier": 2.0,
+   "games": 0,
+   "roots": 0,
+   "labels": 0,
+   "wins": 0,
+   "positive_rate": null,
+   "mixed_roots": 0,
+   "archives": [],
+   "source_multiplier_verified": false,
+   "panel_net_wins": -10,
+   "panel_worse_p": 0.0106353759765625
+  },
+  "38": {
+   "terrain": "fog",
+   "panel_multiplier": 1.5,
+   "games": 0,
+   "roots": 0,
+   "labels": 0,
+   "wins": 0,
+   "positive_rate": null,
+   "mixed_roots": 0,
+   "archives": [],
+   "source_multiplier_verified": false,
+   "panel_net_wins": 7,
+   "panel_worse_p": 0.998046875
+  },
+  "39": {
+   "terrain": "fog",
+   "panel_multiplier": 1.5,
+   "games": 0,
+   "roots": 0,
+   "labels": 0,
+   "wins": 0,
+   "positive_rate": null,
+   "mixed_roots": 0,
+   "archives": [],
+   "source_multiplier_verified": false,
+   "panel_net_wins": -2,
+   "panel_worse_p": 0.38720703125
+  },
+  "40": {
+   "terrain": "fog",
+   "panel_multiplier": 1.5,
+   "games": 0,
+   "roots": 0,
+   "labels": 0,
+   "wins": 0,
+   "positive_rate": null,
+   "mixed_roots": 0,
+   "archives": [],
+   "source_multiplier_verified": false,
+   "panel_net_wins": 14,
+   "panel_worse_p": 0.9999847412109375
+  }
+ },
+ "original_data": {
+  "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbranch/artifacts/task246",
+  "missing": [
+   "features",
+   "branches"
+  ],
+  "required": "task246 features/*.npz\uff08\u8f68\u8ff9\u7ec8\u5c40\u7279\u5f81\uff09\u53ca branches/game_*/ \uff08rows.npz\u3001selection.json\u3001complete.json\u3001root_*/labels.json\uff09\uff0c\u53e6\u9700 plan.json \u4e0e split.json",
+  "recovered": false
+ },
+ "cost_estimate": {
+  "workers": 4,
+  "levels_pool": 5,
+  "levels_fog": 9,
+  "roots_per_level": [
+   8,
+   12
+  ],
+  "futures": 4,
+  "candidates_assumed": 12,
+  "continuation_seconds": {
+   "pool": 123.42,
+   "fog": 30.43
+  },
+  "hours_including_20_percent_overhead": [
+   28.51,
+   42.77
+  ],
+  "note": "\u4e0d\u542b\u7535\u6c60\u6682\u505c\uff0c12\u5019\u9009\u662f\u4f30\u7b97\u503c\u3002\u6bcf\u5173\u6700\u591a\u4e09\u6279\uff0c\u6bcf\u6279\u56db\u6839\uff0c\u672a\u8fbe\u5230\u5e73\u8861\u4e5f\u5728\u4e09\u6279\u540e\u505c\u6b62\u3002",
+  "disk_peak_estimated_gib": 10,
+  "disk_limit_gib": 15
+ },
+ "protocol": {
+  "target_positive_rate": [
+   0.4,
+   0.8
+  ],
+  "root": "\u5f00\u5c40\u6839\uff0c\u5019\u9009\u7531\u73b0\u6709C++\u641c\u7d22\u7ed9\u51fa\uff0c\u5b66\u751f\u5019\u9009\u4ece2\u589e\u81f34",
+  "adaptation": "\u4ec5\u8bad\u7ec3\u79cd\u5b50\u6807\u7b7e\u51b3\u5b9a\u4e0b\u4e00\u6279\u500d\u7387\uff1a\u6b63\u7387\u9ad8\u4e8e80%\u4e581.25\uff0c\u4f4e\u4e8e40%\u4e580.8\u3002\u4ece\u51bb\u7ed3\u7684\u9762\u677f\u500d\u7387\u5f00\u59cb\uff0c\u5361\u7ec4\u4e0d\u53d8\uff0c\u4fdd\u7559\u6240\u6709\u5019\u9009\u548c\u5171\u540c\u672a\u6765\u3002",
+  "split": "\u6bcf\u6279\u56db\u4e2a\u79cd\u5b50\u56fa\u5b9a\u4e3a\u8bad\u7ec32\u4e2a\u3001\u9a8c\u8bc11\u4e2a\u3001\u6d4b\u8bd51\u4e2a\uff0c\u751f\u6210\u6807\u7b7e\u524d\u51bb\u7ed3\u3002",
+  "training": "task246_train --task task254\uff0c\u751f\u4ea7v5\u8d77\u70b9\uff0c\u7f16\u78012\u5bbd64\uff0c16\u8f6e\uff0c\u5b66\u4e60\u73871e-4\uff0c\u6743\u91cd\u8870\u51cf1e-4\uff0c\u4e22\u5f03\u73870\uff0c\u6279\u6b21512\uff0c\u8f68\u8ff9\u4e0e\u5206\u652f\u540450%",
+  "temperature": "\u6309\u5730\u5f62\u4ec5\u7528\u9a8c\u8bc1\u96c6\u62df\u5408\u5bf9\u6570\u635f\u5931\uff0c\u8f68\u8ff9\u4e0e\u5206\u652f\u540450%\uff0c\u6e29\u5ea6\u56fa\u5316\u8fdb\u8f93\u51fa\u5c42\u3002",
+  "panel": "\u6bcf\u517332\u5bf9\u65b0\u79cd\u5b50\uff0c\u6cf3\u6c60\u53ca\u96fe\u5bf9\u6bd4\u751f\u4ea7\uff0c\u5c4b\u9876\u4e94\u5173\u5bf9\u6bd4finetune-t3\u3002\u5019\u9009\u7528\u7edd\u5bf90.02\u95e8\u69db\uff0c\u5c4b\u9876\u5bf9\u7167\u7528\u76f8\u5bf90.02\uff0c\u751f\u4ea7\u5bf9\u7167\u7528\u7edd\u5bf90.02\u3002",
+  "acceptance": "\u6bcf\u5173\u51c0\u5dee>=-2/32\uff0c\u5355\u4fa7\u53d8\u5deep>=0.05\uff0c\u6bcf\u5730\u5f62\u5408\u5e7695%\u533a\u95f4\u4e0b\u754c>=-2/32"
+ },
+ "status": "\u673a\u5236\u6838\u5bf9\u4e0e\u53ef\u7eed\u8dd1\u9a71\u52a8\u5df2\u51c6\u5907\uff0c\u5c1a\u672a\u8865\u6807\u7b7e",
+ "reproduction": {
+  "collect": "python3 scripts/task254_experiment.py --phase collect --workers 4",
+  "full": "python3 scripts/task254_experiment.py --phase all --workers 4 --original <restored-task246-directory>",
+  "resume_training": "python3 scripts/task254_experiment.py --phase train --original <restored-task246-directory>",
+  "panel": "python3 scripts/task254_experiment.py --phase panel --workers 4",
+  "cwd": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbalance",
+  "log_directory": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/vnbalance/artifacts/task254",
+  "launch": "\u524d\u53f0\u8fd0\u884c\u6216\u7531\u4e3b\u63a7\u4f7f\u7528tmux\u542f\u52a8\u3002\u672c\u8f6e\u672a\u542f\u52a8\u540e\u53f0\u957f\u4efb\u52a1\u3002"
+ },
+ "mechanism_conclusion": "L31\u6b63\u738783.3%\uff08320/384\uff09\uff0c\u5b58\u5728\u5168\u6b63\u6839\uff0c\u4f46\u672a\u8fbe\u5230L21/L24\u768497%-98%\u3002L36/L37\u6ca1\u6709\u4efb\u4f55\u539f\u5206\u652f\u6807\u7b7e\uff0c\u5c5e\u4e8e\u5173\u5361\u8986\u76d6\u7f3a\u53e3\u3002L38/L39/L40\u540c\u6837\u65e0\u5206\u652f\u6807\u7b7e\uff0c\u5176\u4e2dL38/L40\u5374\u53d8\u597d\uff0c\u56e0\u6b64\u8986\u76d6\u7f3a\u53e3\u4e0d\u80fd\u5355\u72ec\u89e3\u91ca\u53d8\u5dee\u65b9\u5411\u3002\u539f\u5143\u6570\u636e\u548c\u7279\u5f81\u5df2\u6e05\u7406\uff0c\u6863\u6848\u540d\u4e2d\u7684\u500d\u7387\u5b57\u6837\u4e0d\u80fd\u8bc1\u660e\u4e0etask252\u9762\u677f\u500d\u7387\u53ca\u5361\u7ec4\u4e00\u81f4\u3002",
+ "new_labels": {},
+ "recommendation": {
+  "pool": false,
+  "fog": false,
+  "reason": "\u5c1a\u65e0\u91cd\u8bad\u53ca\u6574\u5c40\u8bc1\u636e\uff0c\u4fdd\u6301\u73b0\u6709\u751f\u4ea7\u914d\u7f6e"
+ }
+}

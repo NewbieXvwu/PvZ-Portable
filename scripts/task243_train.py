@@ -68,7 +68,7 @@ def split(data, seed, exposed_seeds=()):
     return train, val, test
 
 
-def predict(data, paths, device):
+def predict(data, paths, device, *, logits=False):
     predictions = []
     for terrain in TERRAINS:
         if terrain not in data:
@@ -81,7 +81,8 @@ def predict(data, paths, device):
                 stop = min(start + 512, len(prob))
                 batch = {key: rows[key][start:stop] for key in ("board", "scalars", "context", "y")}
                 b, s, c, _ = torch_view(batch, net.encoder_version)
-                prob[start:stop] = torch.sigmoid(net(b.to(device), torch.cat([s, c], 1).to(device))).cpu().numpy()
+                output = net(b.to(device), torch.cat([s, c], 1).to(device))
+                prob[start:stop] = (output if logits else torch.sigmoid(output)).cpu().numpy()
         predictions.append(prob)
         del net
     return np.concatenate(predictions)

@@ -47,12 +47,13 @@ def candidate_rows(base, jobs, columns, predictions):
                 if len(ix)!=sum(not r['leaf_terminal'] for r in rows):
                     raise ValueError(f'{root}: missing candidate {candidate} features')
                 records.append(dict(game=job['game'],op=point,candidate=candidate,terrain=job['terrain'],
+                    level=job['level'] if 'level' in job else job['task']['level'],
                     seed=selection.get('probe_seed',json.loads((directory/'complete.json').read_text())['seed']),
                     truth=sum(r['won'] for r in rows)/len(rows),samples=len(rows),
                     action=rows[0]['action']))
                 for name,prob in predictions.items():
                     scores[name].append((float(prob[ix].sum())+terminal_wins)/len(rows))
-    data={key:np.asarray([r[key] for r in records]) for key in ('game','op','candidate','terrain','seed','truth')}
+    data={key:np.asarray([r[key] for r in records]) for key in ('game','op','candidate','terrain','level','seed','truth')}
     return data,{name:np.asarray(value,dtype=np.float32) for name,value in scores.items()},records
 
 
@@ -81,10 +82,63 @@ def l23_report(base, paths, device):
     return decisions
 
 
+def balanced_report(base, data, jobs, columns, train, val, test, predictions, training, device):
+    """Task254 calibration and held-out ranking, using the same training/aggregation path."""
+    calibration = {}
+    calibrated = []
+    raw_logits = predict(data, {t:base/'models/finetune.pt' for t in TERRAINS}, device, logits=True)
+    offset = 0
+    for name in TERRAINS:
+        rows = data[name]
+        logits = raw_logits[offset:offset+len(rows['y'])]
+        mask = np.array([(name, int(seed)) in val for seed in rows['seed']])
+        losses = {}
+        for temperature in (.25, .5, .75, 1., 1.5, 2., 3., 4., 6., 8.):
+            loss = np.logaddexp(0, logits/temperature) - rows['y']*logits/temperature
+            losses[temperature] = float(np.mean([
+                loss[mask & (rows['source'] == source)].mean() for source in (0, 1)
+                if np.any(mask & (rows['source'] == source))]))
+        temperature = min(losses, key=losses.get)
+        tempered_model(base/'models/finetune.pt', base/f'models/balanced-{name}.pt', temperature)
+        calibrated.append(np.exp(-np.logaddexp(0, -logits/temperature)))
+        calibration[name] = dict(temperature=temperature, validation_rows=int(mask.sum()),
+                                 validation_loss=losses[temperature], grid=losses)
+        offset += len(rows['y'])
+    predictions['balanced'] = np.concatenate(calibrated)
+    ranking, scores, _ = candidate_rows(base, jobs, columns, predictions)
+    heldout = np.array([(t, int(s)) in test for t, s in zip(ranking['terrain'], ranking['seed'])])
+    results = {}
+    for scope in ('all', *TERRAINS, *sorted(set(map(int, ranking['level'])))):
+        mask = heldout & (True if scope == 'all' else
+                         ranking['level'] == scope if isinstance(scope, int) else ranking['terrain'] == scope)
+        results[str(scope)] = {name: rank(prob, ranking, mask) for name, prob in scores.items()}
+    origins = {origin: {scope: {name: rank(prob, ranking, heldout & (ranking['terrain'] == scope) &
+               ((ranking['game'] < 10000) if origin == 'original' else (ranking['game'] >= 10000)))
+               for name, prob in scores.items()} for scope in ('pool', 'fog')}
+               for origin in ('original', 'new')}
+    # Freeze this admission rule before running a new-seed whole-game panel.
+    eligible = all(results[t]['balanced']['pairs'] > 0 and
+                   results[t]['balanced']['pair_accuracy'] >= results[t]['production']['pair_accuracy'] and
+                   results[t]['balanced']['pair_accuracy'] >= results[t]['finetune-t3']['pair_accuracy'] + .05
+                   for t in ('pool', 'fog'))
+    eligible = eligible and all(results[str(level)]['balanced']['pairs'] > 0 and
+        results[str(level)]['balanced']['pair_accuracy'] >= results[str(level)]['production']['pair_accuracy'] and
+        results[str(level)]['balanced']['pair_accuracy'] > results[str(level)]['finetune-t3']['pair_accuracy']
+        for level in (21, 22, 24, 31, 36, 37))
+    report = dict(task='task254', training=training, calibration=calibration, ranking=results,
+                  ranking_by_origin=origins, eligible_for_panel=bool(eligible),
+                  gate='pool/fog >= production and >= finetune-t3 +0.05; L21/22/24/31/36/37 '
+                       'have held-out pairs, >= production and > finetune-t3',
+                  split_games=dict(train=len(train), validation=len(val), test=len(test)))
+    write_json(base/'offline.json', report)
+    print(json.dumps(report, ensure_ascii=False), flush=True)
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--data',type=Path,required=True)
     p.add_argument('--epochs',type=int,default=16)
+    p.add_argument('--task',choices=('task246','task254'),default='task246')
     args=p.parse_args();base=args.data.resolve();started=time.time()
     torch.set_num_threads(1)
     features=base/'features'
@@ -105,12 +159,14 @@ def main():
     test_mask=np.array([(t,int(s)) in test for t,s in zip(terrain,columns['seed'])])
     device=torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
     predictions={};training={}
-    for name,init in [('finetune',base/'models/production.pt'),('scratch',None)]:
+    arms = [('finetune',base/'models/production.pt')]
+    if args.task == 'task246': arms.append(('scratch',None))
+    for name,init in arms:
         state=load_value_net(init).state_dict() if init else None
         report,checkpoint,prob,_=run_arm(data,2,64,246,args.epochs,device,train,val,lr=1e-4,
             dropout=0,weight_decay=1e-4,init_state=state,batch_size=512,decision_fraction=.5)
         checkpoint['state_dict']={k:v.cpu() for k,v in checkpoint['state_dict'].items()}
-        checkpoint.update(task='task246',trained_on=sorted({s for _,s in train|val}),
+        checkpoint.update(task=args.task,trained_on=sorted({s for _,s in train|val}),
             validation_seeds=sorted({s for _,s in val}),decision_fraction=.5,init=str(init) if init else None)
         torch.save(checkpoint,base/'models'/f'{name}.pt')
         predictions[name]=prob
@@ -118,6 +174,12 @@ def main():
         del checkpoint,state
         gc.collect()
         if device.type=='mps':torch.mps.empty_cache()
+    if args.task == 'task254':
+        for name in ('production', 'finetune-t3'):
+            paths={t:base/'models'/('roof.pt' if name=='production' and t=='roof' else f'{name}.pt') for t in TERRAINS}
+            predictions[name]=predict(data,paths,device)
+        balanced_report(base,data,jobs,columns,train,val,test,predictions,training,device)
+        return
     for name in ('production','task244'):
         paths={t:base/'models'/('roof.pt' if name=='production' and t=='roof' else
                                'production.pt' if name=='production' else 'v5-t3.pt') for t in TERRAINS}

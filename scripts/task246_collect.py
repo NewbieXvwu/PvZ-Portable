@@ -50,7 +50,8 @@ def run_one(job):
     play._load_nets(value, policy, str(models / "static.bin"))
     args = play.parser().parse_args(["--rollout-policy", policy, "--value", value,
         "--manifest", str(base / "plan.json"), "--task-id", task["task_id"],
-        "--task-json", json.dumps(task), "--out", str(target), "--student-candidates", "2",
+        "--task-json", json.dumps(task), "--out", str(target), "--student-candidates",
+        str(job.get("student_candidates", 2)),
         "--verify-samples", "9", "--executable", job["executable"]])
     env = play._W["env"] = EventWaitEnv(args.resource_dir, executable=args.executable, headless=True)
     env.load_rollout_net(play._W["rollout_file"])
