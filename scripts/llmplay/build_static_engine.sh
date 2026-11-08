@@ -13,10 +13,12 @@ if [ ! -d "$SDL" ]; then
 fi
 # SDL_Init(TIMER) also initializes DBus in a desktop-enabled SDL build.
 # Disable loadso as well, so future SDL callers cannot dlopen a system library.
+# SDL's separate dynamic API also needs dlopen marked unavailable.
 cmake -S "$SDL" -B "$W/sdl-headless-build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST=OFF \
   -DSDL_LOADSO=OFF -DSDL_DBUS=OFF -DSDL_IBUS=OFF -DSDL_LIBUDEV=OFF \
+  -DHAVE_DLOPEN=OFF -DHAVE_DLOPEN_IN_LIBC=OFF -DHAVE_DLOPEN_IN_LIBDL=OFF \
   -DSDL_JOYSTICK=OFF -DSDL_HAPTIC=OFF -DSDL_SENSOR=OFF -DSDL_HIDAPI=OFF \
   -DSDL_X11=OFF -DSDL_WAYLAND=OFF -DSDL_KMSDRM=OFF -DSDL_DIRECTFB=OFF \
   -DSDL_RPI=OFF -DSDL_VIVANTE=OFF -DSDL_OFFSCREEN=OFF -DSDL_DUMMYVIDEO=ON \
