@@ -6,7 +6,8 @@ OUT=$(realpath -m "${2:?build dir}")
 W=$HOME/pvz-logs/llmplay-build
 SDL=$W/SDL2-2.32.10
 PREFIX=$W/sdl-headless-install
-mkdir -p "$W"
+mkdir -p "$W" "$OUT/tmp"
+export TMPDIR="$OUT/tmp"
 if [ ! -d "$SDL" ]; then
   curl --fail -L -o "$W/SDL2-2.32.10.tar.gz" https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz
   tar xf "$W/SDL2-2.32.10.tar.gz" -C "$W"
