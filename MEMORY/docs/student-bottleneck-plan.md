@@ -1838,3 +1838,4 @@
   - 改动：在共享映射上加 `madvise(MADV_RANDOM)`，只改读取策略，样本、批次和数值都不变。512 MiB 受限缓存实验快 3.06–3.37 倍，读取量降为约 1/300；缓存放得下时冷读会慢约 3 倍，但绝对量很小。
   - GPU 整轮对照被任务书写的 `ulimit -v` 挡住：CUDA 初始化要约 89 GiB 虚拟地址。以后台式机 GPU 实验改用 systemd `MemoryMax`。
   - 主控判断：改动不影响数值，速度最好直接在生产上测。已快进合入 pkg238，布 `autodeploy-trainspeed`：等 r151 出结论后 `deploy26.py --revision 57ff8993`。上线后比较下一轮各 epoch 秒数（r151 A 是 2424 / 3882 / 3810 / 3178），变慢就回滚。
+- 11-09 04:49 CST **r151 晋升**并激活，现任 r151，已连续三次晋升（r146、r148、r151）。04:56 **训练读放大修复上线**（autodeploy-trainspeed，deploy26 57ff8993，exit 0），qc.active=57ff8993。r152–r154 被 r155 取代，r155 正在打包，训练开始后对比各 epoch 秒数。
