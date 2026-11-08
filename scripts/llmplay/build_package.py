@@ -103,6 +103,7 @@ def copy_modules(stage: Path) -> None:
     shutil.copytree(ROOT / "scripts" / "llmplay", stage / "llmplay",
                     ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
                                                   "build_probe.py", "probe", "accept_package.py",
+                                                  "build_static_engine.sh",
                                                   "PROMPT.md", "README.md", "examples",
                                                   "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
@@ -357,6 +358,12 @@ def check_engine(executable) -> None:
     size, count = struct.unpack_from("<HH", data, 54)
     if any(struct.unpack_from("<I", data, phoff + i * size)[0] == 3 for i in range(count)):
         raise SystemExit(f"{executable} 是动态链接（带 PT_INTERP），沙箱缺库；用 -DBUILD_STATIC=ON 构建")
+    # 静态 ELF 仍可能由 SDL dlopen 桌面库，在系统 glibc 初始化时触发 SIGFPE。
+    library = re.search(rb"lib(?:dbus-1|ibus-1\\.0|udev|X11|wayland-client|decor-0|"
+                        rb"asound|pulse|pipewire-0\\.3|jack|sndio|samplerate|GL|EGL|vulkan)\\.so", data)
+    if library:
+        raise SystemExit(f"{executable} 含运行时动态加载库 {library[0].decode()}；"
+                         "请用 scripts/llmplay/build_static_engine.sh 构建")
 
 
 def copy_engine(executable, stage: Path) -> None:

@@ -3,6 +3,10 @@
 解压全部 `llmplay_pkg.7z.*` 分卷；原样的 `llmplay_res.zip` 放在生成的
 `llmplay_pkg/` 旁。进入接口目录，阅读 `PROMPT.md`，直接开始对局。
 
+包内引擎仅支持 `-env` 无窗口模式，不支持窗口、声音或图形渲染。它使用禁用动态加载和
+桌面后端的静态 SDL，调用方无需设置 SDL 驱动环境变量。维护者在 x86-64 Linux 上运行
+`scripts/llmplay/build_static_engine.sh <源码目录> ~/pvz-logs/llmplay-build/<构建目录>` 构建。
+
 ```python
 import os
 os.environ["LLMPLAY_OUT"] = "/mnt/data/out"  # 共用文件系统时，各会话指定不同目录
