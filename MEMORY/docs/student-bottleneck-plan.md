@@ -1826,3 +1826,8 @@
   - 先在台式机找到触发条件，再把静态引擎构建脚本收进仓库，SDL 关掉一切运行时动态加载；
   - 加便宜的防回归检查；
   - 只换引擎做 238e，跑 accept_package，并在触发环境里实测，结果放 Mac `~/Downloads/pvz-llmplay-238e/`。
+- 11-08 **task256 结题**（staticfix 911b2009，已快进合入 pkg238）。
+  - 根因：SexyAppBase 构造时就 `SDL_Init(TIMER)`，SDL 无条件 `SDL_DBus_Init → dlopen`。静态引擎内置的是 glibc 2.43，加载到 Ubuntu 24.04 的共享 libc 2.39 后，`__libc_early_init` 里出现 `div %r8`，除数为 0，触发 SIGFPE。台式机系统库是同版本，所以复现不了；用隔离的 noble 库就能稳定复现。
+  - 修复：构建脚本收进仓库 `scripts/llmplay/build_static_engine.sh`，台式机旧脚本改为调用它。SDL 关掉 dynapi、loadso、DBus / IBus / udev、全部显示、GL 与音频后端，只留 dummy 视频；README 注明只支持无窗口模式。`check_engine` 扫描动态库名与动态入口，旧引擎约 0.1 s 就会被拒收。
+  - **238e**：只换引擎，accept_package 通过；在触发环境推进到 tick 1800、第一波出现，共享库打开次数为 0。文件在 Mac `~/Downloads/pvz-llmplay-238e/`，HF 中转已删。下次开 GPT 会话用 238e。
+- 11-08 15:12 CST 台式机一次 WSL 服务超时（0x8007274c），重试即恢复，生产未受影响。
