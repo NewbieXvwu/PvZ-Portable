@@ -1831,3 +1831,4 @@
   - 修复：构建脚本收进仓库 `scripts/llmplay/build_static_engine.sh`，台式机旧脚本改为调用它。SDL 关掉 dynapi、loadso、DBus / IBus / udev、全部显示、GL 与音频后端，只留 dummy 视频；README 注明只支持无窗口模式。`check_engine` 扫描动态库名与动态入口，旧引擎约 0.1 s 就会被拒收。
   - **238e**：只换引擎，accept_package 通过；在触发环境推进到 tick 1800、第一波出现，共享库打开次数为 0。文件在 Mac `~/Downloads/pvz-llmplay-238e/`，HF 中转已删。下次开 GPT 会话用 238e。
 - 11-08 15:12 CST 台式机一次 WSL 服务超时（0x8007274c），重试即恢复，生产未受影响。
+- 11-08 19:53 CST **r148 晋升**并激活，现任 r148。r147 被 r148 取代，按设计跳过训练和门禁。Mac 06:05 EST 充到 80%，hold 自动解除，采集和 task254 恢复。
