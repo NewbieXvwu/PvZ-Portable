@@ -12,6 +12,7 @@ import argparse
 import contextlib
 import json
 import math
+import mmap
 import os
 import queue
 import zipfile
@@ -678,9 +679,12 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         if spill is not None:
             path = spill / f'{name}.npy'
             if reuse:
-                return np.load(path, mmap_mode='c', allow_pickle=False)
-            store = np.lib.format.open_memmap(path, mode='w+', dtype=dtype, shape=shape)
-            allocated.append(store)
+                store = np.load(path, mmap_mode='c', allow_pickle=False)
+            else:
+                store = np.lib.format.open_memmap(path, mode='w+', dtype=dtype, shape=shape)
+                allocated.append(store)
+            # Shuffled batches otherwise fault in megabytes of read-ahead for a few bytes (task257).
+            store._mmap.madvise(mmap.MADV_RANDOM)
             return store
         return np.zeros(shape, dtype=np.dtype(dtype))
 
