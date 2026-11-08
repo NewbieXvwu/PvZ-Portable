@@ -1839,3 +1839,11 @@
   - GPU 整轮对照被任务书写的 `ulimit -v` 挡住：CUDA 初始化要约 89 GiB 虚拟地址。以后台式机 GPU 实验改用 systemd `MemoryMax`。
   - 主控判断：改动不影响数值，速度最好直接在生产上测。已快进合入 pkg238，布 `autodeploy-trainspeed`：等 r151 出结论后 `deploy26.py --revision 57ff8993`。上线后比较下一轮各 epoch 秒数（r151 A 是 2424 / 3882 / 3810 / 3178），变慢就回滚。
 - 11-09 04:49 CST **r151 晋升**并激活，现任 r151，已连续三次晋升（r146、r148、r151）。04:56 **训练读放大修复上线**（autodeploy-trainspeed，deploy26 57ff8993，exit 0），qc.active=57ff8993。r152–r154 被 r155 取代，r155 正在打包，训练开始后对比各 epoch 秒数。
+- 11-09 07:20 CST **回滚 MADV_RANDOM**（pkg238 ab78ee9f，deploy-revert257b 在组边界部署）。
+  - 依据：r155 候选 A 05:51 开训，86 分钟第一个 epoch 还没完成；r151 约 45 分钟就完成了。
+  - 进程每秒 4869 次主缺页，读盘只有 19 MB/s，受 IO 延迟限制。
+  - 根因：共享映射约 21 GiB，可用页缓存约 15 GB，装不下。关掉预读只是把“读得多”换成了“读得慢”。
+- 派 **task257b**（trainspeed2，Codex）：
+  - 方向一：无损压缩各列，目标合计 ≤ 10 GiB；
+  - 方向二：按块打乱，提高局部性；
+  - 子集实验用 systemd `MemoryMax` 模拟缓存不足，不用 `ulimit -v`；不部署。
