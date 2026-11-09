@@ -1872,3 +1872,17 @@
   - 上线后第一次训练要重建 shared-v2，约 7.3 分钟，额外磁盘峰值约 26 GiB（台式机还剩 795 GB）。
   - 布 `autodeploy-sharedv2`：等下一次门禁结论（现在在训 r156）后 `deploy26.py --revision c385eb87`。上线后看各 epoch 秒数与读盘量，基准是 r151 A 的 2424 / 3882 / 3810 / 3178 s；变慢就回滚。
 - 泳池面板 balanced-pool 臂进行中：L21 21（生产 19）、L22 30（32）、L23 30（26）、L24 7（8）。
+- 11-09 **泳池整局面板结题**（主控，种子从 255100000 起，每关 32 对，生产与 balanced-pool 都用绝对 0.02 门槛）：
+
+  | 关 | 生产 | balanced | 净差 |
+  |---|---:|---:|---:|
+  | L21 | 19 | 21 | +2（+5 / -3） |
+  | L22 | 32 | 30 | -2 |
+  | L23 | 26 | 30 | +4 |
+  | L24 | 8 | 7 | -1（+6 / -7） |
+  | L27 | 22 | 27 | +5 |
+
+  - 合计 115 对 107 / 160，+5.0pp，95% 区间 [-2.7, +12.7]pp，双侧 p=0.27。单关单侧变差都不显著，最差 p=0.25。按 task243 规则**通过**，但改进不显著。
+  - **上生产**：pkg238 4b983cb9，qc_launch 默认路由加 `BACKGROUND_3_POOL → artifacts/value_net/task255_balanced_pool/model.pt`，margin_relative=0，即绝对 0.02。模型经 HF 送到台式机，sha256 779447d9… 已核对，远端已删；test_value_routes 10 项通过。
+  - 与 shared-v2 合并部署：停掉 autodeploy-sharedv2，改布 `autodeploy-sharedv2b`，等下一次门禁结论后 `deploy26.py --revision 4b983cb9`。
+  - **待办**：Mac 采集（macengine 7b43d739）的 mac_collect 不认识 value_routes，Mac 采的泳池局仍用生产叶值。台式机上线后要把 macengine 快进到新版本并重启采集；先确认 build2 引擎支持现在 search_play 传的参数。
