@@ -1912,3 +1912,18 @@
   - progress：drill 2690 / 2709，scenario 315 / 600，resume 484 / 8392。
   - interface_issues 里大量是引擎启动时 -8（SIGFPE）崩溃，即 task256 修掉的 DBus dlopen 问题，238e 已修。
   - 经 HF 送台式机，远端已删，sha 一致；导入任务 import-1109 从 llmimport 跑（导入器软链到 cq 的部署版），日志在 `~/pvz-logs/import_1109.log`。
+- 11-09 **台式机 C 盘写满事故**（约 15:50–17:42 CST，生产停约 2 小时）。
+  - 现象：C 盘只剩 0.5 GB，WSL Ubuntu 停止，启动报 CreateInstance E_FAIL，Tailscale 崩溃，用户手动拉起。
+  - 根因：WSL 虚拟盘 `C:\WSL\Ubuntu\ext4.vhdx` 在 C 盘上，而且不是稀疏盘，只增不减。部署 shared-v2、r158 打包、GPT 导入之前，主控看的是 WSL 内部的 df（显示 795 GB 可用），没看 C 盘。记忆里早有这条警告，没有照做。
+  - 处理（用户批准方案）：
+    1. `.wslconfig` 的 swap 先改 0，后改 2GB（备份 `.wslconfig.bak-20261109`）。
+    2. 在 WSL 内删掉 shared-v1 23 GB、task257 5.9 GB、tmp_import、已导入的 GPT 旧包、HF 缓存，再 fstrim。
+    3. `--set-sparse` 被 WSL 拒绝（提示有损坏风险，必须加 `--allow-unsafe`），没有强开。
+    4. 暂停 PvZWSLKeeper，`wsl --shutdown --force` 之后用 diskpart `compact vdisk`，vhdx 由 199.7 GB 压到 169.1 GB，C 盘回到 38.8 GB。之前两次失败：一次是保活任务把 WSL 拉起来，一次是非强制 shutdown 没生效。
+    5. 删掉崩溃时没建完的 shared-v2，在 cq 用 qc_launch 重启生产与看门狗。
+  - 新增 systemd 用户服务 `pvz-c-guard`（`~/pvz-logs/c_guard.sh`）：`/mnt/c` 可用低于 15 GB 时写 stop_curr，回到 22 GB 以上再撤销（只撤它自己写的）。
+  - 重启后 r159 训练重建 shared-v2：**压缩后 11 GB**，但重建过程写了 32 GB，C 盘降到 30 GB。
+  - **遗留**：
+    - 每次训练全量重建 shared-v2，写 32 GB，既磨损硬盘又会撑大 vhdx，要改成增量；
+    - vhdx 不会自动缩小，需要定期压缩，或者在 Windows 侧腾出 C 盘空间；
+    - 中断的 GPT 交回导入还没重跑。
