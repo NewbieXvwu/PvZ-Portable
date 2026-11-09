@@ -156,6 +156,7 @@ class CompactBoards:
         self.values = bytearray()
         self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
         self.blocks = None
+        self.row_order = None
 
     def append(self, boards, covered=None, plane=None):
         flat = np.asarray(boards, dtype=self.dtype).reshape(len(boards), -1)
@@ -228,24 +229,33 @@ class CompactBoards:
 
     def compress(self, directory, name):
         """Lossless CSR blocks small enough to decode only the randomly selected rows."""
+        with (directory / f'{name}_blocks.bin').open('wb') as output:
+            offsets, sizes, counts = self.write_blocks(output)
+        np.save(directory / f'{name}_counts.npy', counts)
+        np.save(directory / f'{name}_block_offsets.npy', offsets)
+        np.save(directory / f'{name}_raw_sizes.npy', sizes)
+        self.open_blocks(directory, name)
+        for field in ('indices', 'values', 'offsets'):
+            (directory / f'{name}_{field}.npy').unlink(missing_ok=True)
+
+    def write_blocks(self, output, pad=False):
+        """Stream one segment to its final compressed payload; pad its last block for append."""
         offsets, sizes = [0], []
         counts = np.diff(self.offsets)
         if counts.size and counts.max() > np.iinfo(np.uint16).max:
             raise ValueError('CSR row exceeds uint16 count capacity')
-        np.save(directory / f'{name}_counts.npy', counts.astype(np.uint16))
-        with (directory / f'{name}_blocks.bin').open('wb') as output:
-            for start in range(0, self.shape[0], self.BLOCK_ROWS):
-                rows = self.offsets[start:start + self.BLOCK_ROWS + 1]
-                lo, hi = rows[0], rows[-1]
-                raw = ((rows - lo).tobytes() + self.indices[lo:hi].tobytes()
-                       + self.values[lo:hi].tobytes())
-                sizes.append(len(raw))
-                offsets.append(offsets[-1] + output.write(zlib.compress(raw, 1)))
-        np.save(directory / f'{name}_block_offsets.npy', np.asarray(offsets, np.int64))
-        np.save(directory / f'{name}_raw_sizes.npy', np.asarray(sizes, np.uint32))
-        self.open_blocks(directory, name)
-        for field in ('indices', 'values', 'offsets'):
-            (directory / f'{name}_{field}.npy').unlink()
+        for start in range(0, self.shape[0], self.BLOCK_ROWS):
+            rows = self.offsets[start:start + self.BLOCK_ROWS + 1]
+            lo, hi = rows[0], rows[-1]
+            if pad and len(rows) < self.BLOCK_ROWS + 1:
+                rows = np.pad(rows, (0, self.BLOCK_ROWS + 1 - len(rows)), constant_values=hi)
+            raw = ((rows - lo).tobytes() + self.indices[lo:hi].tobytes()
+                   + self.values[lo:hi].tobytes())
+            sizes.append(len(raw))
+            offsets.append(offsets[-1] + output.write(zlib.compress(raw, 1)))
+        if pad:
+            counts = np.pad(counts, (0, -len(counts) % self.BLOCK_ROWS))
+        return np.asarray(offsets, np.int64), np.asarray(sizes, np.uint32), counts.astype(np.uint16)
 
     def open_blocks(self, directory, name):
         _csr_decoder()  # build once before training, including when reopening an existing mapping
@@ -260,6 +270,8 @@ class CompactBoards:
         selected = np.ascontiguousarray(selected, dtype=np.int64)
         if selected.size and (selected.min() < 0 or selected.max() >= self.shape[0]):
             raise IndexError('CSR row out of range')
+        if self.row_order is not None:
+            selected = np.ascontiguousarray(self.row_order[selected], dtype=np.int64)
         groups, inverse = np.unique(selected // self.BLOCK_ROWS, return_inverse=True)
         total = int(self.counts[selected].sum(dtype=np.int64))
         destinations = np.empty(total, np.int64)
@@ -268,7 +280,7 @@ class CompactBoards:
                   inverse.astype(np.int64, copy=False), selected, self.counts, destinations, values)
         pointers = [array.ctypes.data for array in arrays]
         status = _csr_decoder()(pointers[0], self.blocks.nbytes, *pointers[1:4], len(groups),
-                                *pointers[4:6], len(selected), pointers[6], self.shape[0], self.cells,
+                                *pointers[4:6], len(selected), pointers[6], len(self.counts), self.cells,
                                 np.dtype(self.index_dtype).itemsize, self.dtype.itemsize, threads, *pointers[7:])
         if status:
             raise ValueError(f'compressed CSR batch decode failed ({status})')
@@ -371,6 +383,7 @@ class PacketStore:
     def __init__(self, capacity, slots):
         self.slots = slots
         self.packed_flags = False
+        self.row_order = None
         dtypes = (np.int8, np.uint8, np.float32, np.uint8)
         self.columns = [np.empty((capacity, slots), dtype) for dtype in dtypes]
 
@@ -386,18 +399,24 @@ class PacketStore:
     def __getitem__(self, idx):
         if isinstance(idx, tuple) and len(idx) == 3:        # (row, slot, component): one column, one cell
             row, slot, component = idx
+            if self.row_order is not None:
+                row = self.row_order[row]
             if self.packed_flags and component in (1, 3):
                 slot = np.arange(self.slots)[slot]
                 return torch.tensor((self.columns[component][row, slot // 8] >> (7 - slot % 8)) & 1,
                                     dtype=torch.uint8)
             return torch.tensor(np.asarray(self.columns[component])[row, slot])
+        if self.row_order is not None:
+            idx = self.row_order[idx]
         kind, active, progress, affordable = (
             torch.from_numpy(np.unpackbits(column[idx], axis=-1, count=self.slots))
-            if self.packed_flags and component in (1, 3) else torch.from_numpy(np.asarray(column))[idx]
+            if self.packed_flags and component in (1, 3) else torch.from_numpy(np.asarray(column[idx]))
             for component, column in enumerate(self.columns))
         return torch.stack([kind.float(), active.float(), progress, affordable.float()], dim=-1)
 
     def kinds(self, rows, slots):
+        if self.row_order is not None:
+            rows = self.row_order[np.asarray(rows)]
         return torch.from_numpy(np.asarray(self.columns[0])[np.asarray(rows), np.asarray(slots)].astype(np.int64))
 
     @classmethod
@@ -510,7 +529,7 @@ class ValueStore:
         rows = np.flatnonzero(counts >= 2)
         spreads = np.empty(len(rows), dtype=np.float32)
         for index, row in enumerate(rows):
-            block = self.values[self.offsets[row]:self.offsets[row + 1]]
+            block = self.values[self.offsets[row]:self.offsets[row] + counts[row]]
             spreads[index] = block.max() - block.min()
         return rows, spreads
 
@@ -748,30 +767,192 @@ def _member_array(archive, name):
 
 
 def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
-    """Share one merged generation between trainers, keeping their row weights private."""
+    """Append immutable segments to a shared payload; trainers keep private row weights."""
     if data is None:
         return _read_segments(paths, data, row_observer, source_weight)
     _csr_decoder()
     import fcntl
-    import hashlib
     directory = Path(data) / '.merge' / 'shared-v2'
     directory.mkdir(parents=True, exist_ok=True)
-    signature = hashlib.sha256(json.dumps([
-        (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
-        for path in paths]).encode()).hexdigest()
     with (directory.parent / 'shared.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        marker = directory / 'complete'
-        reuse = marker.is_file() and marker.read_text() == signature
-        if not reuse:
+        marker = directory / 'index.json'
+        index = json.loads(marker.read_text()) if marker.is_file() else dict(segments={}, arrays={})
+        signatures = [json.dumps((str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns))
+                      for path in paths]
+        # Pruning/replacement rebuilds through the same streaming writer. Unlink rather than
+        # truncate: already-running trainers retain their previous generation's mappings.
+        if not marker.is_file() or not set(index['segments']).issubset(signatures):
             for previous in directory.iterdir():
                 previous.unlink()
-        result = _read_segments(paths, data, row_observer, source_weight, directory, reuse)
-        marker.write_text(signature)
+            index = dict(segments={}, arrays={})
+        # A killed append has no published index. Discard only its uncommitted tail.
+        for path in directory.glob('*.bin'):
+            descriptor = index['arrays'].get(path.stem)
+            size = (int(np.prod(descriptor['shape'])) * np.dtype(descriptor['dtype']).itemsize
+                    if descriptor else 0)
+            if path.stat().st_size != size:
+                with path.open('r+b') as handle:
+                    handle.truncate(size)
+        changed = False
+        for path, signature in zip(paths, signatures):
+            if signature not in index['segments']:
+                _append_shared_segment(path, directory, index, signature)
+                changed = True
+        if changed:
+            temporary = directory / 'index.building'
+            temporary.write_text(json.dumps(index))
+            temporary.replace(marker)
+        result = _open_shared_segments(directory, index, signatures, data, row_observer, source_weight)
     return result
 
 
-def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=False):
+def _append_shared_segment(path, directory, index, signature):
+    """One NPZ in memory, directly to final files; never spill uncompressed merged CSR."""
+    arrays = index['arrays']
+    def append(name, block):
+        block = np.asarray(block)
+        descriptor = arrays.setdefault(name, dict(dtype=block.dtype.str, shape=[0, *block.shape[1:]]))
+        if descriptor['dtype'] != block.dtype.str or descriptor['shape'][1:] != list(block.shape[1:]):
+            raise ValueError(f'{path}: {name} descriptors differ from the shared payload')
+        with (directory / f'{name}.bin').open('ab') as output:
+            output.write(block.tobytes())
+        descriptor['shape'][0] += len(block)
+
+    part = read_pack(path)
+    rows = len(part[2])
+    base = arrays.get('seed', {'shape': [0]})['shape'][0]
+    with np.load(path, allow_pickle=False) as stored:
+        sources = stored['source'].tolist()
+        counts = np.bincount(stored['source_archive'], minlength=len(sources)).tolist()
+        append('source_row', stored['source_row'])
+    record = dict(base=base, rows=rows, sources=sources, counts=counts, csr={})
+    for name, store in zip(('board', 'scalar'), part[:2]):
+        descriptor = dict(shape=list(store.shape[1:]), dtype=store.dtype.str,
+                          index_dtype=np.dtype(store.index_dtype).str)
+        if name in index and index[name] != descriptor:
+            raise ValueError(f'{path}: {name} descriptors differ from the shared payload')
+        index[name] = descriptor
+        block_name = name + '_blocks'
+        byte_base = arrays.get(block_name, {'shape': [0]})['shape'][0]
+        record['csr'][name] = arrays.get(name + '_counts', {'shape': [0]})['shape'][0]
+        with (directory / f'{block_name}.bin').open('ab') as output:
+            offsets, sizes, row_counts = store.write_blocks(output, pad=True)
+        arrays[block_name] = dict(dtype='|u1', shape=[byte_base + int(offsets[-1])])
+        if not byte_base:
+            # The initial zero is written once, even if preceding segments had zero rows.
+            if name + '_block_offsets' not in arrays:
+                append(name + '_block_offsets', np.zeros(1, np.int64))
+        append(name + '_block_offsets', offsets[1:] + byte_base)
+        append(name + '_raw_sizes', sizes)
+        append(name + '_counts', row_counts)
+        cells, values, plane_offsets = store._plane_tables()
+        plane_base = arrays.get(name + '_plane_lengths', {'shape': [0]})['shape'][0]
+        ids = (store.plane_of if store.plane_of is not None and len(store.plane_of) == rows
+               else np.full(rows, -1, np.int32))
+        append(name + '_plane_of', np.where(ids >= 0, ids + plane_base, -1).astype(np.int32))
+        append(name + '_plane_cells', cells.astype(np.int32))
+        append(name + '_plane_values', values)
+        append(name + '_plane_lengths', np.diff(plane_offsets))
+    for name, block in zip(('plant', 'packet', 'cell', 'weight', 'seed'), part[2:7]):
+        append(name, block)
+    for name, store, fields in (('value', part[7], ('counts', 'slots', 'values')),
+                                ('cand', part[8], ('counts', 'entries'))):
+        if store is not None:
+            for field in fields:
+                append(name + '_' + field, getattr(store, field))
+    for extra in part[9:]:
+        if isinstance(extra, PacketStore):
+            for component, column in enumerate(extra.columns):
+                append(f'packet_col{component}', np.packbits(column, axis=-1)
+                       if component in (1, 3) else column)
+        else:
+            append('aux', extra)
+    index['segments'][signature] = record
+
+
+def _open_shared_segments(directory, index, signatures, data, row_observer, source_weight):
+    def mapped(name):
+        descriptor = index['arrays'][name]
+        shape, dtype = tuple(descriptor['shape']), np.dtype(descriptor['dtype'])
+        return (np.memmap(directory / f'{name}.bin', dtype=dtype, shape=shape, mode='r')
+                if np.prod(shape) else np.empty(shape, dtype))
+
+    chunks = []
+    for signature in signatures:
+        record = index['segments'][signature]
+        start = 0
+        for source, count in zip(record['sources'], record['counts']):
+            chunks.append((source, record, start, start + count))
+            start += count
+    chunks.sort(key=lambda chunk: str(Path(chunk[0]).parent))
+    total = sum(stop - start for _, _, start, stop in chunks)
+    # Row ids, unlike CSR entry offsets, fit uint32 for the current corpus.
+    row_dtype = np.min_scalar_type(max(index['arrays']['seed']['shape'][0],
+                                       index['arrays']['board_counts']['shape'][0]))
+    order = np.empty(total, row_dtype)
+    csr_order = np.empty(total, row_dtype)
+    source_rows = mapped('source_row')
+    position = 0
+    weight_factors = []
+    for source, record, start, stop in chunks:
+        span = stop - start
+        order[position:position + span] = np.arange(record['base'] + start, record['base'] + stop)
+        # Both CSR stores pad the same segment's tail to a full 32-row block.
+        csr_order[position:position + span] = np.arange(record['csr']['board'] + start,
+                                                       record['csr']['board'] + stop)
+        if span and row_observer is not None:
+            row_observer(Path(data) / source, source_rows[record['base'] + start:record['base'] + stop])
+        if span and source_weight:
+            meta_path = (Path(data) / source).parent / 'meta.json'
+            meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+            weight_factors.append((position, position + span, source_factor(meta, source_weight)))
+        position += span
+    stores = []
+    for name in ('board', 'scalar'):
+        descriptor = index[name]
+        store = CompactBoards(descriptor['shape'], np.dtype(descriptor['dtype']))
+        store.index_dtype = np.dtype(descriptor['index_dtype'])
+        store.shape = (total, *descriptor['shape'])
+        store.row_order = csr_order
+        store.blocks, store.block_offsets, store.raw_sizes, store.counts = (
+            mapped(name + '_' + field) for field in ('blocks', 'block_offsets', 'raw_sizes', 'counts'))
+        store.indices = store.values = store.offsets = None
+        lengths = mapped(name + '_plane_lengths')
+        cells, values = mapped(name + '_plane_cells'), mapped(name + '_plane_values')
+        offsets = np.r_[0, np.cumsum(lengths)]
+        store.planes = [(cells[lo:hi], values[lo:hi]) for lo, hi in zip(offsets[:-1], offsets[1:])]
+        store.plane_of = mapped(name + '_plane_of')[order] if len(lengths) else None
+        stores.append(store)
+    dense = [torch.from_numpy(mapped(name)[order]) for name in ('plant', 'packet', 'cell', 'weight')]
+    for start, stop, factor in weight_factors:
+        dense[3][start:stop] *= factor
+    sparse = []
+    for name, factory in (('value', ValueStore), ('cand', CandidateStore)):
+        if name + '_counts' not in index['arrays']:
+            sparse.append(None)
+            continue
+        store = factory()
+        counts = mapped(name + '_counts')
+        # Starts are indexed separately from counts: physical entries remain append-only.
+        store.offsets = np.r_[0, np.cumsum(counts, dtype=np.int64)][order]
+        store.counts = counts[order]
+        for field in (('slots', 'values') if name == 'value' else ('entries',)):
+            setattr(store, field, mapped(name + '_' + field))
+        sparse.append(store)
+    result = (*stores, *dense, mapped('seed')[order], *sparse)
+    if 'aux' in index['arrays']:
+        result = (*result, torch.from_numpy(mapped('aux')[order]))
+    if 'packet_col0' in index['arrays']:
+        packets = PacketStore(0, index['arrays']['packet_col0']['shape'][1])
+        packets.columns = [mapped(f'packet_col{component}') for component in range(4)]
+        packets.packed_flags = True
+        packets.row_order = order
+        result = (*result, packets)
+    return result
+
+
+def _read_segments(paths, data, row_observer, source_weight):
     """Merge compact slices in global archive order, without decompressing game frames.
 
     Labels interleave by seed in frame_paths. Simply concatenating label segments would change
@@ -780,22 +961,13 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
 
     task61: two passes keep the peak near one segment instead of the whole corpus twice. Pass
     one reads only per-row metadata and every member's npy header (no big array is decompressed),
-    lays the chunks out in global archive order and preallocates the targets -- shared file-backed
-    memmaps when a spill directory is supplied, plain arrays otherwise.
+    lays the chunks out in global archive order and preallocates the in-memory targets.
     Pass two loads one segment at a time, copies each chunk
     to its precomputed position and releases it. The result is bitwise identical to the previous
     concatenate-everything implementation (tests compare every column, plus hashes over a real
     round-2 pack subset).
     """
-    allocated = []
     def allocate(name, dtype, shape):
-        if spill is not None:
-            path = spill / f'{name}.npy'
-            if reuse:
-                return np.load(path, mmap_mode='c', allow_pickle=False)
-            store = np.lib.format.open_memmap(path, mode='w+', dtype=dtype, shape=shape)
-            allocated.append(store)
-            return store
         return np.zeros(shape, dtype=np.dtype(dtype))
 
     # Pass one: the chunk layout comes from per-row metadata and the (small) offsets/counts
@@ -877,20 +1049,16 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                 plane_counts[name].append(int(_member_header(zfile, name + "_plane_offsets")[0][0]) - 1)
     plane_bases = {name: np.cumsum([0] + plane_counts[name]) for name in ("board", "scalar")}
 
-    # Targets, preallocated once: file backed memmaps in the trainer (data given), plain
-    # arrays otherwise. The whole merged corpus is written exactly once, position by position.
+    # In-memory reference path. Production shared files use the streaming append writer.
     stores = []
     for name in ("board", "scalar"):
         descriptor = descriptors[name]
         store = CompactBoards(descriptor["shape"], descriptor["dtype"])
         store.index_dtype = descriptor["index_dtype"]
-        if reuse:
-            store.open_blocks(spill, name)
-        else:
-            store.indices = allocate(name + "_indices", store.index_dtype, (totals[name],))
-            store.values = allocate(name + "_values", descriptor["dtype"], (totals[name],))
-            store.offsets = allocate(name + "_offsets", np.int64, (total_rows + 1,))
-            store.offsets[0] = 0
+        store.indices = allocate(name + "_indices", store.index_dtype, (totals[name],))
+        store.values = allocate(name + "_values", descriptor["dtype"], (totals[name],))
+        store.offsets = allocate(name + "_offsets", np.int64, (total_rows + 1,))
+        store.offsets[0] = 0
         store.plane_of = (allocate(name + "_plane_of", np.int32, (total_rows,))
                           if plane_bases[name][-1] else None)
         store.planes = []
@@ -910,23 +1078,11 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                                 (totals["cand"], *headers["cand_entries"][0][1:]))}
     packets = PacketStore(total_rows, headers["packet_col0"][0][1]) if has_packets else None
     if packets is not None:
-        packets.packed_flags = spill is not None
-        packets.columns = [allocate(f'packet_col{index}', column.dtype,
-                                   (total_rows, -(-packets.slots // 8))
-                                   if packets.packed_flags and index in (1, 3) else column.shape)
+        packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
                            for index, column in enumerate(packets.columns)]
 
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
     for index, layout in enumerate(layouts):
-        if reuse:
-            with np.load(layout['path'], allow_pickle=False) as stored:
-                for store, name in zip(stores, ('board', 'scalar')):
-                    cells = stored[name + '_plane_cells']
-                    values = stored[name + '_plane_values']
-                    offsets = stored[name + '_plane_offsets']
-                    store.planes.extend((cells[lo:hi], values[lo:hi])
-                                        for lo, hi in zip(offsets[:-1], offsets[1:]))
-            continue
         part = read_pack(layout["path"])
         for store, name, part_store in ((stores[0], "board", part[0]), (stores[1], "scalar", part[1])):
             descriptor = descriptors[name]
@@ -977,14 +1133,6 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                                     if packets.packed_flags and component in (1, 3) else block)
         del part
 
-    for store in allocated:
-        store.flush()
-    allocated.clear()  # release the raw CSR mappings when compress() replaces and unlinks them
-    if spill is not None and not reuse:
-        for store, name in zip(stores, ('board', 'scalar')):
-            store.compress(spill, name)
-    if spill is not None:
-        dense_targets['weight'] = dense_targets['weight'].copy()
     result = (stores[0], stores[1],
               *(torch.from_numpy(dense_targets[name]) for name in dense_names),
               seed_target, ValueStore.from_arrays(value_arrays),

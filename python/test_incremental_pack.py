@@ -313,7 +313,10 @@ def test_read_segments_per_segment_copy_is_bitwise_including_spill(tmp_path):
         observer = ((lambda path, rows: observed.append((str(path.relative_to(data)), rows.copy())))
                     if kwargs else None)
         result = trainer.read_segments(paths, row_observer=observer, **kwargs)
-        _assert_bitwise(result, oracle)
+        if kwargs:
+            assert_payload_equal(trainer.read_segments(paths), result)
+        else:
+            _assert_bitwise(result, oracle)
     want = []
     for index, path in enumerate(paths):
         with np.load(path, allow_pickle=False) as stored:
@@ -327,6 +330,95 @@ def test_read_segments_per_segment_copy_is_bitwise_including_spill(tmp_path):
             start += count
     want.sort(key=lambda item: str(Path(item[0]).parent))
     assert [(a, b.tolist()) for a, b in observed] == [(a, b.tolist()) for a, b in want]
+
+
+@pytest.mark.parametrize('change', ['append', 'prune', 'modify'])
+def test_shared_incremental_streaming_batches(tmp_path, change):
+    data = tmp_path / 'data'
+    fixture(data, ['b', 'c'])
+    settings = dict(obs='v2', cells=True, aux_horizon=3, packet_head='identity')
+    def segments(labels):
+        packed = pack(data, options(data, labels, **settings))
+        with np.load(packed) as stored:
+            return [packed.parent / name for name in stored['segments'].tolist()]
+    paths = segments(['b', 'c'])
+    directory = data / '.merge/shared-v2'
+    # Existing task257 shared-v2 is replaced once, without retaining a second disk copy.
+    directory.mkdir(parents=True)
+    (directory / 'complete').write_text('legacy-signature')
+    (directory / 'board_values.npy').write_bytes(b'legacy')
+    old = trainer.read_segments(paths, data)
+    old_reference = trainer.read_segments(paths)
+    assert not (directory / 'board_values.npy').exists()
+    before = {p.name: (p.stat().st_ino, p.read_bytes()) for p in directory.glob('*.bin')}
+    if change == 'append':
+        fixture(data, ['a'])  # inserts rows before b/c inside every seed
+        paths = segments(['a', 'b', 'c'])
+        original = trainer.read_pack
+        loaded = []
+        def read(path):
+            loaded.append(path)
+            return original(path)
+        with patch.object(trainer, 'read_pack', side_effect=read):
+            actual = trainer.read_segments(paths, data)
+        assert len(loaded) == 1
+        for name, (inode, content) in before.items():
+            target = directory / name
+            assert target.stat().st_ino == inode
+            assert target.read_bytes()[:len(content)] == content
+    elif change == 'prune':
+        paths = paths[:1]
+        actual = trainer.read_segments(paths, data)
+    else:
+        with np.load(paths[0]) as stored:
+            arrays = {name: stored[name] for name in stored.files}
+        arrays['weight'] *= 1.25
+        np.savez(paths[0], **arrays)
+        actual = trainer.read_segments(paths, data)
+    full = trainer.read_segments(paths, tmp_path / 'fresh')
+    reference = trainer.read_segments(paths)
+    assert_payload_equal(old_reference, old)
+    assert_payload_equal(reference, full)
+    assert_payload_equal(full, actual)
+    # Existing readers survive appends and unlink/rebuild, including private weight changes.
+    old[5].zero_()
+    assert actual[5].sum() > 0
+    rng = np.random.default_rng(259)
+    source = trainer.BatchSource(*actual[:6], actual[-1], actual[8], actual[9])
+    oracle = trainer.BatchSource(*reference[:6], reference[-1], reference[8], reference[9])
+    for idx in (np.array([], np.int64), rng.integers(len(actual[2]), size=79)):
+        left, right = source.prepare(idx), oracle.prepare(idx)
+        for name in ('board', 'scalar'):
+            column = 0 if name == 'board' else 1
+            a = actual[column].materialize(left[name], 'cpu').numpy()
+            b = reference[column].materialize(right[name], 'cpu').numpy()
+            assert a.tobytes() == b.tobytes()
+        for name in ('plant', 'packet', 'cell', 'weight', 'packet_info', 'cands', 'auxiliary'):
+            assert left[name].numpy().tobytes() == right[name].numpy().tobytes()
+    assert np.array_equal(actual[7].spread()[0], reference[7].spread()[0])
+    assert actual[7].spread()[1].tobytes() == reference[7].spread()[1].tobytes()
+
+
+def test_shared_incremental_recovers_unpublished_append(tmp_path):
+    data = tmp_path / 'data'
+    fixture(data, ['b'])
+    first_index = pack(data, options(data, ['b']))
+    with np.load(first_index) as stored:
+        first_paths = [first_index.parent / name for name in stored['segments'].tolist()]
+    first = trainer.read_segments(first_paths, data)
+    fixture(data, ['a'])
+    second_index = pack(data, options(data, ['a', 'b']))
+    with np.load(second_index) as stored:
+        paths = [second_index.parent / name for name in stored['segments'].tolist()]
+    original = trainer._append_shared_segment
+    def interrupted(*args):
+        original(*args)
+        raise RuntimeError('interrupted before publishing index')
+    with patch.object(trainer, '_append_shared_segment', side_effect=interrupted):
+        with pytest.raises(RuntimeError, match='interrupted'):
+            trainer.read_segments(paths, data)
+    assert_payload_equal(first, trainer.read_segments(first_paths, data))
+    assert_payload_equal(trainer.read_segments(paths), trainer.read_segments(paths, data))
 
 
 def test_pending_builds_empty_after_pack(tmp_path):
