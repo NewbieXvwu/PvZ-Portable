@@ -1,41 +1,90 @@
-# task260：scenario 交回存档复验调查（未完成）
+# task260：scenario 复验不一致修复
 
-工作分支 `scenfix`，调查基线 `ec539401`。本次已读取出题、重放与导入判据的调用链，并从台式机读到失败索引和一个完整样本的元数据。随后 SSH 连接中断，重新连接持续超时，尚未执行双引擎重放。根因未确定，未改运行代码，未追加导入，未更新生产引擎。
+分支 `scenfix`，引擎源码基线 `ec539401`。task260b 已完成定位、146 份重新复验及目标库追加导入。根因是导入指定的旧 `imitater1` 引擎缺少 scenario 注入命令。使用本分支源码独立编译的静态引擎复验后，141 份原异常项全部通过并成为有效入库条目，另外 5 份保持真实失败。最终本包 scenario 为 **310 份成功、5 份真实失败、0 份复验异常**。
 
-**已取得的现场证据**
+## 根因与双引擎证据
 
-台式机首次读取 `df -h /mnt/c`：C 盘 954 GB，已用 925 GB，剩余 30 GB，满足任务规定的 25 GB 启动条件。未启动重放实验，未创建远端实验目录。
+原导入引擎是 `~/PvZ-search/artifacts/production/imitater1/pvz-portable`，输出 BuildNum 4107、CommitDate 2026-11-03。其 SHA256 为 `63b4067ef53ab4122bbde18ee5ee46649f8e98735b5e7ac89300ac8064fa6d8c`。
 
-导入脚本确认为 `~/PvZ-search/.claude/worktrees/llmimport/scripts/import_llm_run.py`，软链指向 `cq/scripts/import_llm_run.py`。导入日志开头是引擎输出，包含 BuildNum 4107、CommitDate 2026-11-03，前 32 行未出现导入命令，尚未取得完整运行参数。
+分别使用该引擎与现存 `~/pvz-logs/llmplay-build/pvz-portable-238c` 重放日、雾、夜各一份失败样本。三份均出现同一个分叉：`RESEED` 被接受，紧接着原本成功的 `SET_SUN` 和 `SPAWN` 被旧引擎拒绝，返回 `ok=False`。阳光保留为旧值，指定僵尸未注入，后续种植也会因阳光不足而拒绝。静态引擎接受同样的注入，目标 ID、类型、行与 x 坐标匹配，最后判成功。
 
-读取目标库的 `merged_progress.json`，筛选 `base_task_id` 包含 `scenario` 且备注包含“判据与存档记录不一致”，得到 **141 份**。任务书的日 62、雾 54、夜 25 合计也是 141。任务书总失败数 146 与此相差 5 份，尚未读完原日志和原包，不能确认这 5 份的失败类别。
+| 样本 | 注入操作号 | 旧引擎阳光 → 正确阳光 | 目标 ID | 两引擎最终 tick |
+|---|---|---|---|---|
+| scenario238_day_007 | 103 SET_SUN、104 SPAWN | 0 → 625 | 66453508 | 7020 |
+| scenario238_fog_052 | 128 SET_SUN、129 SPAWN | 35 → 50 | 66453512 | 7811 |
+| scenario238_night_024 | 140 SET_SUN、141 SPAWN | 0 → 125 | 66387974 | 9241 |
 
-已取得以下失败记录，可按 SHA 在目标库 `sha256/<SHA>` 定位：
+样本 SHA256：
 
-| 任务 | 种子 | SHA256 |
+```text
+day_007    487672b0d4f8577e26a194f43713f26a96b3720bc27fb336fc17e73b08e0ba7f
+fog_052    b5f8fa0eaccae076be65d96c9d2c4a5f55097eb487913092acf87f8f38c457b2
+night_024  8aabf37e05bb1ed4c75b5adced93dcd3205cfc744302586048107e65fe80b3b3
+```
+
+[`Game._replay_to`](../../scripts/llmplay/game.py) 会执行操作日志，但没有核对每条操作记录的 `ok`，所以旧引擎拒绝注入后仍继续重放。最终判据看到的是另一个棋盘，表现为 `meta=True replay=False`。目标以对象 ID 识别，后续自然出生的僵尸还可能占用原定注入目标的 ID，旧引擎的最终存活目标因而不能用于判断 GPT 的实际操作效果。
+
+task248 及 `0fea7ad4` / `e91e220b` 的起点、推车和终局修复均已存在，见 [11-05 记录](../2026-11-05.md)。本次 146 份正确引擎重放中，每条操作的接受结果和终点 tick 都与原日志一致。雾样本根 tick 6600、视界 1200、终点 7811，双方都在 7811 判成功。未发现本批由起点或等待时长错位造成的异常。
+
+## 修复方式与生产边界
+
+修复采用导入器已有的 `--executable` 参数选择支持注入命令的独立引擎。运行代码无须改动，判据及重放继续调用现有唯一实现。没有更新 `cq` 工作树、`imitater1` 引擎或 GPT 包。
+
+为取得确定来源的复验引擎，从台式机仓库用 `git archive ec539401 CMakeLists.txt CMake src` 提取源码，在 `~/pvz-logs/task260/` 独立构建。复用已安装的无界面 SDL 静态库及现存 mimalloc 源码，使用 Release、`BUILD_STATIC=ON`、链接参数 `-static`、`PVZ_ROLLOUT_BLAS=OFF`，两个编译进程。引擎 SHA256 为 `fa2e81a2be1ee6dbcc3bfdaf5530c9984cdaa0b2c09fe3e9c1c4605bd7318504`，该摘要已写入新复验回执。
+
+普通对局按每条操作后的 `STATE_HASH` 对照：L6、L16、L26、L36 四份整局一致，L44 屋顶整局首次对照从操作 437 出现哈希差异，双方均在 tick 69945 第 40 波获胜。随后将该局截到操作 437 定位时，未复现哈希差异，原因未定。**现有证据不足以批准整体替换采集引擎，因此上线采用独立导入引擎。**
+
+另取覆盖五种地形的 8 份 drill，共 42,804 条操作，两引擎逐操作哈希及完整判据结果全部相同，包含成功题和失败题。判据代码未改，库内全部 2,691 条 `drill238` 索引记录保持原样，包含本包的 1,945 份 drill。
+
+## 146 份重新复验与入库
+
+原日志记录 scenario 共 315 份：169 份通过并成功，141 份复验异常，5 份通过但局部失败。任务书的日 62、雾 54、夜 25 合计 141，146 是全部 loss 数量。
+
+从原 ZIP 仅提取这 146 份，逐份确认输入 SHA 与原回执一致。使用源码引擎调用部署导入器已有的 `verify_once → verify_short → Game.load_archive` 路径，未另写重放或判据。146 份共用约 53 秒，结果如下。
+
+| 原分类 | 份数 | 正确引擎复验 | 处理 |
+|---|---|---|---|
+| 日间判据不一致 | 62 | 全部成功 | 追加有效入库 |
+| 雾关判据不一致 | 54 | 全部成功 | 追加有效入库 |
+| 夜间判据不一致 | 25 | 全部成功 | 追加有效入库 |
+| 原通过但局部失败 | 5 | 全部仍失败，判据与原记录相符 | 保留原回执及条目 |
+
+146 份共有 `RESEED`、`SET_SUN`、`SPAWN` 各 146 次，`SET_COOLDOWN` 28 次，未使用 `SET_WAVE`。所有操作的 `ok` 与 `end_tick` 均匹配原日志，注入目标的 ID、类型、行与 x 坐标全部匹配题面。
+
+5 份真实失败均来自雾关，且没有放弃标记：
+
+| 题号 | 未来种子 | 失败原因 |
 |---|---|---|
-| scenario238_fog_052 | 100124384 | b5f8fa0eaccae076be65d96c9d2c4a5f55097eb487913092acf87f8f38c457b2 |
-| scenario238_fog_039 | 100120230 | cdd2a940a44e1833cdb611527ff2408765a547f072af5d8f1a7232636aecc8ae |
-| scenario238_fog_019 | 100122330 | c4cb337acfee2ef82deece5f69867123b0aa88260eff655ac9e15a3428e0e535 |
+| scenario238_fog_001 | 239000003 | 使用 1 辆推车 |
+| scenario238_fog_001 | 239000002 | 目标仍在场 |
+| scenario238_fog_013 | 239000027 | 使用 1 辆推车 |
+| scenario238_fog_013 | 239000026 | 使用 1 辆推车 |
+| scenario238_fog_024 | 239000049 | 目标仍在场 |
 
-`scenario238_fog_052` 的元数据记录：L33，卡组 `[9,8,16,10,42,43,24,36,5,17]`，倍率 0.5，前缀操作数 126，注入操作 `[127,128,129]`。根 tick 6600，视界 1200，初始推车 6，目标为 id 66453512、类型 15、行 4、x=650 的小丑。无操作对照在 tick 7800 判失败，目标仍在场。GPT 实际结尾 tick 7811，记录目标已消失、推车未用、房子未破，局部成功。未来种子 239000104。原备注如实说明 `wait_until` 结束于根后 1211 tick。该 11 tick 超出视界本身不能证明复验差异的原因，仍需实际重放。
+追加导入使用 `~/PvZ-search/.claude/worktrees/llmimport/scripts/import_llm_run.py`，实际软链解析为 `cq/scripts/import_llm_run.py`。先在导入锁内用此次复验生成的回执替换 141 份旧失败回执，再调用同一部署模块的 `run()`，复用这些回执，未再重放。单纯重跑命令行会继续复用旧失败回执，不能修复这批记录。
 
-**代码与历史修复核查**
+调用参数：
 
-[`game.py`](../../scripts/llmplay/game.py) 的 `Game.load_archive → from_archive → _start → _replay_to` 负责恢复，操作日志中的注入命令也走 `_step_raw`。当前 `_replay_to` 没有逐条核对重放的 `ok` 和 `end_tick`，调查时应在这条既有路径记录实际值与原值比较。
+```text
+input_path       ~/pvz-logs/task260/retry-input       # 仅 141 份原失败项
+dest             ~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import
+manifest         cq/configs/human_demo_tasks.json
+resources        ~/.cache/pvz-research-resources
+executable       ~/pvz-logs/task260/build/pvz-portable.static
+verify_workers   1
+llm_demo_data    None
+```
 
-`declare_scenario` 在 `game.py:750`，以当前在场僵尸 ID 声明目标，保存起点及注入操作索引，然后用快速快照推进一次无操作对照并恢复。C++ 的 `SNAPSHOT_FAST` 与普通快照共用 `SaveEnvironmentSnapshot` / `RestoreEnvironmentSnapshot`，快照覆盖随机流和对象数组的分配 ID。只读核查未发现足以确认本次根因的快照遗漏。
+结果为新增有效条目 141，移除有效条目 0，原成功回执字节内容全部保持不变。本次仅追加任务指定的存档库，`llm_demo_data=None` 保证未写入 `~/pvz-logs/gptbc/data` 生产训练数据。原 169 份成功回执及 5 份真实失败回执保留。
 
-`_judge` 在 `game.py:717`，已包含 `0fea7ad4` 的修复，优先读取题目持久化的 `mowers_start` 和 `root_tick`。[`drill_start.py`](../../scripts/drill_start.py) 的 `horizon_reached` 已包含 `e91e220b` 的终局处理。task248 的记录在 [`MEMORY/2026-11-05.md`](../2026-11-05.md)，说明当时已修正前缀等待实际时长与 reset 上下文。本分支指定的 `student-bottleneck-plan.md` 中未检索到这些任务号和提交号。
+## GPT 包下一版
 
-[`import_llm_run.py`](../../scripts/import_llm_run.py) 的 `verify_short` 通过 `Game.load_archive` 恢复。drill 调用 `game.drill_result()`，scenario 直接调用同一 `drill_start.judge`，使用元数据里的目标、初始推车、起点和视界。当前导入器会复用失败回执，单纯重跑同一输入不会自动重新复验失败项，恢复调查后须处理这一点，保留已成功回执和已入库条目。
+本批重新复验与 GPT 的成功、失败反馈全部相符，未发现 scenario 判据向 GPT 返回错误成功的证据。下一版包的 scenario 判据无需修改，继续保留 task248 的持久起点修复、task237 注入命令及 `58be2506` 的 SPAWN x 范围限制。本任务未打包。
 
-**修复、重新复验与 GPT 包**
+## 上线步骤
 
-尚无经过双引擎实测确认的修复。141 份判据不一致项及其余 5 份待分类项均未重新复验，新增入库 0 份，已入库 drill 与 scenario 未变动。尚不能判断 GPT 是否得到错误成功反馈，下一版 GPT 包的改动待根因确定。本次未打包。
+1. 主控从本分支源码构建支持注入的引擎，部署到独立路径，例如 `artifacts/production/scenario238/pvz-portable`。可复用 [`build_static_engine.sh`](../../scripts/llmplay/build_static_engine.sh)，构建目录与采集引擎隔离。
+2. 后续 GPT scenario 导入固定传 `--executable ~/PvZ-search/artifacts/production/scenario238/pvz-portable`。采集仍使用原 `imitater1`。本批 141 项已经完成恢复，无须再次导入。
+3. 未来遇到旧失败回执时，使用部署导入器的 `verify_once` 重新生成该失败项回执，再由原 `run` 发布索引。成功回执继续复用。若后续需要进入生产训练数据，由主控在现有导入流程中传入相应 `llm_demo_data`。
 
-**后续执行与上线边界**
-
-恢复台式机 SSH 后，先核清原包 315 份 scenario 的全部失败原因，在 `~/pvz-logs/task260/` 内取日、雾、夜失败样本，分别使用 `imitater1` 和 pkg238 静态引擎重放，比较注入状态、目标 ID、各操作实际 tick、推车与终局。每次实验前检查 C 盘空间，运行使用 `nice -n 19 ionice -c3`。
-
-若需要换引擎，必须先按任务要求完成普通对局逐位对照，再向主控交付部署步骤，不在本任务直接更新 `cq` 或 `imitater1`。若修复落在公共重放或判据中，则保留 drill 当前语义并做直接相关验证。随后通过 llmimport 的部署导入器只重试失败项，追加通过项，报告剩余类别，最后删除远端实验目录。当前没有可上线的运行代码变更。
+所有远端实验通过 `systemd-run --user` 后台运行，使用 `nice -n 19 ionice -c3`。各次启动前检查 C 盘，始终约剩余 30 GB，满足 25 GB 下限。实验文件均在 `~/pvz-logs/task260/`，完成后删除。原 ZIP、导入日志及既有构建产物保留。
