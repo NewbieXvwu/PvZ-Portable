@@ -1897,3 +1897,11 @@
 - 派 **task258**（slimstate，Codex）：training_jobs 只存 recipe 路径，旧状态加载时就地迁移，log 与语料清单截断，单次状态写入 ≤ 20 MB；用生产状态的拷贝做迁移演练；不部署。
 - 11-09 14:02 CST **shared-v2 加泳池路由上线**（deploy26 4b983cb9，exit 0，qc.active=4b983cb9）。r156 和 r157 被 r158 取代，r158 打包中，之后第一次训练会构建原生库并生成 shared-v2。
 - 11-09 **Mac 采集升级**：macengine 快进到 4b983cb9，重启 mac_collect（丢了刚开始 2 分钟的一批）。新版已拉到两份路由模型 `value_route_*.pt`（屋顶和泳池），Mac 的泳池局从此也走 task255 叶值。
+- 11-09 14:41 CST **r158 两个种子训练全部失败**，重试一次后被隔离。原因：deploy26 只部署 .py / .sh / .json，漏了 `scripts/training_codec/{csr.cpp,CMakeLists.txt}`，训练构建原生库时找不到源码。
+  - 主控 14:48 手工把两个文件补进 cq，并预构建好 `cq/build/training_codec/libpvz_training_codec.so`。
+  - 修复 pkg238 5da918dd：deploy26 也部署 .cpp / .h / .hpp / CMakeLists.txt，加了定向测试；台式机 deploy26 工具已换新版。
+- 11-09 **task258 结题**（slimstate 95335c0b）。
+  - 实际大头是每轮训练报告里重复的语料清单 `timing.corpus_archives`，合计 377 MB。现在报告外置成 `timing_path`；recipe 统一走 `job_recipe_path()`；log 只留最近 20 轮，旧的归档到各轮的 `collection.json`；另有 `archived_labels`。
+  - 用生产副本演练：448.47 MB 降到 15.38 MB（-96.6%）；156 个任务和 111 份报告一致，标签集合一致，两次加载逐字节相同；定向测试 11 项通过。
+  - 回滚不能直接跑旧代码：旧代码不认识 `archived_labels`，会漏掉早期标签。要先停采并用报告重建旧格式，脚本在 `MEMORY/docs/task258-slim-state.md`。
+  - 合并成 pkg238 dbbc7bec，`deploy-slimstate` 等组边界部署。此刻没有后台训练在跑，部署不损失训练。
