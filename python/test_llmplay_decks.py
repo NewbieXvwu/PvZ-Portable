@@ -660,6 +660,39 @@ def test_decks_resume_fresh_priority_beats_terrain_order():
     assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_night', 'fresh_roof', 'old_pool']
 
 
+def test_task263_focus_resume_and_native_tail_precede_remaining_scenarios():
+    drill = dict(task_id='drill263', archive='drill/drill263', level=39, terrain='fog',
+                 source_seed=7, deck=D1, targets=[dict(id=9)], future_seeds=[101], priority=0)
+    scenario = dict(task_id='scenario263', archive='scenario/scenario263', level=39,
+                    terrain='fog', source_seed=8, deck=D1, future_seeds=[201])
+    resumes = [dict(id=name, archive=name, level=22, terrain='pool', seed=seed, deck=D1,
+                    multiplier=0.5, source_arm=arm, priority=priority)
+               for name, seed, arm, priority in [('focus263', 301, 'r160', -1),
+                                                  ('old263', 302, 'r94', 0)]]
+    with patch.object(decks, 'drill_catalog', return_value=[drill]), \
+            patch.object(decks, 'scenario_catalog', return_value=[scenario]), \
+            patch.object(decks, 'resume_catalog', return_value=resumes):
+        doc = workflow.derive([native_entry(50, n) for n in range(17)], 'run')
+        boss = doc['native']['llmplay_decks_native_l50_m100']
+        assert boss['wins'] == 17 and boss['target'] == 32 and not boss['complete']
+        assert doc['native']['llmplay_decks_native_l10_m100']['target'] == 16
+        claimed = {}
+        for expected in ['drill263', 'focus263', 'llmplay_decks_native_l50_m100',
+                         'scenario263', 'old263']:
+            with patch.object(workflow, '_read_claims', return_value=claimed):
+                item = workflow.next_task(doc, claim=False)['item']
+                assert item['task_id'] == expected
+                ordered, _ = workflow._ordered(doc)
+                assert workflow._first_free(ordered, claimed)['task_id'] == expected
+                if item['layer'] == 'native':
+                    workflow.check(doc, item['task_id'], [], seed=item['seed'])
+            done = [item]
+            if item['layer'] == 'native':
+                done = [row for row in decks.ordered_items(doc)
+                        if row['layer'] == 'native' and row['level'] in [30, 40, 45, 50]]
+            claimed.update({workflow._slot(row['task_id'], row['seed']): {} for row in done})
+
+
 @contextmanager
 def _task248_catalog():
     item = dict(task_id='drill248', archive='drill/drill248', level=1, terrain='day',

@@ -1,8 +1,1191 @@
 {
  "schema": "llmplay_drill_catalog_v1",
  "task": "task238",
- "item_count": 903,
+ "item_count": 927,
  "items": [
+  {
+   "task_id": "drill238_fog_d87584cd",
+   "archive": "drill/drill238_fog_d87584cd",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258108,
+   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 70254605,
+     "row": 0,
+     "type": 17,
+     "name": "digger",
+     "x": 559.7
+    }
+   ],
+   "future_seeds": [
+    263100000,
+    263100001,
+    263100002
+   ],
+   "priority": 0,
+   "type": "digger",
+   "source": {
+    "id": "r160:seed_100258108/task222_l37_fog_good_fast:r770",
+    "root": "r160",
+    "archive": "seed_100258108/task222_l37_fog_good_fast"
+   },
+   "suits": "digger",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_8b90094b",
+   "archive": "drill/drill238_fog_8b90094b",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100257958,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 66584584,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 682.5
+    }
+   ],
+   "future_seeds": [
+    263100003,
+    263100004,
+    263100005
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100257958/task222_l33_fog_user_fast:r247",
+    "root": "r160",
+    "archive": "seed_100257958/task222_l33_fog_user_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_6531eff5",
+   "archive": "drill/drill238_fog_6531eff5",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100257958,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67174404,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 765.0
+    }
+   ],
+   "future_seeds": [
+    263100006,
+    263100007,
+    263100008
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100257958/task222_l33_fog_user_fast:r398",
+    "root": "r160",
+    "archive": "seed_100257958/task222_l33_fog_user_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_174833d3",
+   "archive": "drill/drill238_fog_174833d3",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100257958,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67371013,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 810.5
+    }
+   ],
+   "future_seeds": [
+    263100009,
+    263100010,
+    263100011
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100257958/task222_l33_fog_user_fast:r425",
+    "root": "r160",
+    "archive": "seed_100257958/task222_l33_fog_user_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_7dae618e",
+   "archive": "drill/drill238_fog_7dae618e",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100257958,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67436548,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 806.6
+    }
+   ],
+   "future_seeds": [
+    263100012,
+    263100013,
+    263100014
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100257958/task222_l33_fog_user_fast:r457",
+    "root": "r160",
+    "archive": "seed_100257958/task222_l33_fog_user_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_2a7cf481",
+   "archive": "drill/drill238_fog_2a7cf481",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258093,
+   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68878342,
+     "row": 0,
+     "type": 17,
+     "name": "digger",
+     "x": 659.7
+    }
+   ],
+   "future_seeds": [
+    263100015,
+    263100016,
+    263100017
+   ],
+   "priority": 0,
+   "type": "digger",
+   "source": {
+    "id": "r160:seed_100258093/task222_l37_fog_good_fast:r609",
+    "root": "r160",
+    "archive": "seed_100258093/task222_l37_fog_good_fast"
+   },
+   "suits": "digger",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_53f0aa1c",
+   "archive": "drill/drill238_fog_53f0aa1c",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258100,
+   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67829764,
+     "row": 0,
+     "type": 17,
+     "name": "digger",
+     "x": 820.6
+    }
+   ],
+   "future_seeds": [
+    263100018,
+    263100019,
+    263100020
+   ],
+   "priority": 0,
+   "type": "digger",
+   "source": {
+    "id": "r160:seed_100258100/task222_l37_fog_good_fast:r459",
+    "root": "r160",
+    "archive": "seed_100258100/task222_l37_fog_good_fast"
+   },
+   "suits": "digger",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_1054e6e6",
+   "archive": "drill/drill238_fog_1054e6e6",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258100,
+   "knowledge": "矿工：后排也要有火力/磁力菇，不能只守前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 69009412,
+     "row": 4,
+     "type": 17,
+     "name": "digger",
+     "x": 721.8
+    }
+   ],
+   "future_seeds": [
+    263100021,
+    263100022,
+    263100023
+   ],
+   "priority": 0,
+   "type": "digger",
+   "source": {
+    "id": "r160:seed_100258100/task222_l37_fog_good_fast:r647",
+    "root": "r160",
+    "archive": "seed_100258100/task222_l37_fog_good_fast"
+   },
+   "suits": "digger",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_cdd87a94",
+   "archive": "drill/drill238_fog_cdd87a94",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258093,
+   "knowledge": "小丑：磁力菇吸盒/窝瓜秒杀，别让它贴脸",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 74252305,
+     "row": 1,
+     "type": 17,
+     "name": "digger",
+     "x": 534.5
+    },
+    {
+     "id": 74514453,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 690.8
+    }
+   ],
+   "future_seeds": [
+    263100024,
+    263100025,
+    263100026
+   ],
+   "priority": 0,
+   "type": "jack",
+   "source": {
+    "id": "r160:seed_100258093/task222_l37_fog_good_fast:r1249",
+    "root": "r160",
+    "archive": "seed_100258093/task222_l37_fog_good_fast"
+   },
+   "suits": "jack",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_b5931092",
+   "archive": "drill/drill238_fog_b5931092",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258093,
+   "knowledge": "小丑：磁力菇吸盒/窝瓜秒杀，别让它贴脸",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67960834,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 767.1
+    }
+   ],
+   "future_seeds": [
+    263100027,
+    263100028,
+    263100029
+   ],
+   "priority": 0,
+   "type": "jack",
+   "source": {
+    "id": "r160:seed_100258093/task222_l37_fog_good_fast:r421",
+    "root": "r160",
+    "archive": "seed_100258093/task222_l37_fog_good_fast"
+   },
+   "suits": "jack",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_94df9eb0",
+   "archive": "drill/drill238_fog_94df9eb0",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258093,
+   "knowledge": "小丑：磁力菇吸盒/窝瓜秒杀，别让它贴脸",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68026372,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 767.9
+    }
+   ],
+   "future_seeds": [
+    263100030,
+    263100031,
+    263100032
+   ],
+   "priority": 0,
+   "type": "jack",
+   "source": {
+    "id": "r160:seed_100258093/task222_l37_fog_good_fast:r473",
+    "root": "r160",
+    "archive": "seed_100258093/task222_l37_fog_good_fast"
+   },
+   "suits": "jack",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_b267563b",
+   "archive": "drill/drill238_fog_b267563b",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100258097,
+   "knowledge": "小丑：磁力菇吸盒/窝瓜秒杀，别让它贴脸",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 69009415,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 771.2
+    }
+   ],
+   "future_seeds": [
+    263100033,
+    263100034,
+    263100035
+   ],
+   "priority": 0,
+   "type": "jack",
+   "source": {
+    "id": "r160:seed_100258097/task222_l37_fog_good_fast:r499",
+    "root": "r160",
+    "archive": "seed_100258097/task222_l37_fog_good_fast"
+   },
+   "suits": "jack",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_155d8f17",
+   "archive": "drill/drill238_fog_155d8f17",
+   "level": 38,
+   "terrain": "fog",
+   "deck": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    16,
+    17,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100258139,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 69337089,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 762.4
+    }
+   ],
+   "future_seeds": [
+    263100036,
+    263100037,
+    263100038
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258139/task222_l38_fog_good_fast:r641",
+    "root": "r160",
+    "archive": "seed_100258139/task222_l38_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_5db7b3bb",
+   "archive": "drill/drill238_fog_5db7b3bb",
+   "level": 38,
+   "terrain": "fog",
+   "deck": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    16,
+    17,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100258139,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 71630860,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 826.0
+    }
+   ],
+   "future_seeds": [
+    263100039,
+    263100040,
+    263100041
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258139/task222_l38_fog_good_fast:r970",
+    "root": "r160",
+    "archive": "seed_100258139/task222_l38_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_22ef9a16",
+   "archive": "drill/drill238_fog_22ef9a16",
+   "level": 38,
+   "terrain": "fog",
+   "deck": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    16,
+    17,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100258142,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68091907,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 770.0
+    }
+   ],
+   "future_seeds": [
+    263100042,
+    263100043,
+    263100044
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258142/task222_l38_fog_good_fast:r520",
+    "root": "r160",
+    "archive": "seed_100258142/task222_l38_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_f2996144",
+   "archive": "drill/drill238_fog_f2996144",
+   "level": 38,
+   "terrain": "fog",
+   "deck": [
+    0,
+    3,
+    6,
+    8,
+    9,
+    16,
+    17,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100258150,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68419589,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 786.8
+    }
+   ],
+   "future_seeds": [
+    263100045,
+    263100046,
+    263100047
+   ],
+   "priority": 1,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258150/task222_l38_fog_good_fast:r467",
+    "root": "r160",
+    "archive": "seed_100258150/task222_l38_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6666666666666666
+   }
+  },
+  {
+   "task_id": "drill238_fog_93878c41",
+   "archive": "drill/drill238_fog_93878c41",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258183,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67829768,
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 475.3
+    }
+   ],
+   "future_seeds": [
+    263100048,
+    263100049,
+    263100050
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100258183/task222_l39_fog_good_fast:r401",
+    "root": "r160",
+    "archive": "seed_100258183/task222_l39_fog_good_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_1fff9dca",
+   "archive": "drill/drill238_fog_1fff9dca",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258192,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68157445,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 766.3
+    }
+   ],
+   "future_seeds": [
+    263100051,
+    263100052,
+    263100053
+   ],
+   "priority": 2,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100258192/task222_l39_fog_good_fast:r485",
+    "root": "r160",
+    "archive": "seed_100258192/task222_l39_fog_good_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 3,
+    "rate": 1.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_42ac824c",
+   "archive": "drill/drill238_fog_42ac824c",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258192,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 70123527,
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 794.2
+    }
+   ],
+   "future_seeds": [
+    263100054,
+    263100055,
+    263100056
+   ],
+   "priority": 1,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100258192/task222_l39_fog_good_fast:r818",
+    "root": "r160",
+    "archive": "seed_100258192/task222_l39_fog_good_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6666666666666666
+   }
+  },
+  {
+   "task_id": "drill238_fog_23be5a62",
+   "archive": "drill/drill238_fog_23be5a62",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258196,
+   "knowledge": "气球：三叶草/仙人掌/香蒲，别让它越过前排",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67698691,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 770.6
+    }
+   ],
+   "future_seeds": [
+    263100057,
+    263100058,
+    263100059
+   ],
+   "priority": 0,
+   "type": "balloon",
+   "source": {
+    "id": "r160:seed_100258196/task222_l39_fog_good_fast:r341",
+    "root": "r160",
+    "archive": "seed_100258196/task222_l39_fog_good_fast"
+   },
+   "suits": "balloon",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_86484483",
+   "archive": "drill/drill238_fog_86484483",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258183,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 68157450,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 764.8
+    }
+   ],
+   "future_seeds": [
+    263100060,
+    263100061,
+    263100062
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258183/task222_l39_fog_good_fast:r473",
+    "root": "r160",
+    "archive": "seed_100258183/task222_l39_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_c5f5fc18",
+   "archive": "drill/drill238_fog_c5f5fc18",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258192,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 69861386,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 768.6
+    }
+   ],
+   "future_seeds": [
+    263100063,
+    263100064,
+    263100065
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258192/task222_l39_fog_good_fast:r793",
+    "root": "r160",
+    "archive": "seed_100258192/task222_l39_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_2297b73c",
+   "archive": "drill/drill238_fog_2297b73c",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258192,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 71303182,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 786.4
+    }
+   ],
+   "future_seeds": [
+    263100066,
+    263100067,
+    263100068
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258192/task222_l39_fog_good_fast:r915",
+    "root": "r160",
+    "archive": "seed_100258192/task222_l39_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
+  {
+   "task_id": "drill238_fog_346d01ef",
+   "archive": "drill/drill238_fog_346d01ef",
+   "level": 39,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    23,
+    25,
+    27,
+    31
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100258196,
+   "knowledge": "跳跳：高坚果/地刺/磁力菇，别让它连续跳过",
+   "horizon": 900,
+   "targets": [
+    {
+     "id": 67960833,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 766.6
+    }
+   ],
+   "future_seeds": [
+    263100069,
+    263100070,
+    263100071
+   ],
+   "priority": 0,
+   "type": "pogo",
+   "source": {
+    "id": "r160:seed_100258196/task222_l39_fog_good_fast:r402",
+    "root": "r160",
+    "archive": "seed_100258196/task222_l39_fog_good_fast"
+   },
+   "suits": "pogo",
+   "teacher": {
+    "games": 3,
+    "wins": 0,
+    "rate": 0.0
+   }
+  },
   {
    "task_id": "drill238_fog_0034c130",
    "archive": "drill/drill238_fog_0034c130",

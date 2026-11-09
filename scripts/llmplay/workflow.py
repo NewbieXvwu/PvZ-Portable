@@ -604,10 +604,7 @@ def _ordered(document) -> tuple:
     """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞（decks 模式为三轨优先序）。"""
     if document.get("mode") == "decks":
         from . import decks
-        # task238 六轨：必刷题 > 自出题 > 中盘接回 > 前沿倍率 > 传送带/Boss 支线 > 主线。
-        return (decks.drill_items(document) + decks.scenario_items(document)
-                + decks.resume_items(document) + decks.frontier_items(document)
-                + decks.native_items(document) + decks.items(document)), []
+        return decks.ordered_items(document), []
     return _main_items(document), _challenge_items(document)
 
 
