@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <thread>
 #include <vector>
 #include <zlib.h>
 
@@ -9,23 +11,41 @@ extern "C" int pvz_csr_gather(
     const uint32_t* raw_sizes, const int64_t* groups, int64_t ngroups,
     const int64_t* inverse, const int64_t* selected, int64_t nselected,
     const uint16_t* counts, int64_t nrows, int64_t cells,
-    int index_width, int value_width, int64_t* destinations, uint8_t* values) {
+    int index_width, int value_width, int threads, int64_t* destinations, uint8_t* values) {
     if ((index_width != 1 && index_width != 2 && index_width != 4)
-        || (value_width != 2 && value_width != 4)) return 1;
+        || (value_width != 2 && value_width != 4) || threads < 1) return 1;
     std::vector<std::vector<uint8_t>> decoded;
+    std::vector<std::thread> workers;
     try {
         decoded.resize(ngroups);
-        for (int64_t i = 0; i < ngroups; ++i) {
-            const auto group = groups[i];
-            if (group < 0 || group >= (nrows + 31) / 32) return 2;
-            const auto lo = offsets[group], hi = offsets[group + 1];
-            if (lo < 0 || hi < lo || uint64_t(hi) > size) return 2;
-            auto& raw = decoded[i];
-            raw.resize(raw_sizes[group]);
-            uLongf length = raw.size();
-            if (uncompress(raw.data(), &length, bytes + lo, hi - lo) != Z_OK
-                || length != raw.size()) return 3;
+        const int count = int(std::max<int64_t>(1, std::min<int64_t>(threads, ngroups)));
+        std::vector<int> errors(count, 0);
+        auto decode = [&](int worker) {
+            try {
+                for (int64_t i = ngroups * worker / count; i < ngroups * (worker + 1) / count; ++i) {
+                    const auto group = groups[i];
+                    if (group < 0 || group >= (nrows + 31) / 32) return 2;
+                    const auto lo = offsets[group], hi = offsets[group + 1];
+                    if (lo < 0 || hi < lo || uint64_t(hi) > size) return 2;
+                    auto& raw = decoded[i];
+                    raw.resize(raw_sizes[group]);
+                    uLongf length = raw.size();
+                    if (uncompress(raw.data(), &length, bytes + lo, hi - lo) != Z_OK
+                        || length != raw.size()) return 3;
+                }
+            } catch (...) { return 4; }
+            return 0;
+        };
+        try {
+            for (int i = 1; i < count; ++i)
+                workers.emplace_back([&, i] { errors[i] = decode(i); });
+        } catch (...) {
+            for (auto& worker : workers) worker.join();
+            return 4;
         }
+        errors[0] = decode(0);
+        for (auto& worker : workers) worker.join();
+        for (int error : errors) if (error) return error;
         int64_t cursor = 0;
         for (int64_t i = 0; i < nselected; ++i) {
             const auto row = selected[i], group = inverse[i];

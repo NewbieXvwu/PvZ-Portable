@@ -2,15 +2,36 @@ from pathlib import Path
 import sys
 import unittest
 import tempfile
+import threading
+import time
 
 import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from train_rollout_policy import CompactBoards
+from train_rollout_policy import BatchPrefetcher, CompactBoards
 
 
 class CompactBoardsTest(unittest.TestCase):
+    def test_prefetch_full_queue_keeps_prepared_batch(self):
+        calls, ready = [], threading.Event()
+
+        class Source:
+            def prepare(self, idx, pin=False):
+                calls.append(idx)
+                if idx == 1:
+                    ready.set()
+                return idx
+
+        prefetch = BatchPrefetcher(Source(), range(3), depth=1, pin=False)
+        try:
+            self.assertTrue(ready.wait(2))
+            time.sleep(0.45)  # two queue timeouts must retain the same prepared batch
+            self.assertEqual(list(prefetch), [0, 1, 2])
+            self.assertEqual(calls, [0, 1, 2])
+        finally:
+            prefetch.close()
+
     def test_compressed_batches_are_bitwise_exact(self):
         rng = np.random.default_rng(257)
         for dtype, cells in ((np.float16, 128), (np.float16, 6960), (np.float32, 128)):
@@ -29,9 +50,11 @@ class CompactBoardsTest(unittest.TestCase):
                     np.save(directory / f'board_{field}.npy', getattr(store, field))
                 store.compress(directory, 'board')
                 store.open_blocks(directory, 'board')
-                for idx, want in zip(selections, expected):
-                    actual = store.batch(np.asarray(idx, np.int64), 'cpu').view(torch.int32)
-                    self.assertTrue(torch.equal(actual, want))
+                for threads in (1, 2, 4):
+                    for idx, want in zip(selections, expected):
+                        prepared = store.prepare(np.asarray(idx, np.int64), decode_threads=threads)
+                        actual = store.materialize(prepared, 'cpu').view(torch.int32)
+                        self.assertTrue(torch.equal(actual, want))
 
     def test_exact_batches(self):
         devices = ["cpu"]

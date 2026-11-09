@@ -97,15 +97,36 @@ def _stream_context(stream):
 
 @functools.lru_cache(maxsize=1)
 def _csr_decoder():
+    import fcntl
+    import hashlib
+    import subprocess
+    source = ROOT / 'scripts' / 'training_codec'
+    digest = hashlib.sha256(b''.join((source / name).read_bytes()
+                                   for name in ('CMakeLists.txt', 'csr.cpp'))).hexdigest()
+    directory = ROOT / 'build' / 'training_codec'
+    directory.mkdir(parents=True, exist_ok=True)
     suffix = '.dylib' if sys.platform == 'darwin' else '.so'
-    path = Path(__file__).resolve().parents[1] / 'build' / 'training_codec' / ('libpvz_training_codec' + suffix)
+    path = directory / ('libpvz_training_codec' + suffix)
+    marker = path.with_suffix(path.suffix + '.sha256')
+    with (directory / 'build.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not path.is_file() or not marker.is_file() or marker.read_text().strip() != digest:
+            print(f'Building training codec in {directory}', file=sys.stderr, flush=True)
+            try:
+                for command in (['cmake', '-S', str(source), '-B', str(directory), '-DCMAKE_BUILD_TYPE=Release'],
+                                ['cmake', '--build', str(directory), '--clean-first', '-j', '1']):
+                    subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            except (OSError, subprocess.CalledProcessError) as error:
+                raise RuntimeError(f'Training codec build failed in {directory}: {error}\n'
+                                   f'{getattr(error, "stdout", "") or ""}') from error
+            marker.write_text(digest + '\n')
     library = ctypes.CDLL(str(path))
     function = library.pvz_csr_gather
     pointer = ctypes.c_void_p
     integer = ctypes.c_int64
     function.argtypes = [pointer, ctypes.c_uint64, pointer, pointer, pointer, integer,
                          pointer, pointer, integer, pointer, integer, integer,
-                         ctypes.c_int, ctypes.c_int, pointer, pointer]
+                         ctypes.c_int, ctypes.c_int, ctypes.c_int, pointer, pointer]
     function.restype = ctypes.c_int
     return function
 
@@ -227,7 +248,7 @@ class CompactBoards:
             (directory / f'{name}_{field}.npy').unlink()
 
     def open_blocks(self, directory, name):
-        _csr_decoder()  # fail before training if the small native codec has not been built
+        _csr_decoder()  # build once before training, including when reopening an existing mapping
         self.block_offsets = np.load(directory / f'{name}_block_offsets.npy', mmap_mode='r')
         self.raw_sizes = np.load(directory / f'{name}_raw_sizes.npy', mmap_mode='r')
         self.counts = np.load(directory / f'{name}_counts.npy', mmap_mode='r')
@@ -235,7 +256,7 @@ class CompactBoards:
         self.blocks = np.memmap(path, mode='r', dtype=np.uint8) if path.stat().st_size else np.empty(0, np.uint8)
         self.indices = self.values = self.offsets = None
 
-    def _gather_blocks(self, selected):
+    def _gather_blocks(self, selected, threads=4):
         selected = np.ascontiguousarray(selected, dtype=np.int64)
         if selected.size and (selected.min() < 0 or selected.max() >= self.shape[0]):
             raise IndexError('CSR row out of range')
@@ -248,7 +269,7 @@ class CompactBoards:
         pointers = [array.ctypes.data for array in arrays]
         status = _csr_decoder()(pointers[0], self.blocks.nbytes, *pointers[1:4], len(groups),
                                 *pointers[4:6], len(selected), pointers[6], self.shape[0], self.cells,
-                                np.dtype(self.index_dtype).itemsize, self.dtype.itemsize, *pointers[7:])
+                                np.dtype(self.index_dtype).itemsize, self.dtype.itemsize, threads, *pointers[7:])
         if status:
             raise ValueError(f'compressed CSR batch decode failed ({status})')
         return destinations, values
@@ -282,7 +303,7 @@ class CompactBoards:
             self._plane_tables()
         return self
 
-    def prepare(self, idx, pin=False):
+    def prepare(self, idx, pin=False, decode_threads=4):
         """The CPU half of batch(): the numpy gather, runnable while the GPU trains the previous batch.
 
         pin=True copies the result into pinned memory so the matching copy in materialize() can be
@@ -298,7 +319,7 @@ class CompactBoards:
             destinations = np.repeat(np.arange(len(selected)) * self.cells, counts) + indices[positions]
             gathered = values[positions]
         else:
-            destinations, gathered = self._gather_blocks(selected)
+            destinations, gathered = self._gather_blocks(selected, decode_threads)
         plane = None
         if self.plane_of is not None:
             identities = self.plane_of[selected]
@@ -520,18 +541,20 @@ class BatchSource:
     the GPU trains the previous batch. prepare() must never touch the device.
     """
 
-    def __init__(self, boards, scalars, plant, packet, cell, weight, packet_info, cands, auxiliary):
+    def __init__(self, boards, scalars, plant, packet, cell, weight, packet_info, cands, auxiliary,
+                 decode_threads=4):
         self.boards, self.scalars = boards, scalars
         self.plant, self.packet, self.cell, self.weight = plant, packet, cell, weight
         self.packet_info, self.cands, self.auxiliary = packet_info, cands, auxiliary
+        self.decode_threads = decode_threads
         boards.warm()
         scalars.warm()
 
     def prepare(self, idx, pin=False) -> dict:
         """Everything batch_loss reads, still on the host."""
         return {
-            "board": self.boards.prepare(idx, pin),
-            "scalar": self.scalars.prepare(idx, pin),
+            "board": self.boards.prepare(idx, pin, self.decode_threads),
+            "scalar": self.scalars.prepare(idx, pin, self.decode_threads),
             "plant": _maybe_pin(self.plant[idx], pin),
             "packet": _maybe_pin(self.packet[idx], pin),
             "cell": _maybe_pin(self.cell[idx], pin),
@@ -560,9 +583,12 @@ class BatchPrefetcher:
     def _produce(self) -> None:
         try:
             for idx in self.batches:
+                if self.stopped.is_set():
+                    return
+                prepared = self.source.prepare(idx, pin=self.pin)
                 while not self.stopped.is_set():
                     try:
-                        self.queue.put(self.source.prepare(idx, pin=self.pin), timeout=0.2)
+                        self.queue.put(prepared, timeout=0.2)
                         break
                     except queue.Full:
                         continue
