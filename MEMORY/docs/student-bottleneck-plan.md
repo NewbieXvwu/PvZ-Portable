@@ -1950,3 +1950,9 @@
   - GPT 侧判据没有错，下一版包不用改。
   - 采集引擎不换：普通对局 L44 整局在第 437 步出现哈希差异，原因不明，证据不足以整体替换。
   - 主控把该引擎放到 `~/PvZ-search/artifacts/production/import238/pvz-portable`（sha fa2e81a2…，已在 gitignore 里），删掉 `~/pvz-logs/task260`。**以后导入 GPT 交回都用 `--executable artifacts/production/import238/pvz-portable`。**
+- 11-09 **Mac 清理**（用户批准），可用空间从 18 GB 升到 45 GB：
+  - 删除：pkgcheck 2.1 GB，旧 GPT 包 238d / 226 / 226b，三份已导入的交回分卷；
+  - 106 个已推送、无改动、没有进程使用的 worktree（共约 9 GB），外加 purgedead / view / purgedocs；
+  - `~/pvz-bench-data` 13 GB（10-29 到 11-02 的 r42 实验缓存），pkg238-ref、task197b.log，旧引擎构建 build / scenario / shovel3 / vn6 / pkg238，wormhole 虚拟环境；
+  - task228.log 截到最近 2 万行。
+  - 保留：macengine（采集在用）、pkg238、deploy26、价值网这条线的 vnbranch / vnpool / fogroute / vnbalance / vnretrain（训练输入还要用），以及有未提交改动的 northstar / archbench / purgefix、vnfix、scenfix、d18head；build2（采集引擎）和 build-vnbranch（价值网实验）。
