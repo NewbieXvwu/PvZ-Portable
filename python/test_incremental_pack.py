@@ -144,14 +144,16 @@ def test_shared_merge_reuses_payload_and_isolates_weights(tmp_path):
     first = trainer.read_segments(paths, data, observe, {'teacher': 2.0})
     torch.testing.assert_close(first[5], oracle[5] * 2, rtol=0, atol=0)
     first[5].zero_()
-    identity = Path(first[0].values.filename).stat().st_ino
+    identity = Path(first[0].blocks.filename).stat().st_ino
     first_observed = list(observed)
     observed.clear()
     with patch.object(trainer, 'read_pack', side_effect=AssertionError('payload loaded twice')):
         second = trainer.read_segments(paths, data, observe)
-    assert Path(second[0].values.filename).stat().st_ino == identity
+    assert Path(second[0].blocks.filename).stat().st_ino == identity
     assert observed == first_observed
     assert_payload_equal(oracle, second)
+    assert torch.equal(second[-1][:], oracle[-1][:])
+    torch.testing.assert_close(second[-1][0, :, 1], oracle[-1][0, :, 1], rtol=0, atol=0)
     fixture(data, ['c'])
     expanded = pack(data, options(data, ['a', 'b', 'c'], **settings))
     assert len(trainer.read_pack(expanded, data)[2]) > len(second[2])
@@ -261,10 +263,16 @@ def _merge_oracle(paths):
 
 def _assert_bitwise(result, oracle):
     for store, expected in ((result[0], oracle['boards']), (result[1], oracle['scalars'])):
-        assert store.indices.dtype == expected['indices'].dtype
-        assert np.array_equal(store.indices, expected['indices'])
-        assert np.array_equal(store.values, expected['values'])
-        assert np.array_equal(store.offsets, expected['offsets'])
+        if store.blocks is None:
+            indices, values, offsets = store.indices, store.values, store.offsets
+        else:
+            destinations, values = store._gather_blocks(np.arange(store.shape[0]))
+            indices = (destinations % store.cells).astype(store.index_dtype)
+            offsets = np.r_[0, store.counts.cumsum(dtype=np.int64)]
+        assert indices.dtype == expected['indices'].dtype
+        assert np.array_equal(indices, expected['indices'])
+        assert np.array_equal(values, expected['values'])
+        assert np.array_equal(offsets, expected['offsets'])
         assert np.array_equal(store.plane_of, expected['plane_of'])
         assert len(store.planes) == len(expected['planes'])
         for (cells, values), (want_cells, want_values) in zip(store.planes, expected['planes']):
@@ -282,7 +290,9 @@ def _assert_bitwise(result, oracle):
     for offset, (kind, payload) in enumerate(oracle['extra']):
         actual = result[9 + offset]
         if kind == 'packets':
-            for column, want in zip(actual.columns, payload):
+            for component, (column, want) in enumerate(zip(actual.columns, payload)):
+                if actual.packed_flags and component in (1, 3):
+                    column = np.unpackbits(column, axis=-1, count=actual.slots)
                 assert np.array_equal(np.asarray(column), want)
         else:
             assert np.array_equal(actual.numpy(), payload)

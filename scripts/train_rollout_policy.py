@@ -15,6 +15,9 @@ import math
 import os
 import queue
 import zipfile
+import zlib
+import ctypes
+import functools
 import random
 import sys
 import threading
@@ -92,14 +95,30 @@ def _stream_context(stream):
     return torch.cuda.stream(stream) if stream is not None else contextlib.nullcontext()
 
 
+@functools.lru_cache(maxsize=1)
+def _csr_decoder():
+    suffix = '.dylib' if sys.platform == 'darwin' else '.so'
+    path = Path(__file__).resolve().parents[1] / 'build' / 'training_codec' / ('libpvz_training_codec' + suffix)
+    library = ctypes.CDLL(str(path))
+    function = library.pvz_csr_gather
+    pointer = ctypes.c_void_p
+    integer = ctypes.c_int64
+    function.argtypes = [pointer, ctypes.c_uint64, pointer, pointer, pointer, integer,
+                         pointer, pointer, integer, pointer, integer, integer,
+                         ctypes.c_int, ctypes.c_int, pointer, pointer]
+    function.restype = ctypes.c_int
+    return function
+
+
 class CompactBoards:
     """CSR rows: element indices, values (float16 boards, float32 scalars -- lossless either way), int64 row offsets.
     Scalars are 84% zeros, so 488 bytes a row become ~120 (2026-10-19).
 
     Three more things are exact and together take the row from 536 to 330 bytes (task32): the index width
-    follows the cell count (uint8 for a 92x6x10 board), the cells that are constant inside an archive are
+    follows the cell count (uint16 for a 92x6x10 board), the cells that are constant inside an archive are
     hoisted into one plane per archive plus an int32 plane id a row, and -0.0 stays a stored zero because
     nonzero() is asked of the bit pattern, not of the value.
+    Shared mappings compress 32 CSR rows per zlib block without changing batch composition or values.
     """
 
     def __init__(self, shape, dtype=np.float16):
@@ -115,6 +134,7 @@ class CompactBoards:
         self.indices = bytearray()
         self.values = bytearray()
         self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
+        self.blocks = None
 
     def append(self, boards, covered=None, plane=None):
         flat = np.asarray(boards, dtype=self.dtype).reshape(len(boards), -1)
@@ -177,8 +197,61 @@ class CompactBoards:
 
     @property
     def nbytes(self):
+        if self.blocks is not None:
+            return (self.blocks.nbytes + self.block_offsets.nbytes + self.raw_sizes.nbytes + self.counts.nbytes
+                    + (0 if self.plane_of is None else self.plane_of.nbytes))
         return (self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
                 + (0 if self.plane_of is None else self.plane_of.nbytes))
+
+    BLOCK_ROWS = 32
+
+    def compress(self, directory, name):
+        """Lossless CSR blocks small enough to decode only the randomly selected rows."""
+        offsets, sizes = [0], []
+        counts = np.diff(self.offsets)
+        if counts.size and counts.max() > np.iinfo(np.uint16).max:
+            raise ValueError('CSR row exceeds uint16 count capacity')
+        np.save(directory / f'{name}_counts.npy', counts.astype(np.uint16))
+        with (directory / f'{name}_blocks.bin').open('wb') as output:
+            for start in range(0, self.shape[0], self.BLOCK_ROWS):
+                rows = self.offsets[start:start + self.BLOCK_ROWS + 1]
+                lo, hi = rows[0], rows[-1]
+                raw = ((rows - lo).tobytes() + self.indices[lo:hi].tobytes()
+                       + self.values[lo:hi].tobytes())
+                sizes.append(len(raw))
+                offsets.append(offsets[-1] + output.write(zlib.compress(raw, 1)))
+        np.save(directory / f'{name}_block_offsets.npy', np.asarray(offsets, np.int64))
+        np.save(directory / f'{name}_raw_sizes.npy', np.asarray(sizes, np.uint32))
+        self.open_blocks(directory, name)
+        for field in ('indices', 'values', 'offsets'):
+            (directory / f'{name}_{field}.npy').unlink()
+
+    def open_blocks(self, directory, name):
+        _csr_decoder()  # fail before training if the small native codec has not been built
+        self.block_offsets = np.load(directory / f'{name}_block_offsets.npy', mmap_mode='r')
+        self.raw_sizes = np.load(directory / f'{name}_raw_sizes.npy', mmap_mode='r')
+        self.counts = np.load(directory / f'{name}_counts.npy', mmap_mode='r')
+        path = directory / f'{name}_blocks.bin'
+        self.blocks = np.memmap(path, mode='r', dtype=np.uint8) if path.stat().st_size else np.empty(0, np.uint8)
+        self.indices = self.values = self.offsets = None
+
+    def _gather_blocks(self, selected):
+        selected = np.ascontiguousarray(selected, dtype=np.int64)
+        if selected.size and (selected.min() < 0 or selected.max() >= self.shape[0]):
+            raise IndexError('CSR row out of range')
+        groups, inverse = np.unique(selected // self.BLOCK_ROWS, return_inverse=True)
+        total = int(self.counts[selected].sum(dtype=np.int64))
+        destinations = np.empty(total, np.int64)
+        values = np.empty(total, self.dtype)
+        arrays = (self.blocks, self.block_offsets, self.raw_sizes, groups,
+                  inverse.astype(np.int64, copy=False), selected, self.counts, destinations, values)
+        pointers = [array.ctypes.data for array in arrays]
+        status = _csr_decoder()(pointers[0], self.blocks.nbytes, *pointers[1:4], len(groups),
+                                *pointers[4:6], len(selected), pointers[6], self.shape[0], self.cells,
+                                np.dtype(self.index_dtype).itemsize, self.dtype.itemsize, *pointers[7:])
+        if status:
+            raise ValueError(f'compressed CSR batch decode failed ({status})')
+        return destinations, values
 
     def _plane_tables(self):
         """Flatten the per-archive planes once: (cells, values, offsets) with offsets[nplanes+1]."""
@@ -216,11 +289,16 @@ class CompactBoards:
         queued with non_blocking=True on a side stream (task164).
         """
         selected = np.asarray(idx)
-        starts = self.offsets[selected]
-        counts = self.offsets[selected + 1] - starts
-        ends = counts.cumsum()
-        positions = np.arange(ends[-1] if len(ends) else 0) + np.repeat(starts - (ends - counts), counts)
-        destinations = np.repeat(np.arange(len(selected)) * self.cells, counts) + self.indices[positions]
+        if self.blocks is None:
+            starts = self.offsets[selected]
+            counts = self.offsets[selected + 1] - starts
+            indices, values = self.indices, self.values
+            ends = counts.cumsum()
+            positions = np.arange(ends[-1] if len(ends) else 0) + np.repeat(starts - (ends - counts), counts)
+            destinations = np.repeat(np.arange(len(selected)) * self.cells, counts) + indices[positions]
+            gathered = values[positions]
+        else:
+            destinations, gathered = self._gather_blocks(selected)
         plane = None
         if self.plane_of is not None:
             identities = self.plane_of[selected]
@@ -239,7 +317,7 @@ class CompactBoards:
                 plane = (_maybe_pin(torch.from_numpy(row_of), pin),
                          _maybe_pin(torch.from_numpy(plane_positions), pin))
         return {"destinations": _maybe_pin(torch.from_numpy(destinations), pin),
-                "values": _maybe_pin(torch.from_numpy(self.values[positions]), pin),
+                "values": _maybe_pin(torch.from_numpy(gathered), pin),
                 "plane": plane, "rows": len(selected)}
 
     def materialize(self, prepared, device, stream=None):
@@ -266,10 +344,12 @@ class CompactBoards:
 
 class PacketStore:
     """(rows, PACKETS, 4) float32 packet features split by column: kind int8, active uint8, progress float32,
-    affordable uint8. 160 bytes a row become 70, and every widening back to float32 is exact (task32)."""
+    affordable uint8. 160 bytes a row become 70, and every widening back to float32 is exact (task32).
+    Shared mappings additionally bit-pack the two boolean columns."""
 
     def __init__(self, capacity, slots):
         self.slots = slots
+        self.packed_flags = False
         dtypes = (np.int8, np.uint8, np.float32, np.uint8)
         self.columns = [np.empty((capacity, slots), dtype) for dtype in dtypes]
 
@@ -285,9 +365,16 @@ class PacketStore:
     def __getitem__(self, idx):
         if isinstance(idx, tuple) and len(idx) == 3:        # (row, slot, component): one column, one cell
             row, slot, component = idx
+            if self.packed_flags and component in (1, 3):
+                slot = np.arange(self.slots)[slot]
+                return torch.tensor((self.columns[component][row, slot // 8] >> (7 - slot % 8)) & 1,
+                                    dtype=torch.uint8)
             return torch.tensor(np.asarray(self.columns[component])[row, slot])
-        kind, active, progress, affordable = (torch.from_numpy(np.asarray(column)) for column in self.columns)
-        return torch.stack([kind[idx].float(), active[idx].float(), progress[idx], affordable[idx].float()], dim=-1)
+        kind, active, progress, affordable = (
+            torch.from_numpy(np.unpackbits(column[idx], axis=-1, count=self.slots))
+            if self.packed_flags and component in (1, 3) else torch.from_numpy(np.asarray(column))[idx]
+            for component, column in enumerate(self.columns))
+        return torch.stack([kind.float(), active.float(), progress, affordable.float()], dim=-1)
 
     def kinds(self, rows, slots):
         return torch.from_numpy(np.asarray(self.columns[0])[np.asarray(rows), np.asarray(slots)].astype(np.int64))
@@ -638,9 +725,10 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
     """Share one merged generation between trainers, keeping their row weights private."""
     if data is None:
         return _read_segments(paths, data, row_observer, source_weight)
+    _csr_decoder()
     import fcntl
     import hashlib
-    directory = Path(data) / '.merge' / 'shared-v1'
+    directory = Path(data) / '.merge' / 'shared-v2'
     directory.mkdir(parents=True, exist_ok=True)
     signature = hashlib.sha256(json.dumps([
         (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
@@ -770,10 +858,13 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         descriptor = descriptors[name]
         store = CompactBoards(descriptor["shape"], descriptor["dtype"])
         store.index_dtype = descriptor["index_dtype"]
-        store.indices = allocate(name + "_indices", store.index_dtype, (totals[name],))
-        store.values = allocate(name + "_values", descriptor["dtype"], (totals[name],))
-        store.offsets = allocate(name + "_offsets", np.int64, (total_rows + 1,))
-        store.offsets[0] = 0
+        if reuse:
+            store.open_blocks(spill, name)
+        else:
+            store.indices = allocate(name + "_indices", store.index_dtype, (totals[name],))
+            store.values = allocate(name + "_values", descriptor["dtype"], (totals[name],))
+            store.offsets = allocate(name + "_offsets", np.int64, (total_rows + 1,))
+            store.offsets[0] = 0
         store.plane_of = (allocate(name + "_plane_of", np.int32, (total_rows,))
                           if plane_bases[name][-1] else None)
         store.planes = []
@@ -793,7 +884,10 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                                 (totals["cand"], *headers["cand_entries"][0][1:]))}
     packets = PacketStore(total_rows, headers["packet_col0"][0][1]) if has_packets else None
     if packets is not None:
-        packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
+        packets.packed_flags = spill is not None
+        packets.columns = [allocate(f'packet_col{index}', column.dtype,
+                                   (total_rows, -(-packets.slots // 8))
+                                   if packets.packed_flags and index in (1, 3) else column.shape)
                            for index, column in enumerate(packets.columns)]
 
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
@@ -851,12 +945,18 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                 dense_targets[name][pos:pos + span] = np.asarray(part[part_index])[start:stop]
             seed_target[pos:pos + span] = np.asarray(part[6])[start:stop]
             if packets is not None:
-                for column, target_column in zip(part[9 + has_aux].columns, packets.columns):
-                    target_column[pos:pos + span] = np.asarray(column)[start:stop]
+                for component, (column, target_column) in enumerate(zip(part[9 + has_aux].columns, packets.columns)):
+                    block = np.asarray(column)[start:stop]
+                    target_column[pos:pos + span] = (np.packbits(block, axis=-1)
+                                                    if packets.packed_flags and component in (1, 3) else block)
         del part
 
     for store in allocated:
         store.flush()
+    allocated.clear()  # release the raw CSR mappings when compress() replaces and unlinks them
+    if spill is not None and not reuse:
+        for store, name in zip(stores, ('board', 'scalar')):
+            store.compress(spill, name)
     if spill is not None:
         dense_targets['weight'] = dense_targets['weight'].copy()
     result = (stores[0], stores[1],

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(pvz_training_codec LANGUAGES CXX)
+find_package(ZLIB REQUIRED)
+add_library(pvz_training_codec SHARED csr.cpp)
+target_compile_features(pvz_training_codec PRIVATE cxx_std_17)
+target_link_libraries(pvz_training_codec PRIVATE ZLIB::ZLIB)

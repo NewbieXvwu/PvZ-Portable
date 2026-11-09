@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import unittest
+import tempfile
 
 import numpy as np
 import torch
@@ -10,6 +11,28 @@ from train_rollout_policy import CompactBoards
 
 
 class CompactBoardsTest(unittest.TestCase):
+    def test_compressed_batches_are_bitwise_exact(self):
+        rng = np.random.default_rng(257)
+        for dtype, cells in ((np.float16, 128), (np.float16, 6960), (np.float32, 128)):
+            bits = rng.integers(0, 65536, (75, cells), dtype=np.uint16)
+            if dtype == np.float32:
+                bits = (bits.astype(np.uint32) << 16) | rng.integers(0, 65536, bits.shape, dtype=np.uint32)
+            rows = bits.view(dtype)
+            store = CompactBoards(rows.shape[1:], dtype)
+            store.append(rows)
+            store.finish()
+            selections = ([74, 0, 33, 33, 31, 64], list(range(75)), [])
+            expected = [store.batch(np.asarray(idx, np.int64), 'cpu').view(torch.int32) for idx in selections]
+            with tempfile.TemporaryDirectory() as folder:
+                directory = Path(folder)
+                for field in ('indices', 'values', 'offsets'):
+                    np.save(directory / f'board_{field}.npy', getattr(store, field))
+                store.compress(directory, 'board')
+                store.open_blocks(directory, 'board')
+                for idx, want in zip(selections, expected):
+                    actual = store.batch(np.asarray(idx, np.int64), 'cpu').view(torch.int32)
+                    self.assertTrue(torch.equal(actual, want))
+
     def test_exact_batches(self):
         devices = ["cpu"]
         if torch.backends.mps.is_available():
