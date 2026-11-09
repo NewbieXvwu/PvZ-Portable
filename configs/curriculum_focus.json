@@ -1,0 +1,18 @@
+{
+  "focus_share": 0.0,
+  "l29_start_share": 0.0,
+  "cells": [
+    "pool_user_l22_user",
+    "pool_user_l29_user1",
+    "pool_user_l29_user2",
+    "fog_good_l34_train",
+    "fog_good_l36_train",
+    "roof_user_l47_user",
+    "roof_user_l49_user",
+    "fog_good_l32_train"
+  ],
+  "l29_starts": [
+    "user_l29_0257d51bd462_start",
+    "user_l29_c08db8116248_start"
+  ]
+}

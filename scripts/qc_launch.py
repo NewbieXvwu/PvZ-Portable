@@ -11,6 +11,11 @@ def command(args):
     root, worktree = args.repo, args.worktree or args.repo / '.claude/worktrees/cq'
     python = args.python or Path.home() / '.venvs/ml/bin/python3'
     imports = root / '.claude/worktrees/llmimport'
+    focus = json.loads((Path(__file__).resolve().parents[1] / 'configs/curriculum_focus.json').read_text())
+    focus_share = getattr(args, 'focus_share', None)
+    l29_start_share = getattr(args, 'l29_start_share', None)
+    focus_share = focus['focus_share'] if focus_share is None else focus_share
+    l29_start_share = focus['l29_start_share'] if l29_start_share is None else l29_start_share
     routes = getattr(args, 'value_routes', None)
     if routes is None:
         # task252: the checkpoint already contains the T=3 output-head weights.
@@ -41,6 +46,9 @@ def command(args):
         '--promotion-panel', str(worktree / 'configs/gate_v8_panel.json'),
         '--extra-manifest', str(worktree / 'artifacts/task165/training_panel.json'),
         '--demo-start-share', '0.25', '--random-deck-share', '0.25',
+        *(['--focus-share', str(focus_share), '--l29-start-share', str(l29_start_share),
+           '--focus-manifest', str(worktree / 'configs/curriculum_focus.json')]
+          if focus_share or l29_start_share else []),
         '--gpt-import-dir', str(imports / 'artifacts/task105/import'), '--gpt-archive-root', str(imports),
         '--gpt-cold-rates', str(args.logs / 'teacher_rates.json'), '--obs-v3', '--native-games',
         '--resource-dir', str(Path.home() / '.cache/pvz-research-resources'),
@@ -65,6 +73,8 @@ def main():
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--rounds', type=int, default=100)
     parser.add_argument('--review-share', type=float)
+    parser.add_argument('--focus-share', type=float, help='覆盖curriculum_focus.json中的份额，0关闭')
+    parser.add_argument('--l29-start-share', type=float, help='覆盖curriculum_focus.json中的份额，0关闭')
     # Standard library only: deploy26 runs this file from a partial install (changed files only),
     # so importing search_play failed there on 11-07. curriculum_queue validates the routes.
     parser.add_argument('--value-routes', type=json.loads,

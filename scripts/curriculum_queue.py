@@ -2258,7 +2258,9 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                drill_share: float | None = None,
                drill_games: int = 12,
                live_catalog: dict | None = None,
-               review_share: float = REVIEW_SHARE) -> tuple[list[dict], list[str]]:
+               review_share: float = REVIEW_SHARE,
+               focus_share: float = 0., l29_start_share: float = 0.,
+               focus_config: dict | None = None) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -2281,21 +2283,32 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     if specialists and pending_special > remaining:
         return [], changes + ['opening specialists start next round: partial-round budget already spent']
     ordinary_budget = remaining - pending_special
-    if demo_start_share is None and drill_share is None:
+    if demo_start_share is None and drill_share is None and not focus_share and not l29_start_share:
         # Default remains the deploy16 planner, including its ordering.
         picks = special_picks + allocate(ordinary, values, ordinary_budget,
                                         per_group, state['round'] + 1, teacher,
                                         random_deck_cap=int(budget * random_deck_share))
     else:
+        focus_config = focus_config or {}
+        focus = set(focus_config.get('cells', [])) if focus_share else set()
+        l29 = set(focus_config.get('l29_starts', [])) if l29_start_share else set()
         def category(cell):
             if cell.get('drill_start') or cell.get('drill'):
                 return 'drill'
             return 'random' if cell.get('random_deck_cell') else 'demo' if (cell.get('archive') is not None or cell.get('demo_archive') is not None) else 'multiplier'
+        def kind_of(base, cell):
+            kind = category(cell)
+            return 'focus' if base in focus and kind == 'multiplier' else 'l29' if base in l29 and kind == 'demo' else kind
         completed_games = {kind: sum(group['games'] for group in completed
-                           if category(state['cells'].get(group['base'], state.get('retired_cells', {}).get(group['base'], group))) == kind)
-                           for kind in ('random', 'drill', 'demo')}
-        caps = dict(random=max(0, int(budget * random_deck_share) - completed_games['random']),
-                    demo=(max(0, int(budget * demo_start_share) - completed_games['demo'])
+                           if kind_of(group['base'], state['cells'].get(group['base'], state.get('retired_cells', {}).get(group['base'], group))) == kind)
+                           for kind in ('focus', 'random', 'drill', 'l29', 'demo')}
+        random_quota = int(budget * random_deck_share)
+        focus_quota = int(random_quota * focus_share)
+        l29_quota = int(budget * (demo_start_share or 0.) * l29_start_share)
+        caps = dict(focus=max(0, focus_quota - completed_games['focus']),
+                    l29=max(0, l29_quota - completed_games['l29']),
+                    random=max(0, random_quota - focus_quota - completed_games['random']),
+                    demo=(max(0, int(budget * demo_start_share) - l29_quota - completed_games['demo'])
                           if demo_start_share is not None else None),
                     drill=(max(0, int(budget * drill_share) - completed_games['drill'])
                            if drill_share is not None else None))
@@ -2303,18 +2316,27 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         # Reserve random decks and drills before the large demo floor can consume
         # their budget.  Remaining non-demo budget goes to multiplier cells,
         # including any unused quota.
-        for kind in ('random', 'drill', 'demo', 'multiplier'):
+        for kind in ('focus', 'random', 'drill', 'l29', 'demo', 'multiplier'):
             if kind == 'multiplier' and caps.get('demo') is None:
                 continue   # demo and multiplier share one uncapped pool (old planner)
             if kind == 'demo' and caps.get('demo') is None:
                 subset = {base: cell for base, cell in ordinary.items()
-                          if category(cell) in ('demo', 'multiplier')}
+                          if kind_of(base, cell) in ('demo', 'multiplier')}
             else:
-                subset = {base: cell for base, cell in ordinary.items() if category(cell) == kind}
+                subset = {base: cell for base, cell in ordinary.items() if kind_of(base, cell) == kind}
             group_games = max(1, int(drill_games)) if kind == 'drill' else per_group
             cap = caps.get(kind)
             quota = min(ordinary_budget, cap) if cap is not None else ordinary_budget
-            selected = allocate(subset, values, quota, group_games, state['round'] + 1, teacher)
+            if kind in ('focus', 'l29'):
+                selected = []
+                for base in sorted(subset, key=lambda base: (subset[base]['last_round'], base)):
+                    if subset[base]['last_round'] == state['round'] + 1 or quota < 1:
+                        continue
+                    games = min(quota, max(1, per_group // FLOOR_SHARE))
+                    selected.append((base, cell_level(subset[base], values), games))
+                    quota -= games
+            else:
+                selected = allocate(subset, values, quota, group_games, state['round'] + 1, teacher)
             picks.extend(selected)
             ordinary_budget -= sum(games for _, _, games in selected)
     plan = []
@@ -2647,6 +2669,9 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
+                                       focus_share=getattr(args, 'focus_share', 0.),
+                                       l29_start_share=getattr(args, 'l29_start_share', 0.),
+                                       focus_config=getattr(args, 'focus_config', None),
                                        demo_start_share=getattr(args, 'demo_start_share', None),
                                        drill_share=getattr(args, 'drill_share', 0.05),
                                        drill_games=getattr(args, 'drill_games', 12),
@@ -2691,6 +2716,11 @@ def main() -> None:
                         help='additional registered training panel (task137 random-deck cells); repeatable')
     parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
                         help='max share of the round budget for random-deck cells (default 0.15)')
+    parser.add_argument('--focus-share', type=float, default=0.,
+                        help='从随机卡组配额划给同卡组重点格的比例，默认0关闭')
+    parser.add_argument('--l29-start-share', type=float, default=0.,
+                        help='示范起点配额中优先轮转两条L29起点的比例，默认0关闭')
+    parser.add_argument('--focus-manifest', type=Path, default=ROOT / 'configs/curriculum_focus.json')
     parser.add_argument('--gpt-import-dir', type=Path,
                         help='task193: reread the existing task105 import indexes at each round')
     parser.add_argument('--gpt-archive-root', type=Path, help='root for relative task105 archive paths')
@@ -2809,7 +2839,7 @@ def main() -> None:
         parser.error(str(error))
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
-                 'promotion_panel', 'teacher_rates', 'demo_start_manifest',
+                 'promotion_panel', 'teacher_rates', 'demo_start_manifest', 'focus_manifest',
                  'gpt_import_dir', 'gpt_archive_root', 'gpt_cold_rates'):
         value = getattr(args, name)
         if value is not None and not value.is_absolute():
@@ -2829,6 +2859,17 @@ def main() -> None:
             parser.error(f'--extra-manifest does not exist: {extra}')
     if not 0.0 <= args.random_deck_share <= 1.0:
         parser.error('--random-deck-share must be within 0..1')
+    for name in ('focus_share', 'l29_start_share'):
+        if not 0.0 <= getattr(args, name) <= 1.0:
+            parser.error(f'--{name.replace("_", "-")} must be within 0..1')
+    if args.l29_start_share and args.demo_start_share is None:
+        parser.error('--l29-start-share requires --demo-start-share')
+    args.focus_config = (read_json(args.focus_manifest)
+                         if args.focus_share or args.l29_start_share else {})
+    if args.focus_share and not args.focus_config.get('cells'):
+        parser.error('--focus-manifest needs cells for --focus-share')
+    if args.l29_start_share and not args.focus_config.get('l29_starts'):
+        parser.error('--focus-manifest needs l29_starts for --l29-start-share')
     if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
         parser.error('--demo-start-share must be within 0..1')
     if not 0.0 <= args.drill_share <= 1.0:
@@ -2892,6 +2933,9 @@ def main() -> None:
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
+                                       focus_share=args.focus_share,
+                                       l29_start_share=args.l29_start_share,
+                                       focus_config=args.focus_config,
                                        demo_start_share=getattr(args, 'demo_start_share', None),
                                        drill_share=getattr(args, 'drill_share', 0.05),
                                        drill_games=getattr(args, 'drill_games', 12),

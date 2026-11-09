@@ -3659,3 +3659,20 @@ L33 使用 `human_v2` 观测，其他环境字段沿用录像。L28 与两局 L2
 `[200000000,201000000)` 续领。原 L47/L49 两族保持原定义，11 局用户录像至此全部有对应起点格。
 总预算仍为每轮 768 局，九族共享现有 192 局示范起点配额。实打与部署说明见
 [task253](MEMORY/docs/task253-user-starts.md)。
+
+### task262：同卡组重点配额与 L29 起点优先轮转（2026-11-09 登记，未部署）
+
+`configs/curriculum_focus.json` 登记八个普通课程格：`pool_user_l22_user`、
+`pool_user_l29_user1` / `pool_user_l29_user2`、`fog_good_l32_train` / `fog_good_l34_train` /
+`fog_good_l36_train`、`roof_user_l47_user` / `roof_user_l49_user`。沿用已有任务定义与倍率，
+没有新增卡组或任务族。`focus_share` 默认 0，建议 0.25：从随机卡组的 192 局主配额划出
+48 局，按最久未采顺序每轮两格、每格 24 局，八格约四轮覆盖一次。
+
+同一清单登记两条 `user_l29_*_start`，`l29_start_share` 默认 0，建议 0.25：在 192 局
+示范主配额内部优先留 48 局，两格每轮各 24 局，其他起点共享 144 局。继续沿用 task71
+阶梯与升降档规则，现有两条阶梯最早约为录像的 46%，本次不会延伸到开局。
+
+768 局主预算上限、开局专项与短题配置保持原值。新增份额在共用的 `qc_launch.py`
+从配置读取，部署与看门狗采用相同设置，也可用 `--focus-share` / `--l29-start-share`
+覆盖。默认均关闭，执行先验路由与 beta 不变。分配实数、复习局口径和上线方案见
+[task262](MEMORY/docs/task262-focus-cells.md)。

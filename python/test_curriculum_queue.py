@@ -34,6 +34,114 @@ def cell(wins, games, mult_index=0, last_round=0, level=7):
                                                    'wins': wins, 'games': games}})
 
 
+class FocusQuotaTest(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        archive = root / 'archive'
+        archive.mkdir()
+        (archive / 'meta.json').write_text(json.dumps(dict(verified=True, task=dict(seed=42))))
+        self.config = json.loads((ROOT / 'configs/curriculum_focus.json').read_text())
+        self.state = dict(round=10, cells={}, offsets={})
+        self.tasks, self.manifests = {}, {}
+
+        def add(base, **extra):
+            self.state['cells'][base] = dict(family='f', level=22, mult_index=0,
+                last_round=1, windows={}, **extra)
+            self.tasks[base] = dict(task_id=base, level=22, seeds=[42] + list(range(1000, 2000)))
+            self.manifests[base] = root / 'panel.json'
+
+        for base in self.config['cells'] + [f'ordinary_{i}' for i in range(44)]:
+            add(base)
+        for i in range(43):
+            add(f'random_{i}', random_deck_cell=True)
+        starts, _ = load_demo_start_cells(ROOT / 'configs/human_demo_tasks.json')
+        for base in self.config['l29_starts'] + [f'demo_{i}' for i in range(126)]:
+            ladder = starts[base]['ladder'] if base in starts else [900, 800, 700]
+            add(base, archive=str(archive), ladder=ladder, task_id=base,
+                seeds=list(range(3000, 5000)))
+            self.state['cells'][base]['mult_index'] = 2
+        for i in range(90):
+            add(f'drill_{i}', archive=str(archive), ladder=[10], drill=True,
+                task_id=f'drill_{i}', seeds=list(range(5000, 7000)))
+        for i in range(8):
+            add(f'opening_{i}', opening_specialist=True)
+
+    def planned(self, state=None, **kwargs):
+        return plan_round(copy.deepcopy(self.state if state is None else state), self.tasks, {}, [1.],
+            self.manifests, budget=768, per_group=48, random_deck_share=.25,
+            demo_start_share=.25, drill_share=.05, review_share=0., **kwargs)[0]
+
+    def test_focus_disabled_preserves_every_plan_field(self):
+        self.assertEqual(self.planned(), self.planned(focus_share=0., l29_start_share=0.,
+                                                    focus_config=self.config))
+
+    def test_focus_moves_random_quota_without_changing_total_or_specialists(self):
+        baseline = self.planned()
+        focused = self.planned(focus_share=.25, focus_config=self.config)
+        games = lambda plan, bases: sum(item['games'] for item in plan if item['base'] in bases)
+        randoms = {base for base, value in self.state['cells'].items() if value.get('random_deck_cell')}
+        specialists = {base for base, value in self.state['cells'].items() if value.get('opening_specialist')}
+        self.assertEqual(games(baseline, randoms), 192)
+        self.assertEqual(games(focused, randoms), 144)
+        self.assertEqual(games(focused, self.config['cells']), 48)
+        self.assertEqual(games(baseline, specialists), games(focused, specialists))
+        self.assertEqual(sum(item['games'] for item in baseline), sum(item['games'] for item in focused))
+        self.assertLessEqual(sum(item['games'] for item in focused), 768)
+        state = copy.deepcopy(self.state)
+        seen = set()
+        for _ in range(4):
+            plan = self.planned(state, focus_share=.25, focus_config=self.config)
+            seen.update(item['base'] for item in plan if item['base'] in self.config['cells'])
+            state['round'] += 1
+            for item in plan:
+                state['cells'][item['base']]['last_round'] = state['round']
+        self.assertEqual(seen, set(self.config['cells']))
+
+    def test_focus_l29_starts_get_24_each_with_unchanged_ladder_and_resume(self):
+        options = dict(focus_share=.25, l29_start_share=.25, focus_config=self.config)
+        baseline = self.planned()
+        focused = self.planned(**options)
+        starts = [item for item in focused if item['base'] in self.config['l29_starts']]
+        self.assertEqual({item['base'] for item in starts}, set(self.config['l29_starts']))
+        self.assertEqual([item['games'] for item in starts], [24, 24])
+        self.assertTrue(all(item['demo_decision'] == self.state['cells'][item['base']]['ladder'][2]
+                            for item in starts))
+        self.assertFalse(any(item['base'] in self.config['l29_starts'] for item in baseline))
+        self.assertEqual(sum(item['games'] for item in baseline), sum(item['games'] for item in focused))
+        partial = copy.deepcopy(self.state)
+        done = [item for item in focused if item['base'] in self.config['cells']] + starts[:1]
+        partial['completed_groups'] = done
+        for item in done:
+            partial['cells'][item['base']]['last_round'] = 11
+        resumed = self.planned(partial, **options)
+        self.assertFalse(set(item['base'] for item in done) & set(item['base'] for item in resumed))
+        self.assertEqual(sum(item['games'] for item in done + resumed), sum(item['games'] for item in focused))
+        self.assertEqual(sum(item['games'] for item in resumed
+                             if item['base'] in self.config['l29_starts']), 24)
+
+    def test_focus_launch_uses_shared_config_and_explicit_zero_overrides(self):
+        import qc_launch
+        args = SimpleNamespace(repo=ROOT, worktree=ROOT, python=None, logs=ROOT / 'logs',
+            review_share=None, rounds=1, workers=3, recipe=None, alternate_recipe=None,
+            b_init=None, b_initial_epochs=None, b_epochs=None, a_restart=False, executable=None)
+        baseline = qc_launch.command(args)
+        self.assertNotIn('--focus-share', baseline)
+        config = dict(self.config, focus_share=.25, l29_start_share=.25)
+        original = Path.read_text
+        def read(path, *a, **kw):
+            return json.dumps(config) if path.name == 'curriculum_focus.json' else original(path, *a, **kw)
+        with mock.patch.object(Path, 'read_text', read):
+            command = qc_launch.command(args)
+            self.assertEqual(command[command.index('--focus-share') + 1], '0.25')
+            self.assertEqual(command[command.index('--l29-start-share') + 1], '0.25')
+            self.assertEqual(command[command.index('--focus-manifest') + 1],
+                             str(ROOT / 'configs/curriculum_focus.json'))
+            args.focus_share = args.l29_start_share = 0.
+            self.assertEqual(qc_launch.command(args), baseline)
+
+
 class ReviewShareTest(unittest.TestCase):
     def fixture(self, multiplier=3.):
         base = 'night_l20_train_n10_orig'
