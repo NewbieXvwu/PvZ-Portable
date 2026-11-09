@@ -1905,3 +1905,10 @@
   - 用生产副本演练：448.47 MB 降到 15.38 MB（-96.6%）；156 个任务和 111 份报告一致，标签集合一致，两次加载逐字节相同；定向测试 11 项通过。
   - 回滚不能直接跑旧代码：旧代码不认识 `archived_labels`，会漏掉早期标签。要先停采并用报告重建旧格式，脚本在 `MEMORY/docs/task258-slim-state.md`。
   - 合并成 pkg238 dbbc7bec，`deploy-slimstate` 等组边界部署。此刻没有后台训练在跑，部署不损失训练。
+- 11-09 14:52 CST **状态瘦身上线**（deploy-slimstate，dbbc7bec，exit 0）：curriculum_state.json 由 448 MB 降到 15.4 MB，首次加载迁移完成；之后台式机空闲时写盘约 0.2 MB/s。
+- 11-09 15:2x–15:35 CST 台式机 Tailscale 直连失败（relay hkg），SSH 超时约 30 分钟后恢复，生产未受影响。
+- 11-09 **GPT 交回** `LLMPlay_2026-11-09_031532_HKT_out.zip.001`（68 MB，2260 份存档，run 43047052 的续跑）：
+  - drill 1945 份：雾 1325、屋顶 250、泳池 176、夜 170、日 24；scenario 315 份：日 117、雾 118、夜 80；
+  - progress：drill 2690 / 2709，scenario 315 / 600，resume 484 / 8392。
+  - interface_issues 里大量是引擎启动时 -8（SIGFPE）崩溃，即 task256 修掉的 DBus dlopen 问题，238e 已修。
+  - 经 HF 送台式机，远端已删，sha 一致；导入任务 import-1109 从 llmimport 跑（导入器软链到 cq 的部署版），日志在 `~/pvz-logs/import_1109.log`。
