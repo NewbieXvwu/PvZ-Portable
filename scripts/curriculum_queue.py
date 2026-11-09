@@ -1138,11 +1138,14 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
 
 
-def pack_labels(state: dict, extra: str = '') -> list[str]:
+def pack_labels(state: dict, extra: str = '', through_round: int | None = None) -> list[str]:
     """Every label this queue has written so far, plus ``extra`` (the base corpus training also uses)."""
-    labels = {group.get('frame_label', group['label'] + '_fast_search')
+    labels = {label for label, round_index in state.get('archived_labels', {}).items()
+              if through_round is None or round_index <= through_round}
+    labels.update(group.get('frame_label', group['label'] + '_fast_search')
               for entry in state['log'] for group in entry['groups']
-              if group.get('status', 'done') == 'done'}
+              if (through_round is None or entry['round'] <= through_round)
+              and group.get('status', 'done') == 'done')
     labels.update(name for name in extra.split(',') if name)
     return sorted(labels)
 
@@ -1197,6 +1200,7 @@ class TrainingPipeline:
         self.game_health = getattr(args, 'game_health', None) or GameHealth(args)
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
         retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
+        compact_state(args.state, state)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
         self.lock = threading.Lock()
         self.process = None
@@ -1236,7 +1240,7 @@ class TrainingPipeline:
                     pass
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
-                    builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
+                    builders = int(load_recipe(job_recipe_path(job), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
@@ -1247,7 +1251,7 @@ class TrainingPipeline:
         if approved:
             latest = max(approved, key=lambda j: j['round'])
             state.update(student=latest['model'], student_round=latest['round'])
-            recovered = latest.get('timing') or {}
+            recovered = job_report(latest)
             if recovered.get('corpus_archives') is not None:
                 state['student_corpus_archives'] = recovered['corpus_archives']
             if recovered.get('promotion', {}).get('next_panel') is not None:
@@ -1260,7 +1264,7 @@ class TrainingPipeline:
                   and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
-                self._plan_build(load_recipe(Path(queued[-1]['recipe']), 'training'))
+                self._plan_build(load_recipe(job_recipe_path(queued[-1]), 'training'))
             except (OSError, ValueError, KeyError, RuntimeError):
                 pass   # 退回 estimate_peak 的已建段估算；_admit 仍按 MemAvailable 把关
         if state.get('student'):
@@ -1356,7 +1360,7 @@ class TrainingPipeline:
             source = ROOT / 'configs/gate_v5_panel.json'
         extra = {}
         incumbent = self.incumbent()
-        trained = read_json(Path(job['recipe']).parent / 'trained.json')
+        trained = read_json(job_recipe_path(job).parent / 'trained.json')
         with self.lock:
             incumbent = Path(self.args.rollout_policy)
             extra = dict(candidates={c['recipe_family']: c['model'] for c in trained['candidates']
@@ -1381,7 +1385,7 @@ class TrainingPipeline:
     def _evaluate(self, job):
         """Evaluate one already trained immutable candidate against the current collector."""
         frozen = self.evaluation_contract(job)
-        folder = Path(job['recipe']).parent
+        folder = job_recipe_path(job).parent
         out = folder / 'evaluations' / contract_key(frozen)
         python = str(self.args.python)
         units = self._evaluation_units()
@@ -1536,7 +1540,7 @@ class TrainingPipeline:
         for old in self.state.get('training_jobs', []):
             if old.get('b_lineage') != CLEAN_B_LINEAGE or not round_index < old['round'] < before:
                 continue
-            marker = Path(old['recipe']).parent / 'seeds/seed_000002/trained.json'
+            marker = job_recipe_path(old).parent / 'seeds/seed_000002/trained.json'
             if marker.is_file():
                 candidate = read_json(marker)
                 if candidate['status'] == 'trained':
@@ -1571,10 +1575,10 @@ class TrainingPipeline:
         return recipe
 
     def _a_recipe(self, job):
-        return self._refresh_lineage(Path(job['recipe']), job, restart=job.get('a_restart', False))
+        return self._refresh_lineage(job_recipe_path(job), job, restart=job.get('a_restart', False))
 
     def _b_recipe(self, job):
-        return self._refresh_lineage(Path(job['recipe']).with_name('recipe_b.json'), job)
+        return self._refresh_lineage(job_recipe_path(job).with_name('recipe_b.json'), job)
 
     def _round_recipe(self, recipe, job, parent, parent_round, epochs=None):
         """Freeze the shared round lineage and replay window for both candidates."""
@@ -1585,10 +1589,9 @@ class TrainingPipeline:
             recipe['replay_old_archives'] = self.state['student_corpus_archives']
             recipe['replay_old_labels'] = []
         else:
-            old = dict(self.state, log=[entry for entry in self.state['log']
-                       if entry['round'] <= self.state.get('student_round', 0)])
-            recipe['replay_old_labels'] = pack_labels(old, ','.join(
-                load_recipe(self.args.recipe, 'training')['labels']))
+            recipe['replay_old_labels'] = pack_labels(self.state, ','.join(
+                load_recipe(self.args.recipe, 'training')['labels']),
+                through_round=self.state.get('student_round', 0))
         return recipe
 
     @retry_io
@@ -1802,7 +1805,7 @@ class TrainingPipeline:
         raise GameRecoveryStopped('background stopped while waiting for game recovery')
 
     def _run_snapshot(self, job):
-        recipe_path = Path(job['recipe'])
+        recipe_path = job_recipe_path(job)
         folder = recipe_path.parent
         done = folder / 'complete.json'
         trained = folder / 'trained.json'
@@ -1850,7 +1853,7 @@ class TrainingPipeline:
         A failed seed is local to its candidate. Only an entirely failed round
         reaches the existing B7 retry/stop mechanism in _run/poll.
         """
-        recipe_path = Path(job['recipe'])
+        recipe_path = job_recipe_path(job)
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
         report = dict(round=job['round'], model=job['model'])
@@ -1880,7 +1883,7 @@ class TrainingPipeline:
             directory.mkdir(parents=True, exist_ok=True)
             path = directory / 'recipe.json'
             variant = job['candidate_recipes'][job['training_seeds'].index(seed)]
-            child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
+            child_recipe = dict(load_recipe(job_recipe_path(variant), 'training'),
                                 seed=seed, out=str(directory / 'student'))
             if not path.exists():
                 if variant['recipe_family'] == 'B':
@@ -2043,7 +2046,7 @@ class TrainingPipeline:
                              policy=promotion_policy(read_json(self.promotion_panel_path())),
                              contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
             report['promotion'] = promotion
-            completed = Path(job['recipe']).parent / 'complete.json'
+            completed = job_recipe_path(job).parent / 'complete.json'
             temporary = completed.with_suffix('.building')
             temporary.write_text(json.dumps(report, indent=2) + '\n')
             temporary.replace(completed)
@@ -2103,6 +2106,93 @@ def log_line(path: Path, message: str) -> None:
     print(f'{stamp} {message}', flush=True)
 
 
+STATE_LOG_ROUNDS = 20
+PROMOTION_STATE_FIELDS = ('version', 'approved', 'reasons', 'contract', 'winner_family', 'next_panel')
+
+
+def job_recipe_path(job: dict) -> Path:
+    """The single recipe reference used by the pipeline (legacy objects migrate on load)."""
+    return Path(job['recipe'])
+
+
+def job_report(job: dict) -> dict:
+    """Read full corpus/evaluation details only when recovery actually needs them."""
+    return read_json(Path(job['timing_path'])) if job.get('timing_path') else job.get('timing') or {}
+
+
+def _externalize_state_document(path: Path, document: dict) -> None:
+    if path.is_file():
+        if read_json(path) != document:
+            raise ValueError(f'saved state differs from {path}; embedded data retained')
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    TrainingPipeline._marker(path, document)
+
+
+def compact_state(path: Path, state: dict) -> bool:
+    """Move duplicated details out of the frequently rewritten recovery state."""
+    changed = False
+    directory = path.parent / (path.stem + '.pipeline')
+    for job in state.get('training_jobs', []):
+        if not isinstance(job, dict):
+            continue  # TrainingPipeline isolates malformed jobs.
+        folder = directory / f'round_{job["round"]:06d}' if type(job.get('round')) is int else None
+        if isinstance(job.get('recipe'), dict) and folder is not None:
+            recipe_path = Path(job.get('recipe_path') or folder / 'recipe.json')
+            _externalize_state_document(recipe_path, job['recipe'])
+            job['recipe'] = str(recipe_path)
+            changed = True
+        for candidate in job.get('candidate_recipes', []):
+            if isinstance(candidate.get('recipe'), dict) and folder is not None:
+                recipe_path = Path(candidate.get('recipe_path') or folder / (
+                    'recipe_b.json' if candidate.get('recipe_family') == 'B' else 'recipe.json'))
+                _externalize_state_document(recipe_path, candidate['recipe'])
+                candidate['recipe'] = str(recipe_path)
+                changed = True
+        timing = job.get('timing')
+        if not isinstance(timing, dict) or not isinstance(job.get('recipe'), str):
+            continue
+        summary = {key: value for key, value in timing.items()
+                   if not isinstance(value, (dict, list))}
+        if isinstance(timing.get('promotion'), dict):
+            summary['promotion'] = {key: timing['promotion'][key] for key in PROMOTION_STATE_FIELDS
+                                    if key in timing['promotion']}
+        if summary != timing:
+            report_path = job_recipe_path(job).parent / 'complete.json'
+            if report_path.is_file():
+                if read_json(report_path) != timing:
+                    # Preserve both the worker result and the saved-state snapshot.
+                    report_path = report_path.with_name('state_report.json')
+                    _externalize_state_document(report_path, timing)
+            else:
+                _externalize_state_document(report_path, timing)
+            job.update(timing_path=str(report_path), timing=summary)
+            changed = True
+    old = state.get('log', [])[:-STATE_LOG_ROUNDS]
+    if old:
+        for entry in old:
+            # One immutable file per round also makes interrupted migrations idempotent.
+            _externalize_state_document(directory / f'round_{entry["round"]:06d}' / 'collection.json', entry)
+        labels = state.setdefault('archived_labels', {})
+        for entry in old:
+            for label in pack_labels(dict(log=[entry])):
+                labels[label] = min(labels.get(label, entry['round']), entry['round'])
+        state['log'] = state['log'][-STATE_LOG_ROUNDS:]
+        changed = True
+    return changed
+
+
+def load_state(path: Path) -> dict:
+    state = read_json(path)
+    if (not isinstance(state, dict) or type(state.get('round')) is not int or state['round'] < 0
+            or not isinstance(state.get('cells'), dict) or not isinstance(state.get('offsets'), dict)
+            or not isinstance(state.get('log'), list) or not isinstance(state.get('training_jobs', []), list)):
+        raise ValueError('invalid global curriculum state structure')
+    if compact_state(path, state):
+        save_state(path, state)
+    return state
+
+
 def save_state(path: Path, state: dict) -> None:
     try:
         _write_state(path, state)
@@ -2113,6 +2203,7 @@ def save_state(path: Path, state: dict) -> None:
 @retry_io
 def _write_state(path: Path, state: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    compact_state(path, state)
     state['updated'] = datetime.now().isoformat(timespec='seconds')
     temporary = path.with_suffix(path.suffix + '.building')
     temporary.write_text(json.dumps(state, indent=1) + '\n')
@@ -2767,11 +2858,10 @@ def main() -> None:
     patterns = args.init_glob or [str(ROOT / 'artifacts/hard/*/config.json'),
                                   str(ROOT / 'artifacts/task28/*/config.json')]
     if args.state.exists():
-        state = read_json(args.state)
-        if (not isinstance(state, dict) or type(state.get('round')) is not int or state['round'] < 0
-                or not isinstance(state.get('cells'), dict) or not isinstance(state.get('offsets'), dict)
-                or not isinstance(state.get('log'), list) or not isinstance(state.get('training_jobs', []), list)):
-            parser.error('invalid global curriculum state structure')
+        try:
+            state = load_state(args.state)
+        except ValueError as error:
+            parser.error(str(error))
         for line in isolate_cells(state, values):
             log_line(args.log, line)
         # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
