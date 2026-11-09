@@ -257,3 +257,11 @@ def test_deploy26_rollback_launch_uses_restored_launcher(tmp_path, monkeypatch):
     rollback, forward = calls
     assert rollback[1] == str(worktree / 'scripts/qc_launch.py') and '--recipe' not in rollback
     assert forward[1] == str(installation / 'scripts/qc_launch.py')
+
+
+def test_deploy26_ships_native_sources(monkeypatch):
+    import deploy26
+    names = 'scripts/a.py\nscripts/training_codec/csr.cpp\nscripts/training_codec/CMakeLists.txt\npython/test_x.py\nscripts/README.md\n'
+    monkeypatch.setattr(deploy26, 'git', lambda *args: names.encode())
+    assert deploy26.code_paths('.', 'HEAD', 'AMT') == [
+        'scripts/a.py', 'scripts/training_codec/csr.cpp', 'scripts/training_codec/CMakeLists.txt']

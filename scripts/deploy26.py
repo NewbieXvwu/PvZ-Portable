@@ -23,7 +23,9 @@ def git(root, *args):
 def code_paths(root, revision, kind):
     return [path for path in git(root, 'diff', '--no-renames', '--name-only', '--diff-filter=' + kind,
             BASE, revision, '--', 'python', 'scripts', 'recipes', 'configs').decode().splitlines()
-            if not path.startswith('python/test_') and path.endswith(('.py', '.sh', '.json'))]
+            if not path.startswith('python/test_')
+            # 11-09: csr.cpp / CMakeLists.txt were skipped, so every r158 training seed failed.
+            and path.endswith(('.py', '.sh', '.json', '.cpp', '.h', '.hpp', 'CMakeLists.txt'))]
 
 
 def backup(path, saved):
