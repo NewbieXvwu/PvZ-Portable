@@ -1956,3 +1956,5 @@
   - `~/pvz-bench-data` 13 GB（10-29 到 11-02 的 r42 实验缓存），pkg238-ref、task197b.log，旧引擎构建 build / scenario / shovel3 / vn6 / pkg238，wormhole 虚拟环境；
   - task228.log 截到最近 2 万行。
   - 保留：macengine（采集在用）、pkg238、deploy26、价值网这条线的 vnbranch / vnpool / fogroute / vnbalance / vnretrain（训练输入还要用），以及有未提交改动的 northstar / archbench / purgefix、vnfix、scenfix、d18head；build2（采集引擎）和 build-vnbranch（价值网实验）。
+- 11-10 01:28 CST r161 否（现任 r160）。r161 训练时增量 shared-v2 只写了 9 MB。
+- 11-10 派 **task261**（bottleneck161，Codex）：现任 r160 的瓶颈盘点。数据是门禁结果、课程状态和日志，经 HF 中转到 Mac 纯分析。要回答：哪些关 / 卡组长期低于 50%；老师瓶颈和学生瓶颈各在哪；否决原因的分布；下一步最值得投的 3 个方向，各附证据、收益和成本，不能是手写策略。
