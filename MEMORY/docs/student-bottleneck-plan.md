@@ -1886,3 +1886,6 @@
   - **上生产**：pkg238 4b983cb9，qc_launch 默认路由加 `BACKGROUND_3_POOL → artifacts/value_net/task255_balanced_pool/model.pt`，margin_relative=0，即绝对 0.02。模型经 HF 送到台式机，sha256 779447d9… 已核对，远端已删；test_value_routes 10 项通过。
   - 与 shared-v2 合并部署：停掉 autodeploy-sharedv2，改布 `autodeploy-sharedv2b`，等下一次门禁结论后 `deploy26.py --revision 4b983cb9`。
   - **待办**：Mac 采集（macengine 7b43d739）的 mac_collect 不认识 value_routes，Mac 采的泳池局仍用生产叶值。台式机上线后要把 macengine 快进到新版本并重启采集；先确认 build2 引擎支持现在 search_play 传的参数。
+- 11-09 13:3x CST **不等 r156，立即部署 4b983cb9**（shared-v2 加泳池路由，unit deploy-sharedv2-now）。
+  - 原因：r156 的 A 训了 5.7 小时才完成 2 个 epoch，进程读盘 4.25 TB；照这个速度，等它出结论还要约 20 小时。
+  - 部署会中断 r156 的训练；之后训练最新一轮（r158），对比 epoch 秒数与读盘量。
