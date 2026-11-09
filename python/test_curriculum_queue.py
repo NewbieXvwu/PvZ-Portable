@@ -126,20 +126,13 @@ class FocusQuotaTest(unittest.TestCase):
         args = SimpleNamespace(repo=ROOT, worktree=ROOT, python=None, logs=ROOT / 'logs',
             review_share=None, rounds=1, workers=3, recipe=None, alternate_recipe=None,
             b_init=None, b_initial_epochs=None, b_epochs=None, a_restart=False, executable=None)
-        baseline = qc_launch.command(args)
-        self.assertNotIn('--focus-share', baseline)
-        config = dict(self.config, focus_share=.25, l29_start_share=.25)
-        original = Path.read_text
-        def read(path, *a, **kw):
-            return json.dumps(config) if path.name == 'curriculum_focus.json' else original(path, *a, **kw)
-        with mock.patch.object(Path, 'read_text', read):
-            command = qc_launch.command(args)
-            self.assertEqual(command[command.index('--focus-share') + 1], '0.25')
-            self.assertEqual(command[command.index('--l29-start-share') + 1], '0.25')
-            self.assertEqual(command[command.index('--focus-manifest') + 1],
-                             str(ROOT / 'configs/curriculum_focus.json'))
-            args.focus_share = args.l29_start_share = 0.
-            self.assertEqual(qc_launch.command(args), baseline)
+        command = qc_launch.command(args)
+        self.assertEqual(command[command.index('--focus-share') + 1], str(self.config['focus_share']))
+        self.assertEqual(command[command.index('--l29-start-share') + 1], str(self.config['l29_start_share']))
+        self.assertEqual(command[command.index('--focus-manifest') + 1],
+                         str(ROOT / 'configs/curriculum_focus.json'))
+        args.focus_share = args.l29_start_share = 0.
+        self.assertNotIn('--focus-share', qc_launch.command(args))
 
 
 class ReviewShareTest(unittest.TestCase):

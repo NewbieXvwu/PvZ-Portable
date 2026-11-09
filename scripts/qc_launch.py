@@ -11,7 +11,9 @@ def command(args):
     root, worktree = args.repo, args.worktree or args.repo / '.claude/worktrees/cq'
     python = args.python or Path.home() / '.venvs/ml/bin/python3'
     imports = root / '.claude/worktrees/llmimport'
-    focus = json.loads((Path(__file__).resolve().parents[1] / 'configs/curriculum_focus.json').read_text())
+    # Read the launched worktree's config, not this file's location (deploy26 runs it from a partial install).
+    config = worktree / 'configs/curriculum_focus.json'
+    focus = json.loads(config.read_text()) if config.exists() else dict(focus_share=0, l29_start_share=0)
     focus_share = getattr(args, 'focus_share', None)
     l29_start_share = getattr(args, 'l29_start_share', None)
     focus_share = focus['focus_share'] if focus_share is None else focus_share
