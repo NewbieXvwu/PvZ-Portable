@@ -1895,3 +1895,5 @@
   - 读取大头：训练随机读 24 GB 映射却装不进缓存，r156 的 A 进程读了 4.25 TB。shared-v2 正在部署来解决。
   - swap：内存紧，换出 482 GB、换入 370 GB。
 - 派 **task258**（slimstate，Codex）：training_jobs 只存 recipe 路径，旧状态加载时就地迁移，log 与语料清单截断，单次状态写入 ≤ 20 MB；用生产状态的拷贝做迁移演练；不部署。
+- 11-09 14:02 CST **shared-v2 加泳池路由上线**（deploy26 4b983cb9，exit 0，qc.active=4b983cb9）。r156 和 r157 被 r158 取代，r158 打包中，之后第一次训练会构建原生库并生成 shared-v2。
+- 11-09 **Mac 采集升级**：macengine 快进到 4b983cb9，重启 mac_collect（丢了刚开始 2 分钟的一批）。新版已拉到两份路由模型 `value_route_*.pt`（屋顶和泳池），Mac 的泳池局从此也走 task255 叶值。
