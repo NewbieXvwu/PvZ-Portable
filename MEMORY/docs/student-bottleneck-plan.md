@@ -1943,3 +1943,10 @@
   - drill 1945 份全部复验通过（雾 1325、屋顶 250、泳池 176、夜 170、日 24）；
   - scenario 315 份里 169 份通过，**146 份失败**（日 62、雾 54、夜 25），原因都是“判据与存档记录不一致：meta=True replay=False”。
 - 派 **task260**（scenfix，Codex）：用导入引擎和 pkg238 源码引擎分别重放失败存档，查清是引擎缺 task237 的命令、判据时点，还是起点偏移；修唯一实现，重新复验这 146 份；如果 GPT 侧判据有错，写清下一版包要改什么。
+- 11-09 22:46 CST **r160 晋升**并激活，现任 r160，这是 shared-v2 上线后第一次晋升。
+- 11-09 **task260 结题**（scenfix 9ce8007b / d07a9a8a）。
+  - 根因：导入复验用的生产引擎 imitater1，不能正确执行 scenario 的注入命令（task237 的 SPAWN / SET_SUN 等），重放结果和沙盒不一致。
+  - 用 pkg238 源码编译的静态引擎重放：141 份全部成功，已追加入库（先在导入锁内替换失败回执，再走部署版的 `run()`）；另 5 份是真实失败（雾关，用了推车或目标还在场），保留原条目。
+  - GPT 侧判据没有错，下一版包不用改。
+  - 采集引擎不换：普通对局 L44 整局在第 437 步出现哈希差异，原因不明，证据不足以整体替换。
+  - 主控把该引擎放到 `~/PvZ-search/artifacts/production/import238/pvz-portable`（sha fa2e81a2…，已在 gitignore 里），删掉 `~/pvz-logs/task260`。**以后导入 GPT 交回都用 `--executable artifacts/production/import238/pvz-portable`。**
