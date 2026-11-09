@@ -1855,3 +1855,8 @@
   - 雾 balanced 0.580，生产 0.582，finetune-t3 0.591。
   - 拟合温度两地形都是 1.0。泳池离线过线，雾没过。
 - 主控在 tmux `pool-panel` 跑**泳池整局配对面板**：L21 / 22 / 23 / 24 / 27 各 32 对，种子从 255100000 起；生产与 balanced-pool 都用绝对 0.02 门槛，4 worker。数据目录 `vnretrain/artifacts/task255/panel/`，模型取自 vnpool 的 task250 模型集加 balanced-pool。
+- 11-09 08:20 CST **主控杀掉 task257b 的基准实验**：`bench.py train before` 50 分钟读了 2.6 TB，台式机 IO 压力被推到 54%，生产训练 35 分钟读了 744 GB，被拖慢。
+  - 生产共享映射 shared-v1 共 41.6M 行、24.27 GB：board_indices uint16 和 board_values float16 各 6.93 GB，scalar_values float32 3.72 GB，packet_col2 float32 1.66 GB。可用页缓存约 13–15 GiB。
+  - 台式机物理内存 32 GB，WSL 已给到 26 GB，加不上去。
+- 派 **task257c**（trainspeed2，Codex）：抽样统计各列取值，设计逐位无损的窄编码，目标 ≤ 10 GiB，新目录 shared-v2；解码按批向量化。
+  - 禁止重 IO 基准：单进程读盘 ≤ 20 GB，`ionice -c3`，生产 IO 压力超过 30% 就暂停；不部署。
