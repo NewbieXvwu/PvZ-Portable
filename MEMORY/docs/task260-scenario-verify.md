@@ -87,4 +87,6 @@ llm_demo_data    None
 2. 后续 GPT scenario 导入固定传 `--executable ~/PvZ-search/artifacts/production/scenario238/pvz-portable`。采集仍使用原 `imitater1`。本批 141 项已经完成恢复，无须再次导入。
 3. 未来遇到旧失败回执时，使用部署导入器的 `verify_once` 重新生成该失败项回执，再由原 `run` 发布索引。成功回执继续复用。若后续需要进入生产训练数据，由主控在现有导入流程中传入相应 `llm_demo_data`。
 
-所有远端实验通过 `systemd-run --user` 后台运行，使用 `nice -n 19 ionice -c3`。各次启动前检查 C 盘，始终约剩余 30 GB，满足 25 GB 下限。实验文件均在 `~/pvz-logs/task260/`，完成后删除。原 ZIP、导入日志及既有构建产物保留。
+所有远端实验通过 `systemd-run --user` 后台运行，使用 `nice -n 19 ionice -c3`。各次启动前检查 C 盘，始终约剩余 30 GB，满足 25 GB 下限。原 ZIP、导入日志及既有构建产物保留。
+
+**未完成的收尾：**追加导入完成后 SSH 再次中断。初次清理连接及按 60 秒间隔的 5 次重试全部连接超时，清理命令未能执行，`~/pvz-logs/task260/` 仍保留实验文件。入库结果已经落盘，报告已推送。恢复连接后，确认 `task260-*` 后台作业均未运行，再删除该实验目录。独立导入引擎的正式部署仍由主控完成。
