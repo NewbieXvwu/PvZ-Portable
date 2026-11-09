@@ -54,7 +54,9 @@ def test_value_routes_launch_default_and_rollback(tmp_path):
     command = qc_launch.command(args)
     routes = json.loads(command[command.index('--value-routes') + 1])
     assert routes == {'BACKGROUND_5_ROOF': dict(
-        value=str(tmp_path / 'artifacts/value_net/task252_finetune_t3/model.pt'), margin_relative=.02)}
+        value=str(tmp_path / 'artifacts/value_net/task252_finetune_t3/model.pt'), margin_relative=.02),
+        'BACKGROUND_3_POOL': dict(
+        value=str(tmp_path / 'artifacts/value_net/task255_balanced_pool/model.pt'), margin_relative=0)}
     args.value_routes = {}
     command = qc_launch.command(args)
     assert json.loads(command[command.index('--value-routes') + 1]) == {}

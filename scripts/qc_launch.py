@@ -14,8 +14,11 @@ def command(args):
     routes = getattr(args, 'value_routes', None)
     if routes is None:
         # task252: the checkpoint already contains the T=3 output-head weights.
+        # task255: balanced pool branch labels; fitted T=1, absolute 0.02 override (margin 0).
         routes = {'BACKGROUND_5_ROOF': dict(
-            value=str(root / 'artifacts/value_net/task252_finetune_t3/model.pt'), margin_relative=.02)}
+                      value=str(root / 'artifacts/value_net/task252_finetune_t3/model.pt'), margin_relative=.02),
+                  'BACKGROUND_3_POOL': dict(
+                      value=str(root / 'artifacts/value_net/task255_balanced_pool/model.pt'), margin_relative=0)}
     return [str(python), str(worktree / 'scripts/curriculum_queue.py'),
         *(['--review-share', str(args.review_share)] if args.review_share is not None else []),
         '--state', str(args.logs / 'curriculum_state.json'), '--log', str(args.logs / 'curriculum.log'),
