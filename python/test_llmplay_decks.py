@@ -675,7 +675,7 @@ def test_decks_roster_public_export_and_default_seed():
         llmplay.roster('not-a-task')
 
 
-def test_decks_resume_items_dispatch_first_and_are_one_shot():
+def test_decks_resume_items_follow_priority_native_and_are_one_shot():
     catalog = [dict(id='r86a_l17_s1', archive='r86a_l17_s1', level=17, terrain='night',
                     seed=1, deck=D1, multiplier=1.0, base_task_id='task101_l17_night_n10',
                     breach_tick=9000, cutoff_tick=4500, source_arm='r86a'),
@@ -684,9 +684,15 @@ def test_decks_resume_items_dispatch_first_and_are_one_shot():
                     breach_tick=12000, cutoff_tick=7500, source_arm='r86a')]
     with patch.object(decks, 'drill_catalog', return_value=[]), \
             patch.object(decks, 'scenario_catalog', return_value=[]), \
-            patch.object(decks, 'resume_catalog', return_value=catalog):
+            patch.object(decks, 'resume_catalog', return_value=catalog), \
+            patch.object(workflow, '_read_claims', return_value={}) as claims:
         doc = workflow.derive([], 'run')
         assert doc['resume']['total'] == 2 and doc['resume']['remaining'] == 2
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['layer'] == 'native' and str(item['level']) in decks.config()['native_targets']
+        claims.return_value = {workflow._slot(row['task_id'], row['seed']): {}
+                               for row in decks.native_items(doc)
+                               if str(row['level']) in decks.config()['native_targets']}
         item = workflow.next_task(doc, claim=False)['item']
         assert item['layer'] == 'resume' and item['task_id'] == 'r86a_l17_s1'
         assert item['action'] == 'resume_archive' and item['path'].endswith('resume/r86a_l17_s1')
@@ -696,6 +702,9 @@ def test_decks_resume_items_dispatch_first_and_are_one_shot():
                       task_id='task101_l17_night_n10')
         doc = workflow.derive([played], 'run')
         assert doc['resume']['played'] == 1 and doc['resume']['remaining'] == 1
+        claims.return_value.update({workflow._slot(row['task_id'], row['seed']): {}
+                                    for row in decks.native_items(doc)
+                                    if str(row['level']) in decks.config()['native_targets']})
         item = workflow.next_task(doc, claim=False)['item']
         assert item['task_id'] == 'r86a_l21_s2'
 

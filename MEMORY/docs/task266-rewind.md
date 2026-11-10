@@ -1,6 +1,6 @@
 # task266：238h 接回题回退切点
 
-238h 增加 `Game.rewind_resume(reason=..., to_tick=None)`，供 GPT 判断当前接回切点无法救回时使用。接口、导入和 Mac 打包已完成，代码提交 `6ce29a32` 已推送 `origin/pkg238h`。台式机 SSH 转发尚未恢复，**台式机已导入库统计与实际包验收待完成**。本任务不部署。
+238h 增加 `Game.rewind_resume(reason=..., to_tick=None)`，供 GPT 判断当前接回切点无法救回时使用。接口、导入和 Mac 打包已完成，代码提交 `6ce29a32` 已推送 `origin/pkg238h`。task266b 已补完**台式机包验收与已导入库统计**，并修正过时的派题顺序用例。本任务未部署。
 
 ## 接口与派题
 
@@ -31,9 +31,9 @@ g = g.rewind_resume(reason="第3波起只有2株向日葵，切点阳光0")
 
 ## 现有数据统计
 
-台式机指定库 `~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import` 尚未读到。多次重试 `127.0.0.1:22222` 均返回连接被拒绝，旧直连地址超时。以下数字来自 Mac 交回分卷中的 `out/progress.json`，**不能替代已导入库口径**。
+task266b 已通过 `ssh newbiexvwu@100.120.155.85 wsl -d Ubuntu -e bash -s` 读取台式机指定库 `~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import`。`merged_progress.json` 有 16,599 个独立 SHA，旧索引未保存 resume 字段，因此只读对应的 `meta.json`，按 `resume_id` / `resume` / `workflow_layer` 识别接回记录，未读取帧或重放对局。元数据缺失 0，统计用时 16.7 秒。以下表格现为**已导入库口径**，数字与原 Mac 交回镜像一致。
 
-交回进度有 3,613 条独立归档路径，涉及 3,599 个 resume 题目 id。其中 241 条原生败局、6 条中途结束、0 条放弃，共 247 条未赢记录，占 6.84%，涉及 244 个题目 id。244 个 id 中有 3 个还存在另一次赢局记录。
+已导入库有 3,613 条独立 SHA 的 resume 存档，涉及 3,599 个题目 id，全部既有复验结果为通过。其中 3,366 条通关、241 条原生败局、6 条中途结束、0 条放弃，共 247 条未赢记录，占 6.84%，涉及 244 个题目 id。244 个 id 中有 3 个还存在另一次赢局记录。原生败局按 `outcome.result == 2` 计，中途结束为未通关且未达到原生败局的记录，放弃读取存档顶层或 outcome 的 `abandoned` 标志，三者互斥。地形调用现有 `pvz_constants.background_for_level()`，含第 35 关特例。
 
 | 地形 | 接回记录 | 原生败局 | 中途结束 | 放弃 |
 |---|---:|---:|---:|---:|
@@ -69,9 +69,9 @@ g = g.rewind_resume(reason="第3波起只有2株向日葵，切点阳光0")
 | 37 | 8 | 0 | 0 | 0 |
 | 38 | 32 | 2 | 0 | 0 |
 
-逐份检查同一分卷的 42 个 `out/*.py`，经济相关失败笔记约 1–2 局。严格口径有 1 局明确诊断“失败原因是低经济期火力投入与近屋改路选择不足”：`out/root_resume_strategy_notes_20261109.py:45` 的 A94 L16 / seed100119593 / c6，切点 25482，起手 0 阳光、1 株成年阳光菇，最终 tick57590 败局。另有第 42 行 ROOT25，L18 / seed100121740 / c3，切点 25260，起手 0 阳光、1 株成年阳光菇，最终第19波败局，笔记归因为战术与资源分配失败。两条均未直接断言该局面理论上无法救回。
+task266 逐份检查原 Mac 交回分卷的 42 个 `out/*.py`，经济相关失败笔记约 1–2 局。严格口径有 1 局明确诊断“失败原因是低经济期火力投入与近屋改路选择不足”：`out/root_resume_strategy_notes_20261109.py:45` 的 A94 L16 / seed100119593 / c6，切点 25482，起手 0 阳光、1 株成年阳光菇，最终 tick57590 败局。另有第 42 行 ROOT25，L18 / seed100121740 / c3，切点 25260，起手 0 阳光、1 株成年阳光菇，最终第19波败局，笔记归因为战术与资源分配失败。两条均未直接断言该局面理论上无法救回。
 
-观测卡片“阳光不够”、成功局暂时资金不足，以及 drill 的起始危险不计入这个数量。笔记只能给出明确归因的下限。244 个有未赢记录的题目 id 是交回镜像里可尝试回退的候选规模，实际新增示范量取决于更早子项的通关结果，现有记录无法给出挽回率。
+观测卡片“阳光不够”、成功局暂时资金不足，以及 drill 的起始危险不计入这个数量。笔记只能给出明确归因的下限。244 个有未赢记录的题目 id 是已导入库里可尝试回退的候选规模，实际新增示范量取决于更早子项的通关结果，现有记录无法给出挽回率。
 
 ## 测试与验收
 
@@ -86,15 +86,24 @@ timeout 300 uv run --python 3.12 --with pytest --with numpy --with py7zr \
 
 7 项通过，覆盖子项生成、切点合法性、队首与同代理认领、保存恢复、上限与结构性标记、结论层 carry 去重，以及导入时前缀切分与 full / half / loss 分档。导入单测使用替身复验器，实际引擎复验留给台式机包验收。
 
-同时运行的旧 `test_decks_resume_items_dispatch_first_and_are_one_shot` 用旧题库断言旧 resume 始终先于 native，与 task263 已生效的队列顺序冲突，未修改该既有用例。
+task266b 已修正旧 `test_decks_resume_items_dispatch_first_and_are_one_shot`，更名为 `test_decks_resume_items_follow_priority_native_and_are_one_shot`：先断言 task263 的重点原生关优先，再占住这些任务，断言普通 resume 顺序与完成后不再派发。原有 task263 用例继续覆盖 drill → r160 重点 resume → 重点原生关 → scenario → 普通 resume。以下定向测试 **2 项通过**：
 
-`accept_package.py` 已加入真实回退链：打开原题、推进、请求回退、导出父子两档、调用统一导入器复验两档并检查链路元数据。台式机尚未运行此验收，未创建或改动生产任务。
+```bash
+ulimit -f 2000000
+timeout 300 uv run --no-project --python 3.12 --with pytest --with numpy --with py7zr \
+  python -m pytest python/test_llmplay_decks.py \
+  -k 'decks_resume_items_follow_priority_native or task263_focus_resume_and_native_tail' -q
+```
+
+task266b 在台式机对 HF 实际下载并解出的 238h 分卷运行一次 `accept_package.py`，**退出码 0**，包含真实回退链。启动前 `/mnt/c` 剩余 30 GB，在独立 `~/pvz-logs/task266/` 目录用 `systemd-run --user` 后台运行，命令加 `nice -n 19 ionice -c3`，内存上限 4 GB。下载解包至验收结束共约 100 秒。
+
+静态 x86-64 引擎、三进程不重复认领、drill 跨进程保存恢复及 scenario 导出均通过。drill 推进至 900 tick 后判失败，导入器复验同判失败。resume 原题 `r160_pool_user_l22_user_s100257507_c18840` 推进至 tick 19,140 后请求回退，子项 `__rewind1` 切点为 9,420。父子两份存档均由统一导入器真实复验通过、分档为 loss，子档完整保留诊断与回退链。连续两次导出前后均为 **15,598** 条记录。
 
 ## 打包与文件位置
 
 `build_package.py --reuse-package` 复用 `~/Downloads/pvz-llmplay-238g/llmplay_pkg/`，原样使用其 carry、题库和静态引擎。carry 的 15,594 条记录内容与 238g 相同。`check_engine` 通过，静态引擎 SHA256 仍为 `1c3680f36aa5bd5fef97d035a97a1cdd9ca89fce2493a87f125c7bd507d29c07`。
 
-接口分卷已通过 HF `transfer/task266/` 上传并取回 Mac，远端两卷已在取用后删除。资源包直接从 238g 本地复制。目录：`~/Downloads/pvz-llmplay-238h/`。本机打包临时目录已清理，台式机未启动验收任务，未碰生产 `cq`、生产日志或 `~/pvz-mac-collect/hold`。
+接口分卷已通过 HF `transfer/task266/` 上传并取回 Mac，远端两卷已在取用后删除。资源包直接从 238g 本地复制。目录：`~/Downloads/pvz-llmplay-238h/`。task266b 经 HF `transfer/task266b/` 将接口两卷和隔离验收所需源码送到台式机，取用后已删除远端。台式机使用已有资源，资源未上传 HF。实际验收通过，包内代码未改，Mac 交付包沿用下列文件。台式机独立验收目录已删除。未部署，未操作生产 `cq`、生产日志或 `~/pvz-mac-collect/hold`。
 
 | 文件 | 字节 | SHA256 |
 |---|---:|---|
