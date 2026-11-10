@@ -1,7 +1,8 @@
 {
   "focus_share": 0.25,
   "l29_start_share": 0.25,
-  "execute_incumbent": false,
+  "execute_incumbent": true,
+  "execute_incumbent_share": 0.5,
   "cells": [
     "pool_user_l22_user",
     "pool_user_l29_user1",

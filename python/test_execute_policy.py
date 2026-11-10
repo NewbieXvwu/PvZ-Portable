@@ -48,6 +48,7 @@ def test_execute_policy_focus_boundary(base, level, enabled, expected):
     import json
     focus = json.loads((ROOT / 'configs/curriculum_focus.json').read_text())
     focus['execute_incumbent'] = enabled
+    focus['execute_incumbent_share'] = 1.0
     args = SimpleNamespace(focus_config=focus, rollout_policy='student.pt')
     item = dict(base=base, task_definition=dict(level=level))
     assert queue.focus_execute_policy(args, item) == expected
@@ -90,3 +91,16 @@ def test_execute_policy_group_records_routed_identity(tmp_path, monkeypatch, exe
     assert item['execute_policy'] == expected
     assert item['rollout_policy'] == 'gpt.pt'
     assert item['student_round'] == 163
+
+
+def test_execute_policy_share_splits_groups():
+    import json
+    focus = json.loads((ROOT / 'configs/curriculum_focus.json').read_text())
+    focus.update(execute_incumbent=True, execute_incumbent_share=0.5)
+    args = SimpleNamespace(focus_config=focus, rollout_policy='student.pt')
+    picks = [queue.focus_execute_policy(args, dict(base='roof_user_l47_user', label=f'c{i}roof47_o{i * 24}',
+                                                   task_definition=dict(level=47))) for i in range(200)]
+    assert 60 < sum(p == 'student.pt' for p in picks) < 140
+    focus['execute_incumbent_share'] = 0.0
+    assert queue.focus_execute_policy(args, dict(base='roof_user_l47_user', label='x',
+                                                 task_definition=dict(level=47))) is None

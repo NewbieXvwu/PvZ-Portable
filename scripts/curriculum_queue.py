@@ -54,6 +54,7 @@ import copy
 import functools
 import glob
 import json
+import zlib
 import math
 import os
 import shlex
@@ -2453,6 +2454,10 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
 def focus_execute_policy(args, item):
     focus = getattr(args, 'focus_config', {})
     if not focus.get('execute_incumbent', False) or item['base'] not in focus.get('cells', []):
+        return None
+    # Main control 11-10: only a share of the groups, so GPT-executed same-deck wins keep coming.
+    share = float(focus.get('execute_incumbent_share', 1.0))
+    if zlib.crc32(str(item.get('label') or item.get('task_id') or item['base']).encode()) % 1000 >= share * 1000:
         return None
     from pvz_constants import background_for_level
     task = item.get('task_definition') or load_tasks(Path(item['manifest']))[item['task_id']]
