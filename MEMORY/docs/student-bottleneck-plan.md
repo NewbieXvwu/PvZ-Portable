@@ -2013,3 +2013,4 @@
   - 认领：resume / drill / scenario 经 `load_archive` / `reseed` 后持有与 `_slot` 一致的认领键，每步 `_apply()` 续期，导出 / 放弃 / 关闭释放；顶层 `next_task(ttl=...)` 透传。定向测试 5 项通过。
   - spawn 根因：`Board::EnvironmentCanSpawnZombie()` 原生规则，冒险模式第 0 行禁止巨人；题面要求不合法，引擎不改。任务书写明巨人避开 r0。
   - **238g** 在 `~/Downloads/pvz-llmplay-238g/`（`.001` / `.002` / res），carry 合并到 11-10 交回（15,594 条）：drill 2709 / 2781、scenario 598 / 600、resume 649 / 8457；台式机 `accept_package.py` exit 0。
+- 11-10 22:51 CST **r169 晋升**，22:52 激活，现任 r169，r168 之后连续第二次。评估用时 766 s，没有否决理由。留出关监测（只看不否决）L7 38/96、L9 38/96，r168 是 42/96、57/96，L9 回落，下一轮再看。
