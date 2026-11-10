@@ -226,6 +226,81 @@ def test_decks_restoring_claim_does_not_let_search_branch_release_parent(tmp_pat
     assert workflow._slot(task_id, primary.seed) not in workflow.held()
 
 
+@pytest.mark.parametrize('layer', ['resume', 'drill', 'scenario'])
+def test_task265_loaded_claim_renews_past_ttl_and_releases(tmp_path, monkeypatch, layer):
+    from llmplay import next_task
+    from pvz_frame_store import write_frames
+    clock = [1000.0]
+    monkeypatch.setattr(workflow, 'time', SimpleNamespace(time=lambda: clock[0]))
+    monkeypatch.setenv('LLMPLAY_CLAIM_HOLD', '10')
+    task_id = 'task265_' + layer
+    archive = tmp_path / layer
+    archive.mkdir()
+    base = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='经济', _gate=False)
+    block = dict(id=task_id, future_seed=101, prefix_operations=0)
+    meta = dict(task=dict(id=base.task_id if layer == 'resume' else task_id,
+                          level=1, seed=7, deck=D1),
+                environment_task=base._environment_task(), workflow_layer=layer,
+                outcome=dict(final_tick=0))
+    if layer == 'resume':
+        meta['resume_id'] = task_id
+    else:
+        meta[layer] = block
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    (archive / 'ticks.jsonl').write_text('')
+    write_frames(archive / 'frames.npz', [], cache=False)
+    item = dict(id=task_id, task_id=task_id, archive=str(archive), level=1,
+                terrain='day', seed=7, deck=D1, future_seeds=[101, 102])
+    with patch.object(decks, 'resume_catalog', return_value=[item] if layer == 'resume' else []), \
+            patch.object(decks, 'drill_catalog', return_value=[item] if layer == 'drill' else []), \
+            patch.object(decks, 'scenario_catalog', return_value=[item] if layer == 'scenario' else []), \
+            patch.object(decks, 'assigned_tasks', side_effect=lambda native=False, frontier=False:
+                         [] if native or frontier else decks.config()['order']), \
+            patch.object(decks, 'upgrade_target', return_value=0):
+        # 留住第一个未来，验证读第二个种子时不会续错题面默认值或原局 seed。
+        first = next_task(ttl=10)['item']
+        claimed = next_task(ttl=10)['item'] if layer != 'resume' else first
+        key = workflow._slot(claimed['task_id'], claimed['seed'])
+        token = workflow.held()[key]['token']
+        assert workflow.held()[key]['expires'] == 1010
+        game = Game.load_archive(claimed['path'])
+        game.env = SimpleNamespace(close=Mock())
+        game.obs = dict(wave=1, result=0)
+
+        def step(action):
+            game.tick += int(action.get('ticks') or 0)
+            return True
+
+        try:
+            with patch.object(game, '_step_raw', side_effect=step), \
+                    patch.object(game, '_note_events'), patch.object(game, '_maybe_frame'), \
+                    patch.object(game, '_persist_best'):
+                if layer != 'resume':
+                    assert not game._claimed
+                    game.reseed(claimed['future_seed'])
+                assert game._claimed == (claimed['task_id'], claimed['seed'])
+                for now in (1006, 1012):
+                    clock[0] = now
+                    game.wait(60)  # 同一波推进，不能依赖换波才续期。
+                assert workflow.held()[key]['token'] == token
+                other = next_task(ttl=10)['item']
+                assert (other['task_id'], other.get('seed')) != (claimed['task_id'], claimed['seed'])
+                saved = tmp_path / 'saved.json'
+                game.save(saved)
+                game.close()
+                assert key not in workflow.held()
+                restored = Game.load(saved)
+                assert restored._claimed == (claimed['task_id'], claimed['seed'])
+                restored.close()
+                child = Game.load_archive(claimed['path'], _internal=True)
+                child._hold_claim()
+                assert not child._claimed
+                child.close()
+        finally:
+            game.close()
+            base.close()
+
+
 def test_decks_metadata_only_carry_survives_out_zip_resume(tmp_path):
     source = tmp_path / 'carry.json'
     prior = workflow.derive([entry(1, D1)], 'carry-run')

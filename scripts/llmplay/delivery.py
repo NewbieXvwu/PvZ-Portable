@@ -113,13 +113,13 @@ def progress() -> dict:
     return _derive(document["archives"], document["run_id"])
 
 
-def next_task(track=None, *, shard=None, shards=None) -> dict:
+def next_task(track=None, *, shard=None, shards=None, ttl=None) -> dict:
     """领下一项。track="C" 表示 C 轨专职子代理（C 优先，做完接主线）。"""
     if workflow.decks_mode() and (shard is not None or shards is not None):
         from .decks import configure_shard
         configure_shard(shard, shards)
     ensure_run_id()
-    return workflow.next_task(track=track)
+    return workflow.next_task(track=track, ttl=ttl)
 
 
 def check(task_id, deck, strategy="", seed=None) -> dict:

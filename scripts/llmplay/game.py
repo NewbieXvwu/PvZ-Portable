@@ -286,18 +286,14 @@ class Game:
         self._claimed = False
         if _gate and not self._internal:
             from .delivery import check
-            from .workflow import hold
             context = check(self.task_id, self.deck, self.strategy, self.seed)
             self.cycle = context.get("cycle", self.cycle)
             self.workflow_layer = context.get("workflow_layer", self.workflow_layer)
             # 队列占位：别的子代理不会领到同一项；进程崩了 30 分钟后自动释放。
-            hold(self.task_id, self.seed)
-            self._claimed = True
+            self._hold_claim()
         elif _restore_claim and self.workflow_layer in ("decks", "native") and not self._internal:
             # 同片中盘恢复继续持有并最终释放原来的关卡+种子占位。
-            from .workflow import hold
-            hold(self.task_id, self.seed)
-            self._claimed = True
+            self._hold_claim()
         self.session = budget.session()
         self.budget_key = self.task_id
         self.session.register_task(self.budget_key, self.spec.level)
@@ -584,6 +580,8 @@ class Game:
         before_plants, before_zombies = self._plants_snapshot, self._zombies_snapshot
         before_mowers = self._mower_snapshot
         ok = self._step_raw(action)
+        if self._claimed:
+            self._hold_claim()
         self._note_events(action, ok, before_plants, before_zombies, before_mowers, before_wave)
         self.session.note_ticks(level, self.tick - before,
                                 "search" if self._internal else self.session.mode(level))
@@ -600,9 +598,6 @@ class Game:
         # 内部试打局走的是换过的未来，写进「最远进度」会把真局的纪录冲掉。
         if self._internal or self.env is None or self.obs is None:
             return None
-        if self._claimed:
-            from .workflow import hold
-            hold(self.task_id, self.seed)
         return self.session.save_best_log(self.budget_key, self.log(), wave=self.max_wave,
                                           won=int(self.obs.get("result") or 0) == 1)
 
@@ -705,8 +700,13 @@ class Game:
         if self.abandon_reason is not None:
             raise RuntimeError("本局已放弃，请重开")
         self._start()
+        if self._claimed and self.workflow_layer in ("drill", "scenario") and self.future_seed != int(seed):
+            self._release_claim()
         self.future_seed = int(seed)
-        return self._apply({"type": "reseed", "seed": int(seed)})
+        ok = self._apply({"type": "reseed", "seed": int(seed)})
+        if self.workflow_layer in ("drill", "scenario"):
+            self._hold_claim()
+        return ok
 
     def zombies(self) -> list[dict]:
         """当前在场的僵尸（id / row / type / x / hp），用于声明出题目标。"""
@@ -1140,6 +1140,7 @@ class Game:
             game.future_seed = doc.get("future_seed") or game.future_seed
             game.note, game.abandon_reason = doc.get("note", game.note), doc.get("abandon_reason")
             game.terminal = game.abandon_reason is not None
+            game._restore_archive_claim()
             return game
         return cls(doc["task_id"], seed=doc["seed"], ops=doc.get("ops") or [],
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
@@ -1213,6 +1214,8 @@ class Game:
         config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted", ()))
         game.spec = TaskSpec(**config)
         game.deck = list(task["deck"])
+        if kwargs["_restore_claim"]:
+            game._restore_archive_claim()
         return game
 
     def export_archive(self, directory, *, note=None) -> Path:
@@ -1330,11 +1333,28 @@ class Game:
         self._release_claim()
         return target
 
+    def _restore_archive_claim(self) -> None:
+        block = self.drill_meta or self.scenario_meta or {}
+        if self.workflow_layer == "resume" or (
+                self.workflow_layer in ("drill", "scenario") and any(
+                    op["action"].get("type") == "reseed"
+                    for op in self.ops[int(block.get("prefix_operations") or 0):])):
+            self._hold_claim()
+
+    def _hold_claim(self) -> None:
+        if self._internal:
+            return
+        from .workflow import hold
+        # 短题在 reseed 后才知道派发种子，题面里的默认未来不能拿来认领。
+        seed = self.future_seed if self.workflow_layer in ("drill", "scenario") else self.seed
+        self._claimed = (self.resume_id or self.task_id, seed)
+        hold(*self._claimed)
+
     def _release_claim(self) -> None:
         if not self._claimed:
             return
         from .workflow import release
-        release(self.task_id, self.seed)
+        release(*self._claimed)
         self._claimed = False
 
     def _deliver(self) -> None:
