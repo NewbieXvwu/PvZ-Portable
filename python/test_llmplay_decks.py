@@ -1004,3 +1004,124 @@ def test_task248_prefix_wait_uses_recorded_elapsed_time_and_matches_root(tmp_pat
             assert check_drill_prefix(target)['status'] == 'rejected'
     finally:
         g.close()
+
+
+@contextmanager
+def _task266_resume(tmp_path):
+    from pvz_frame_store import write_frames
+    archive = tmp_path / 'prefix'
+    archive.mkdir()
+    base = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='经济', _gate=False)
+    item = dict(id='resume266', archive=str(archive), seed=7, level=1, deck=D1,
+                cutoff_tick=240, multiplier=1.0)
+    meta = dict(task=dict(id=base.task_id, level=1, seed=7, deck=D1),
+                environment_task=base._environment_task(), resume_id=item['id'],
+                resume=dict(cutoff_tick=240), workflow_layer='resume', outcome=dict(final_tick=240))
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    ops = [dict(action=dict(type='wait', ticks=240), tick=0, end_tick=240, ok=True)]
+    (archive / 'ticks.jsonl').write_text(json.dumps(ops[0]) + '\n')
+    write_frames(archive / 'frames.npz', [dict(tick=240, operation=1)], cache=False)
+
+    class Env:
+        episode = {}
+        def __init__(self, **kwargs): self.tick = 0
+        def begin_demo(self): pass
+        def set_lean_observation(self, value): pass
+        def close(self): pass
+        def observe(self):
+            return dict(tick=self.tick, wave=1, sun=50, result=0, terminal=False)
+        def reset(self, **kwargs):
+            self.tick = 0
+            return self.observe(), {}
+        def step(self, action):
+            self.tick += action.get('ticks', 0)
+            return self.observe(), 0, False, False, dict(events={}, ok=True)
+
+    with patch.object(decks, 'resume_catalog', return_value=[item]), \
+            patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch('llmplay.game.PvZEnv', Env), \
+            patch('llmplay.resources.app_data', return_value=tmp_path):
+        try:
+            yield item
+        finally:
+            base.close()
+
+
+def test_task266_rewind_child_claim_prefix_and_carry(tmp_path, monkeypatch):
+    with _task266_resume(tmp_path) as original:
+        item = workflow.next_task(delivery.progress(), claim=False)['resume']
+        game = Game.load_archive(item['path'], strategy='补经济')
+        child = None
+        try:
+            game.wait(60)
+            for invalid in (-1, 240, 300, 1.5):
+                with pytest.raises(ValueError, match='to_tick'):
+                    game.rewind_resume(reason='第3波缺经济', to_tick=invalid)
+            child = game.rewind_resume(reason='第3波缺经济', to_tick=95)
+            assert child.resume_id == 'resume266__rewind1'
+            assert child.tick == 95 and child.ops[-1]['end_tick'] == 95
+            assert child.ops[-1]['action']['ticks'] == 95
+            assert child._claimed == (child.resume_id, 7)
+            doc = delivery.progress()
+            queued = workflow.next_task(doc, claim=False)['resume']
+            # 占位期间其他子代理跳过子项。
+            assert queued is None
+            assert decks.ordered_items(doc)[0]['task_id'] == child.resume_id
+            assert doc['archives'][-1]['abandoned']
+            assert doc['resume']['rewound'] == 1
+            child._start()
+            assert child.tick == 95 and len(child.frames) == 1 and child.frames[0]['tick'] == 95
+            assert child.resume_source['prefix_operations'] == 1
+            child.wait(60)
+            saved = tmp_path / 'child.save'
+            child.save(saved)
+            child.close()
+            child = Game.load(saved)
+            child._start()
+            assert child.tick == 155 and child.frames[0]['tick'] == 95
+            child.close()
+            # 结论层 carry 不带旧存档，也能从包内原前缀重建子项。
+            prior = delivery.output_dir() / 'progress.json'
+            monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'carried'))
+            delivery.carry(prior)
+            again = delivery.next_task()['item']
+            assert again['task_id'] == 'resume266__rewind1'
+            restored = Game.load_archive(again['path'], resume_item=again['resume_item'], strategy='补经济')
+            try:
+                assert restored.tick == 95
+                restored.abandon(reason='第3波仍缺阳光')
+            finally:
+                restored.close()
+            latest = delivery.output_dir() / 'progress.json'
+            monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'carried-again'))
+            delivery.carry(latest)
+            assert delivery.next_task()['item']['task_id'] != again['task_id']
+        finally:
+            game.close()
+            if child:
+                child.close()
+
+
+@pytest.mark.parametrize('opening', [False, True])
+def test_task266_rewind_limit_structural_and_diagnostics(tmp_path, opening):
+    with _task266_resume(tmp_path) as item:
+        game = Game.load_archive(item['archive'], strategy='补经济')
+        try:
+            for number in range(1, 2 if opening else 4):
+                game = game.rewind_resume(reason='第%d波阳光不足' % number,
+                                          to_tick=0 if opening else None)
+                assert game.resume_source['rewind_count'] == number
+                assert game.tick == (0 if opening else 240 // (2 ** number))
+            last = game
+            assert game.rewind_resume(reason='开局仍救不回，检查卡组与倍率') is None
+            doc = delivery.progress()
+            assert doc['resume']['remaining'] == 0 and doc['resume']['structural'] == 1
+            assert doc['resume']['structural_ids'] == [item['id']]
+            record = doc['archives'][-1]['resume']
+            assert record['structural'] and record['original_resume_id'] == item['id']
+            assert len(record['rewind_chain']) == (1 if opening else 3)
+            assert record['diagnosis'] == '开局仍救不回，检查卡组与倍率'
+            last.close()
+        finally:
+            game.close()

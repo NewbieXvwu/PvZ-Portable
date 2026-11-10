@@ -1,4 +1,4 @@
-# LLM Play 任务书（task265：238g）
+# LLM Play 任务书（task266：238h）
 
 你拿到的是无窗口的《植物大战僵尸》1.2.0.1073 复刻引擎及 Python 接口。
 每局产物是一份真实操作序列存档：什么 tick、用什么卡、种在哪一格、注入了什么。
@@ -8,7 +8,7 @@
 **任何阶段都不交班、不请示、不盘点，完成一局就立即 `next_task()` 领下一项。**
 `progress()["complete"]` 永远是 `False`，这不是 bug。唯一停止条件是用户在对话里说停。
 
-238g 按配置依次派发：真实必刷题 drill → r160 八个重点格的同卡组败局 resume →
+238h 按配置依次派发：回退子项 → 真实必刷题 drill → r160 八个重点格的同卡组败局 resume →
 L30/L40/L45/L50 原生整局 native → 剩余 scenario → 其余旧 resume → 前沿倍率 → 其余原生支线 → 主线。
 drill 从真实危急局面起手，scenario 从真实底局注入单一威胁，均由模拟器判分。
 重点 resume 保持原局卡组与倍率，native 由引擎发牌。按 `next_task()` 返回的项推进。
@@ -153,16 +153,37 @@ drill 后先派 r160 重点格的 `layer=="resume"`，其余旧接回排在 scen
 ```python
 item = llmplay.next_task()["item"]
 if item["layer"] == "resume":
-    g = Game.load_archive(item["path"], strategy="先补两列经济，再用窝瓜/樱桃顶住下一波")
+    g = Game.load_archive(item["path"], resume_item=item.get("resume_item"),
+                          strategy="根据局面补经济，保住下一波")
     print(g.observe())
     # ... 解题 ...
-    g.export_archive(llmplay.out_dir() / ("resume_" + item["task_id"]))
-    g.close()
+    # 判断当前切点已经救不回时，保存本次尝试并接着打更早的子局：
+    g = g.rewind_resume(reason="第3波起只有2株向日葵，切点阳光0")
+    # 不指定 to_tick 时默认退到当前切点的一半；目标必须早于切点且 >= 0。
+    # g 为 None 表示已到开局或三次回退用尽，已标为结构性待复核，此时领下一题。
+    if g is None:
+        item = llmplay.next_task()["item"]
+    else:
+        print(g.observe())                # 当前子代理继续解题
+        # ... 打到实际终局，再导出 ...
+        g.export_archive(llmplay.out_dir() / ("resume_" + g.resume_id))
+        g.close()
 ```
 
 本包 `carry/` 已经接上 2026-11-10 04:32:58 HKT 的最新交回进度，
 **不需要再附旧分卷**；`resume` 进度会从 carry 继续，不会重打已完成的条目。
 导出时 `strategy` 必填：写清从这个局面先补什么、靠什么顶哪一波。
+
+救不回时调用 `rewind_resume()`，诊断写一句“从哪一波开始走偏、缺什么”，可建议更早的
+`to_tick`。不要因如实记录失败就直接跳过。接口会自动导出本次失败或放弃记录，用原局
+前缀截出更早子项，放到队首并交给当前子代理继续。默认取开局与当前切点的中点，
+让经济决策的可修改区间每次向前扩展一半。每条链最多回退三次，开局仍救不回或次数
+用尽就标为结构性待复核，主控据此检查卡组与倍率。这里的经济诊断由你判断。
+
+回退子项赢局后，仅新切点之后的 GPT 操作进入示范行，分档沿用普通 resume。
+原题、回退次数、各次切点和诊断会随存档与进度一起保留。`rewind(tick)` 仍是局内重试，
+回退题目请用 `rewind_resume()`。跨进程重领子项时，照示例把 `item.get("resume_item")`
+传给 `load_archive()`；直接接住 `rewind_resume()` 返回的局则已完成认领。
 
 ## 5. 共用规则
 
@@ -193,4 +214,4 @@ llmplay.roster(task_id, seed=...)  # 出怪表（drill/scenario 可跳过）
 
 `Game` 常用：`observe()`、`legal()`、`plant()`、`shovel()`、`spawn()`、`set_sun()`、
 `set_cooldown()`、`reseed()`、`zombies()`、`declare_scenario()`、`drill_result()`、
-`wait()`、`wait_until()`、`export_archive()`、`close()`。
+`wait()`、`wait_until()`、`rewind_resume()`、`export_archive()`、`close()`。

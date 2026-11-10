@@ -315,6 +315,10 @@ class Game:
             self._capture_drill_root(0)
             if self.ops or target:
                 self._replay_to(target)
+            if getattr(self, "_resume_prefix_pending", False):
+                self.frames = []
+                self._frame_now(None)
+                self._resume_prefix_pending = False
             # task238：drill/scenario 的起点就是重放终点；判据从这一刻算起。
             self._root_operations = len(self.ops)
             self._root_tick = self.tick
@@ -859,6 +863,60 @@ class Game:
         self._persist_best()
         self._replay_to(target)
 
+    def rewind_resume(self, *, reason: str, to_tick=None):
+        """记录本次救局失败，返回已认领的更早子局；三次用尽或已到开局则返回 None。"""
+        self._require_primary("rewind_resume()")
+        if not self.resume_id or self.workflow_layer != "resume":
+            raise ValueError("只有 resume 题能回退切点")
+        if not reason.strip():
+            raise ValueError("请说明从哪一波开始走偏、缺什么")
+        cutoff = int(self.resume_source["cutoff_tick"])
+        count = int(self.resume_source.get("rewind_count", 0))
+        if to_tick is not None and (type(to_tick) is not int or not 0 <= to_tick < cutoff):
+            raise ValueError("to_tick 必须是早于当前切点的非负整数")
+        self._start()
+        if self.obs.get("result") == 1:
+            raise ValueError("已通关的局不能记为救局失败")
+        root_id = self.resume_source.get("original_resume_id") or self.resume_id
+        source = dict(self.resume_source, original_resume_id=root_id, diagnosis=reason)
+        child = None
+        if count >= 3 or cutoff == 0:
+            source["structural"] = True
+        else:
+            from .decks import resume_catalog
+            original = next((item for item in resume_catalog() if item["id"] == root_id), {})
+            target = cutoff // 2 if to_tick is None else to_tick
+            chain = list(source.get("rewind_chain") or []) + [dict(
+                parent_resume_id=self.resume_id, from_tick=cutoff, cutoff_tick=target,
+                rewind_count=count + 1, diagnosis=reason)]
+            child = dict(original, **{k: v for k, v in source.items() if k != "next"})
+            child.update(id=root_id + "__rewind%d" % (count + 1),
+                         archive=original.get("archive") or Path(self._source_archive).name,
+                         seed=self.seed, deck=list(self.deck), level=self.spec.level,
+                         multiplier=self.spec.zombie_count_multiplier,
+                         cutoff_tick=target, rewind_count=count + 1, rewind_chain=chain)
+            source["next"] = child
+        self.resume_source = source
+        if not self.terminal:
+            self.abandon_reason, self.terminal = reason, True
+        if child:
+            # 发布之前用 task265 的同一占位机制保留子项，其他进程不能抢到它。
+            from .workflow import hold, release
+            hold(child["id"], self.seed)
+        try:
+            self._deliver()
+        except BaseException:
+            if child:
+                release(child["id"], self.seed)
+            raise
+        finally:
+            self.close()
+        if child:
+            return type(self).load_archive(self._source_archive, resume_item=child,
+                                           executable=self.executable, resource_dir=self.resource_dir,
+                                           strategy=self.strategy)
+        return None
+
     def branch(self) -> "Game":
         """复制一份独立的局（同一任务、同一操作序列）。各自一个引擎进程。
 
@@ -1115,6 +1173,8 @@ class Game:
                     # 记下源存档，load() 走 from_archive 同一条路径恢复（11-05 交付验收发现）。
                     archive=getattr(self, "_source_archive", None),
                     archive_decision=getattr(self, "_source_decision", None),
+                    resume_item=(dict(self.resume_source, id=self.resume_id)
+                                 if self.resume_source.get("rewind_count") else None),
                     scenario_meta=self.scenario_meta, future_seed=self.future_seed)
 
     def save(self, path) -> Path:
@@ -1134,8 +1194,11 @@ class Game:
             raise ValueError("不是 %s 存档：%s" % (SCHEMA, path))
         if doc.get("archive"):
             game = cls.from_archive(doc["archive"], decision=doc.get("archive_decision"),
+                                    resume_item=doc.get("resume_item"),
                                     strategy=doc.get("strategy", ""), **kwargs)
             game.ops, game.frames, game.tick = doc.get("ops") or [], doc.get("frames") or [], doc.get("tick")
+            game._resume_prefix_pending = False
+            game.attempt_id = doc.get("attempt_id") or game.attempt_id
             game.scenario_meta = doc.get("scenario_meta") or game.scenario_meta
             game.future_seed = doc.get("future_seed") or game.future_seed
             game.note, game.abandon_reason = doc.get("note", game.note), doc.get("abandon_reason")
@@ -1158,7 +1221,7 @@ class Game:
         return cls.from_archive(directory, **kwargs)
 
     @classmethod
-    def from_archive(cls, directory, decision=None, **kwargs) -> "Game":
+    def from_archive(cls, directory, decision=None, *, resume_item=None, **kwargs) -> "Game":
         """从存档恢复；decision=N 恢复成该决策执行前的局面（1 = 初始状态）。
 
         只截断已有的操作日志，再由 Game._start 用现有重放路径走到那里，不另写一套
@@ -1181,6 +1244,11 @@ class Game:
             ops = ops[:stop]
             frames = frames[:decision]
             tick = int(ops[-1]["end_tick"]) if ops else int(frames[0].get("tick", 0))
+        if resume_item is not None:
+            tick = resume_item["cutoff_tick"]
+            if type(tick) is not int or not 0 <= tick <= int(meta["outcome"]["final_tick"]):
+                raise ValueError("回退切点必须在原存档前缀内")
+            ops, frames = _truncate_ops(ops, tick), []
         task = meta["task"]
         kwargs.setdefault("_gate", False)
         kwargs.setdefault("_restore_claim", True)
@@ -1200,6 +1268,14 @@ class Game:
         # task220：中盘接回项用 resume_id 认领（同一生产任务族下有多条不同起点的存档）。
         game.resume_id = meta.get("resume_id") or None
         game.resume_source = dict(meta.get("resume") or {})
+        if resume_item is not None:
+            game.resume_id = resume_item["id"]
+            game.resume_source = dict(resume_item)
+            game.resume_source["prefix_operations"] = len(ops)
+            game.abandon_reason, game.terminal = None, False
+            game.attempt_id = uuid.uuid4().hex
+            game.robustness_report, game.manual_patch = None, False
+            game._resume_prefix_pending = True
         game.workflow_layer = meta.get("workflow_layer") or game.workflow_layer
         # task238：题面随存档走，导入/重放不再另读配置。
         game.drill_meta = dict(meta.get("drill") or task.get("drill_start") or {}) or None

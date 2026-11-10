@@ -183,16 +183,23 @@ def resume_catalog():
 
 def resume_progress(document):
     catalog = resume_catalog()
+    entries = [entry for entry in document.get("archives") or [] if entry.get("resume_id")]
+    children = {child["id"]: child for entry in entries
+                if (child := (entry.get("resume") or {}).get("next"))}
+    catalog = catalog + list(children.values())
     known = {item["id"] for item in catalog}
-    played = {entry.get("resume_id") for entry in document.get("archives") or []
+    played = {entry.get("resume_id") for entry in entries
               if entry.get("resume_id") in known}
-    items = [item for item in catalog if item["id"] not in played]
+    structural = {((entry.get("resume") or {}).get("original_resume_id") or entry["resume_id"])
+                  for entry in entries if (entry.get("resume") or {}).get("structural")}
+    items = [item for item in catalog if item["id"] not in played
+             and (item.get("original_resume_id") or item["id"]) not in structural]
     terrain_order = (config().get("resume") or {}).get("terrain_order") or []
     rank = {name: index for index, name in enumerate(terrain_order)}
     def terrain(item):
         return item.get("terrain") or region(item["level"])
     # task226：priority 0 = 当前 v8 策略的新鲜败局，1 = 旧 r86–r89 存档；新鲜的先打。
-    items.sort(key=lambda item: (int(item.get("priority", 1)),
+    items.sort(key=lambda item: (0 if item.get("rewind_count") else 1, int(item.get("priority", 1)),
                                  rank.get(terrain(item), len(rank)),
                                  item.get("cutoff_tick", 0), item["id"]))
     counts = {}
@@ -203,6 +210,7 @@ def resume_progress(document):
         if item["id"] in played:
             counts[name][1] += 1
     return dict(total=len(catalog), played=len(played), remaining=len(items),
+                rewound=len(children), structural=len(structural), structural_ids=sorted(structural),
                 by_terrain=counts, items=items)
 
 
@@ -226,7 +234,8 @@ def resume_items(document):
                                breach_tick=item.get("breach_tick"), cutoff_tick=item.get("cutoff_tick"),
                                source_arm=item.get("source_arm"), source_checkpoint=item.get("source_checkpoint"),
                                source_executable=item.get("source_executable"),
-                               source_result=item.get("source_result")))
+                               source_result=item.get("source_result"),
+                               resume_item=item if item.get("rewind_count") else None))
     return candidates
 
 
@@ -609,6 +618,8 @@ def queues(document):
 
 
 def dispatch_priority(item):
+    if item.get("resume_item"):
+        return -float("inf")
     name = "main" if item["layer"] == "decks" else item["layer"]
     default = ["drill", "scenario", "resume", "frontier", "native", "main"].index(name)
     priorities = config().get("queue_priority") or {}
@@ -735,6 +746,8 @@ def report(document):
     resume = document.get("resume") or {}
     lines.append("共 %d 条，已打 %d，剩 %d。" % (resume.get("total", 0), resume.get("played", 0),
                                               resume.get("remaining", 0)))
+    lines.append("回退子项 %d，结构性待复核 %d（检查卡组或倍率）。" % (
+        resume.get("rewound", 0), resume.get("structural", 0)))
     for terrain, (total, played) in sorted((resume.get("by_terrain") or {}).items()):
         lines.append("- %s：%d/%d" % (terrain, played, total))
     lines += ["", "## 前沿倍率（课程当前倍率 > 1.0）", "",
