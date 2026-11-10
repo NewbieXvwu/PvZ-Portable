@@ -109,7 +109,7 @@ def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str
 
 
 def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
-    """Fog, roof and boss levels act and continue with the GPT prior; other terrain keeps the student."""
+    """Route the search continuation and its default executor by terrain."""
     if not gpt_path:
         return student_path
     from pvz_constants import background_for_level
@@ -135,7 +135,8 @@ def _close_worker_env():
         env.close()
 
 
-def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None) -> None:
+def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None,
+               execute_path: str | None = None) -> None:
     """Load the nets and the student's C++ export into the worker state dict.
 
     Either every worker calls this, or -- where the platform can fork -- the parent calls it
@@ -149,12 +150,20 @@ def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None
     torch.set_num_threads(1)
     from pvz_rollout_policy import load_student
     _W["value_files"] = (value_path, static_value_path or value_path)
-    _W["fast"] = load_student(rollout_path)
+    rollout = load_student(rollout_path)
+    split = execute_path is not None and Path(execute_path).resolve() != Path(rollout_path).resolve()
+    _W["fast"] = load_student(execute_path) if split else rollout
+    _W["split_policy"] = split
+    _W["rollout_obs"] = rollout.obs
     import tempfile
     from pvz_rollout_policy import export_student
     _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
     _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
-    export_student(_W["fast"], _W["rollout_file"])
+    export_student(rollout, _W["rollout_file"])
+    _W["execute_file"] = _W["rollout_file"]
+    if split:
+        _W["execute_file"] = str(Path(_W["rollout_tmp"].name) / "execute.bin")
+        export_student(_W["fast"], _W["execute_file"])
 
 
 def _release_freed_memory() -> None:
@@ -185,7 +194,8 @@ def _freeze_startup() -> None:
 
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
-                 static_value_path: str | None = None, metrics_counters=None) -> None:
+                 static_value_path: str | None = None, metrics_counters=None,
+                 execute_path: str | None = None) -> None:
     _W["metrics_counters"] = metrics_counters
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
@@ -198,7 +208,7 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
     from multiprocessing.util import Finalize
     Finalize(None, _close_worker_env, exitpriority=10)
     if "fast" not in _W:        # a preloading parent already loaded them, and we inherited the pages
-        _load_nets(value_path, rollout_path, static_value_path)
+        _load_nets(value_path, rollout_path, static_value_path, execute_path)
     import torch
     # Forking does not carry the parent's intra-op thread count into the child; a worker is
     # single threaded either way.
@@ -414,7 +424,12 @@ def _play(job: dict, observer=None) -> dict:
     env = _W.get("env")
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
-        env.load_rollout_net(_W["rollout_file"])
+        env.load_rollout_net(_W.get("execute_file", _W["rollout_file"])
+                             if job["arm"] == "fast" else _W["rollout_file"])
+        env._policy_arm = job["arm"]
+    elif getattr(env, '_policy_arm', None) != job["arm"] and _W.get("split_policy"):
+        env.load_rollout_net(_W["execute_file"] if job["arm"] == "fast" else _W["rollout_file"])
+        env._policy_arm = job["arm"]
     if not getattr(env, "_search_version", 0):
         raise RuntimeError("the teacher needs a rebuilt simulator advertising search_version=1")
     if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
@@ -546,6 +561,12 @@ def _play(job: dict, observer=None) -> dict:
                 for frame in prefix[:-1]:
                     fast_state['history'].extra(frame)
         _W["student_history"] = None
+        rollout_history = None
+        if _W.get("split_policy") and _W["rollout_obs"] != 'v1':
+            from pvz_student_observation import StudentHistory
+            rollout_history = StudentHistory(_W["rollout_obs"])
+            for frame in prefix[:-1]:
+                rollout_history.extra(frame)
         # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
         # 1 - dagger_beta the student's own action is executed, so the archive covers the positions the
         # student itself gets into. The label is the anchored search decision (overrides only past MARGIN).
@@ -592,8 +613,11 @@ def _play(job: dict, observer=None) -> dict:
             planted_by_type = read_types(details,task_definition)
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
+        # ponytail: one native policy slot; reuse the existing root forward for a split executor
+        # until the engine can retain two policies. SEARCH keeps the rollout net loaded.
         native_root = (getattr(args, 'native_games', False) and observer is None
-                       and getattr(_W['fast'], 'token_input', None) != 'obs_v3')
+                       and getattr(_W['fast'], 'token_input', None) != 'obs_v3'
+                       and (not _W.get('split_policy') or job['arm'] == 'fast'))
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             if horizon_reached(obs, drill_root_tick, drill_horizon):
                 break
@@ -603,6 +627,10 @@ def _play(job: dict, observer=None) -> dict:
                 reference_history.extra(_frame(obs))
             action = policy_choice = _fast_action(obs, fast_state, env if native_root else None)
             _W["student_history"] = fast_state.get("history")
+            if _W.get("split_policy"):
+                if rollout_history is not None:
+                    rollout_history.extra(_W["student_frame"])
+                _W["student_history"] = rollout_history
             if job["arm"] == "fast_search":
                 searched_before = stats['searched']
                 stats["last_targets"] = None
@@ -711,7 +739,7 @@ def _play(job: dict, observer=None) -> dict:
         drill_verdict = judge(env, obs, drill_targets, mowers_start, mowers_left,
                               horizon=drill_horizon, root_tick=drill_root_tick,
                               reference_policy=reference_bin, student_history=reference_history,
-                              actor_policy=_W['rollout_file'],
+                              actor_policy=_W.get('execute_file', _W['rollout_file']),
                               previous_tick=(fast_state.get('frame') or {}).get('tick'),
                               previous_plant=(fast_state.get('action') or {}).get('type') == 'plant')
     if frames is not None:
@@ -730,10 +758,14 @@ def _play(job: dict, observer=None) -> dict:
                                    frames=token_writer.rows)
         from dataclasses import asdict
         from pvz_episode_archive import write_meta
+        # checkpoint identifies the label prior for source weighting; record the executor separately.
         archive_task = dict(id=args.task_id, seed=job['seed'], level=kw['level'], deck=list(kw['deck']),
                             policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
                             arm=job['arm'], playthrough=2,
                             **{k: v for k, v in kw['task_extra'].items() if v is not None})
+        if getattr(args, 'execute_policy', None):
+            archive_task.update(execute_policy=str(Path(args.execute_policy).resolve()),
+                                rollout_policy=str(Path(args.rollout_policy).resolve()))
         archive_outcome = dict(result=obs.get('result') or 0,
                                won=(drill_verdict['success'] if drill_verdict is not None
                                     else obs.get('result') == 1),
@@ -835,6 +867,7 @@ def parser():
                    help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
+    p.add_argument("--execute-policy", help="execution checkpoint; search continuation and candidate prior keep the routed rollout policy")
     p.add_argument("--rollout-policy-gpt",
                    help="GPT behavior-clone prior for fog/roof/boss levels "
                         "(BACKGROUND_4_FOG/5_ROOF/6_BOSS); default --rollout-policy")
@@ -1016,7 +1049,7 @@ def main() -> None:
     # Student weights remain shared on fork; value weights live only in engine processes.
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
     if start_method == "fork":
-        _load_nets(value_files[0], args.rollout_policy, value_files[1])
+        _load_nets(value_files[0], args.rollout_policy, value_files[1], args.execute_policy)
         _freeze_startup()
     started = time.time()
     counters = mp.get_context(start_method).RawArray("q", len(jobs) * 2)
@@ -1027,7 +1060,7 @@ def main() -> None:
     # admitted width and adds workers when MemAvailable allows, up to --workers.
     pool = GrowablePool(mp.get_context(start_method), _play, init=_init_worker,
                         initargs=(value_files[0], args.rollout_policy, args.rollout_sim_skip,
-                                  value_files[1], counters),
+                                  value_files[1], counters, args.execute_policy),
                         initial=initial_workers, upper=args.workers,
                         interval=args.grow_interval,
                         per_worker=args.worker_memory_bytes,

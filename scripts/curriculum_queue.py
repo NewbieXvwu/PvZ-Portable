@@ -1102,7 +1102,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                 save_candidates: int = 0, upper_workers: int | None = None,
                 per_worker_bytes: int = 0, headroom_bytes: int = 0,
                 task_definition: dict | None = None,
-                seed_offset: int | None = None) -> list[str]:
+                seed_offset: int | None = None, execute_policy: str | None = None) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -1119,6 +1119,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                      '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
+            *(['--execute-policy', str(execute_policy)] if execute_policy is not None else []),
             *(['--rollout-policy-gpt', str(args.rollout_policy_gpt)]
               if getattr(args, 'rollout_policy_gpt', None) else []),
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
@@ -2449,6 +2450,17 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     return plan, changes
 
 
+def focus_execute_policy(args, item):
+    focus = getattr(args, 'focus_config', {})
+    if not focus.get('execute_incumbent', False) or item['base'] not in focus.get('cells', []):
+        return None
+    from pvz_constants import background_for_level
+    task = item.get('task_definition') or load_tasks(Path(item['manifest']))[item['task_id']]
+    if background_for_level(int(task['level'])) in ('BACKGROUND_4_FOG', 'BACKGROUND_5_ROOF'):
+        return str(args.rollout_policy)
+    return None
+
+
 def _run_group(args, state, item, round_index, per_worker):
     pipeline = getattr(args, 'pipeline', None)
     state['offsets'][item.get('offset_key', item['task_id'])] = item['offset'] + item['games']
@@ -2494,7 +2506,7 @@ def _run_group(args, state, item, round_index, per_worker):
                           save_candidates=item.get('save_candidates', 0),
                           upper_workers=upper, per_worker_bytes=per_worker,
                           headroom_bytes=background, task_definition=item.get('task_definition'),
-                          seed_offset=item.get('seed_offset'))
+                          seed_offset=item.get('seed_offset'), execute_policy=focus_execute_policy(args, item))
     started = time.time()
     item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
@@ -2506,6 +2518,11 @@ def _run_group(args, state, item, round_index, per_worker):
             pipeline.foreground_workers = 0
     seconds = time.time() - started
     folder = args.out / f'{item["label"]}_{item["games"]}'
+    if (folder / 'config.json').exists():
+        config = read_json(folder / 'config.json')
+        execute = config.get('execute_policy')
+        item.update(execute_policy=execute if execute not in (None, 'None', '') else config['rollout_policy'],
+                    rollout_policy=config['rollout_policy'])
     wins = games = 0
     rows = []
     if (folder / 'games.jsonl').exists():
@@ -2864,8 +2881,7 @@ def main() -> None:
             parser.error(f'--{name.replace("_", "-")} must be within 0..1')
     if args.l29_start_share and args.demo_start_share is None:
         parser.error('--l29-start-share requires --demo-start-share')
-    args.focus_config = (read_json(args.focus_manifest)
-                         if args.focus_share or args.l29_start_share else {})
+    args.focus_config = read_json(args.focus_manifest) if args.focus_manifest.exists() else {}
     if args.focus_share and not args.focus_config.get('cells'):
         parser.error('--focus-manifest needs cells for --focus-share')
     if args.l29_start_share and not args.focus_config.get('l29_starts'):
