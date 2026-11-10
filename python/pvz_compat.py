@@ -22,8 +22,8 @@ from datetime import date
 LEGACY: dict[str, dict] = {
     "obs-versions": {
         "what": "学生观测版本 v1 / v2lite / v2 与它们冻结的编码器签名",
-        "kept_for": "artifacts/hard_mac/frames 下 21 056 个档案（encoder 5c3448262051）、"
-                    "以及面板与文档仍在对照的 v34、identity_dw3_s1、dw4i_s1 检查点",
+        "kept_for": "面板与文档仍在对照的 v34、identity_dw3_s1、dw4i_s1 检查点"
+                    "（Mac 上 artifacts/hard_mac/frames 的旧档案已于 2026-11-10 删除）",
         "since": "2026-10-14",
         "remove_when": "旧档案全部重算、且没有面板或文档再对照带 v2lite/v2 观测的检查点",
         "where": ["python/pvz_student_observation.py", "python/pvz_frame_store.py:encoder_signature"],
