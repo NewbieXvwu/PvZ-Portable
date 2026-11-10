@@ -1,6 +1,6 @@
 # task266：238h 接回题回退切点
 
-238h 增加 `Game.rewind_resume(reason=..., to_tick=None)`，供 GPT 判断当前接回切点无法救回时使用。接口、导入和 Mac 打包已完成。台式机 SSH 转发尚未恢复，**台式机已导入库统计与实际包验收待完成**。本任务不部署。
+238h 增加 `Game.rewind_resume(reason=..., to_tick=None)`，供 GPT 判断当前接回切点无法救回时使用。接口、导入和 Mac 打包已完成，代码提交 `6ce29a32` 已推送 `origin/pkg238h`。台式机 SSH 转发尚未恢复，**台式机已导入库统计与实际包验收待完成**。本任务不部署。
 
 ## 接口与派题
 
@@ -94,7 +94,7 @@ timeout 300 uv run --python 3.12 --with pytest --with numpy --with py7zr \
 
 `build_package.py --reuse-package` 复用 `~/Downloads/pvz-llmplay-238g/llmplay_pkg/`，原样使用其 carry、题库和静态引擎。carry 的 15,594 条记录内容与 238g 相同。`check_engine` 通过，静态引擎 SHA256 仍为 `1c3680f36aa5bd5fef97d035a97a1cdd9ca89fce2493a87f125c7bd507d29c07`。
 
-接口分卷已通过 HF `transfer/task266/` 上传并取回 Mac，资源包直接从 238g 本地复制。目录：`~/Downloads/pvz-llmplay-238h/`。目前仍待台式机取用、验收及远端清理。
+接口分卷已通过 HF `transfer/task266/` 上传并取回 Mac，远端两卷已在取用后删除。资源包直接从 238g 本地复制。目录：`~/Downloads/pvz-llmplay-238h/`。本机打包临时目录已清理，台式机未启动验收任务，未碰生产 `cq`、生产日志或 `~/pvz-mac-collect/hold`。
 
 | 文件 | 字节 | SHA256 |
 |---|---:|---|
