@@ -422,7 +422,8 @@ def cards(game) -> str:
     from . import cards as card_names
     sun = int(obs.get("sun") or 0)
     conveyor = obs.get("conveyor_start") == "original"
-    lines = []
+    lines = ["  （冷却显示的是**剩余** tick = refresh_time − 已过；到 0 的那一帧还没进 legal()，"
+             "下一帧才可种。以 legal() 为准）"]
     if conveyor:
         lines.append("  （传送带：左→右排列，用掉一张后后面的卡整体前移，槽位号会变；"
                      "plant(card=\"名字\") 按名字种，不受影响）")
@@ -433,9 +434,11 @@ def cards(game) -> str:
             lines.append("  [%d] （空槽）" % index)
             continue
         cost = int(packet.get("cost") or 0)
-        cooldown = int(packet.get("cooldown") or 0)
+        elapsed = int(packet.get("cooldown") or 0)
+        refresh_time = int(packet.get("refresh_time") or 0)
+        remaining = max(0, refresh_time - elapsed)
         active = bool(packet.get("active"))
-        ready = active and cooldown == 0
+        ready = active
         target = int(packet.get("imitater_type", -1))
         copied = seed == 48 and target >= 0
         if copied:
@@ -454,10 +457,12 @@ def cards(game) -> str:
             where = "此刻没有可种的格"
         if ready:
             state = "就绪"
-        elif cooldown > 0:
-            state = "冷却剩 %d tick" % cooldown
-        else:
+        elif refresh_time <= 0:
             state = "未激活"
+        elif remaining > 0:
+            state = "冷却剩 %d tick（总 %d）" % (remaining, refresh_time)
+        else:
+            state = "冷却到点，下一帧可种"
         lines.append("  [%d] %s%s(%s) %d☀ %s %s %s"
                      % (index, _plant_name(seed), "（模仿者）" if copied else "",
                         card_names.slug(seed), cost, state, afford, where))

@@ -713,7 +713,10 @@ class Game:
         return ok
 
     def zombies(self) -> list[dict]:
-        """当前在场的僵尸（id / row / type / x / hp），用于声明出题目标。"""
+        """当前在场的僵尸（id / row / type / x / hp / body_health / phase），用于声明出题目标。
+
+        ``hp`` 是本体血量（完整观测里的 ``body_health``）；护具血量另列。
+        """
         self._start()
         from drill_start import on_board
         return list(on_board(self.env, self.obs or {}).values())

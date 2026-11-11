@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -283,6 +284,42 @@ def plant_defs() -> list[dict]:
             "name": name,
         })
     return out
+
+
+@lru_cache(maxsize=1)
+def seed_types() -> dict[str, int]:
+    """enum SeedType 的名字 -> 数值（从 ConstEnums.h 现解析）。
+
+    卡片身份用这张表，不用 gPlantDefs 的显示名：显示名可以复用
+    （SEED_REPEATER 与 SEED_LEFTPEATER 都叫 "REPEATER"），枚举名不会。
+    """
+    return _parse_enum(_read(CONST_ENUMS), "SeedType")
+
+
+@lru_cache(maxsize=1)
+def zombie_phases() -> dict[str, int]:
+    """enum ZombiePhase 的名字 -> 数值（从 ConstEnums.h 现解析）。"""
+    return _parse_enum(_read(CONST_ENUMS), "ZombiePhase")
+
+
+@lru_cache(maxsize=1)
+def zombie_death_phases() -> set[int]:
+    """C++ ``Zombie::IsDeadOrDying()`` 认作已死的阶段数值。
+
+    阶段名从函数体里抓，数值再由 ZombiePhase 枚举解析，不写死数字，
+    也不在这里另抄一份阶段列表：源码加了死亡阶段，这里自动跟上。
+    """
+    text = _read(ZOMBIE_CPP)
+    start, end = _function_span(text, "bool Zombie::IsDeadOrDying()")
+    body = _strip_comments(text[start:end])
+    names = set(re.findall(r"\bPHASE_[A-Z0-9_]+\b", body))
+    if not names:
+        raise RuntimeError("Zombie::IsDeadOrDying() 里没有 PHASE_* 名字 —— 解析锚点失效。")
+    phases = zombie_phases()
+    missing = sorted(name for name in names if name not in phases)
+    if missing:
+        raise RuntimeError("ZombiePhase 枚举里没有这些名字：%s" % missing)
+    return {phases[name] for name in names}
 
 
 def plant_specials() -> dict[str, dict[str, int]]:
