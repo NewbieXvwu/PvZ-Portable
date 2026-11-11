@@ -2079,3 +2079,10 @@
 - 11-11 用户让删旧包：Mac 删掉 238e–238i、已导入的 11-10 和 11-11 两份交回、Drive 下载的 zip（合并后的交回移到 `~/Downloads/LLMPlay_2026-11-11_220837_HKT_out.zip`，留给打下一版包作 carry）；保留 238j。Mac 余 92 GB。
 - 11-11 派 **task269**（pkg238k，基于 pkg238 aab98068）：修模仿者导出和 native 派题不一致；把 pkg238j 合进生产线（drill_start.py 两边都改过）；打 238k，carry 用 11-11 22:08 交回。Codex 新号额度又用完了，改由 DeepSeek（dsh pkg238k）做。
 - 11-11 import-1112 完成，exit 0：3089 份全部复验通过，0 份不一致（drill 2036 / native 81 / resume 372 / scenario 600）。两份带 `dying` 的新 scenario 用旧判据复验也一致。
+- 11-12 00:36 CST **r178 晋升**（00:38 激活，现任 r178；L7 45/96、L9 42/96），这是数据瘦身上线后第一次训练出来的学生。
+- 11-12 **task269 结题**（DeepSeek，pkg238k 5fbe4e31，已快进合入 pkg238）：
+  - 卡组转卡集合只留 `pvz_env.deck_cards` / `sorted_deck` 一处实现，`[48,x]` 同时计 48 和 x。llmplay 的 decks / workflow / delivery / game / build_package，以及 pvz_tasks、make_random_deck_cells、pvz_live_curriculum、unified_panel 都改成调用它；纯整数卡组的签名不变。
+  - native 已认领的项开局时放行，名额按“胜局加未结束的认领”扣。
+  - 合并了 pkg238j（drill_start 两边的改动都保留）。
+  - **238k** 在 `~/Downloads/pvz-llmplay-238k/`，carry 15,953 条（11-11 22:08）；台式机 `accept_package.py` exit 0，其中包含 L47 模仿者卡组的真实导出。
+  - 布 `autodeploy-238k`：下次门禁后部署 5fbe4e31，生产与导入器同时更新。Mac 删掉 238j 和已经并进 carry 的交回 zip。
