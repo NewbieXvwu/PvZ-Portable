@@ -1,6 +1,6 @@
 # task267：修 GPT 报告的四个接口问题，打 238j 包
 
-本任务只在 Mac 上做，未连接台式机，未跑整局对局、未开窗口。分支 `pkg238j`（基于 `pkg238h` 8b8d546f），代码提交 `0a0bf257bc813b22ef58088afee7d92ff17b0549`。
+本任务只在 Mac 上做，未连接台式机，未跑整局对局、未开窗口。分支 `pkg238j`（基于 `pkg238h` 8b8d546f），代码提交 `79fbdecc`（含空卡槽输出的回归修复）。
 
 ## 1. `zombies()` 血量全是 0
 
@@ -91,8 +91,8 @@
 
 | 文件 | 字节 | SHA256 |
 |---|---:|---|
-| `llmplay_pkg.7z.001` | 20000000 | `ff82d1550008d4bece46e070969e262eabfbb20d19bbfc28b72e69dd25c58b7d` |
-| `llmplay_pkg.7z.002` | 340160 | `d0f4fe9ec2a1b18df6ef75d252f8dfdbf8cf34c057c350499dbfc2e02c3414bd` |
+| `llmplay_pkg.7z.001` | 20000000 | `9f981d5f3091109224890ff980e0a10eab3e591f66db0e38bec9e38e5ec5e313` |
+| `llmplay_pkg.7z.002` | 343193 | `526c2ee97226835a51e46801c7139153f28bf6a3ee87057893720803afb60f3f` |
 | `llmplay_res.zip` | 34258402 | `0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e` |
 
 ## 说明
