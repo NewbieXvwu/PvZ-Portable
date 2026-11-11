@@ -2043,3 +2043,9 @@
   - 修了 4 个问题：`on_board` 读 `body_health`；卡名从 `SeedType` 枚举生成，52 改叫 `leftpeater`；冷却显示剩余时间；drill 判据把 `Zombie::IsDeadOrDying()` 的阶段算作已解决，阶段从 C++ 源码解析，`drill_result` 和导入器共用同一个 `drill_start.judge()`。
   - 238j 在 `~/Downloads/pvz-llmplay-238j/`，carry 与 238i 相同（11-11 00:53）；台式机 `accept_package.py` exit 0。
   - **注意**：导入 238j 的交回之前，台式机导入器要先换成含新判据的代码（pkg238j），否则死亡动画期间结束的 drill 会出现“判据与存档不一致”。
+- 11-11 用户问 WSL 里的大头是不是格式臃肿。主控实测：
+  - 同一批数据存了四层：frames.npz 21 GB（源数据，已压缩），cache 里 63 万个小文件 17.5 GB（每局特征缓存），packs/segments 1.14 万个**未压缩** npz 41 GB（zlib 1 级可压到约 1/4），shared-v2 11.4 GB（训练实际读的压缩块）。
+  - 另有 tokens_v3 旁车 31.7 GB：生产带 `--obs-v3`（deploy18 起）给每局写，是给 v3 实体 token 学生预备的，目前生产训练不读；它比帧本身还大。
+  - 合计约 123 GB，真正不可少的约 32 GB（frames 加 shared-v2）。
+  - 建议：segments 改压缩存储或在并入 shared-v2 后删除；cache 剪掉已并入的；tokens_v3 先测能否由 frames 重放回填，能的话就停写并删除。等用户决定 tokens_v3；改动交给 Codex（11-11 11:17 EST 额度恢复）。
+- 11-11 用户今晚有事，Mac 采集已冻结（hold）。
