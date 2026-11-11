@@ -92,14 +92,14 @@ def deck_violations(level: int, deck, *, fixed_bank: bool = False) -> list[str]:
     deck = tuple(deck)
     problems = []
     region = region_for_level(level, fixed_bank=fixed_bank)
+    if not all(type(card) is int and 0 <= card < 48 for card in deck):
+        problems.append('卡号超出 0..47')
+        return problems
     cards = set(deck)
     if not 6 <= len(deck) <= 10:
         problems.append(f'长度 {len(deck)} 不在 6..10')
     if len(cards) != len(deck):
         problems.append('有重复卡')
-    if not all(type(card) is int and 0 <= card < 48 for card in deck):
-        problems.append('卡号超出 0..47')
-        return problems
     banned = banned_for_level(level, fixed_bank=fixed_bank)
     for card in sorted(cards & banned):
         problems.append(f'禁卡 {card}（{region}）')
