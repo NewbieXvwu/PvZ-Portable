@@ -419,6 +419,7 @@ class Task267InterfaceTest(unittest.TestCase):
         self.assertNotIn('冷却剩 1375', text)
         game.obs['packets'][0].update(cooldown=3000)
         self.assertIn('下一帧可种', scene.cards(game))
+        self.assertEqual(scene.cards(SimpleNamespace(obs={})).strip(), '（没有卡槽）')
 
     def test_dying_target_counts_as_resolved(self):
         from drill_start import judge

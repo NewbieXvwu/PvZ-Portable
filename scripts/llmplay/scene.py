@@ -422,12 +422,15 @@ def cards(game) -> str:
     from . import cards as card_names
     sun = int(obs.get("sun") or 0)
     conveyor = obs.get("conveyor_start") == "original"
-    lines = ["  （冷却显示的是**剩余** tick = refresh_time − 已过；到 0 的那一帧还没进 legal()，"
-             "下一帧才可种。以 legal() 为准）"]
+    packets = obs.get("packets") or []
+    lines = []
+    if packets:
+        lines.append("  （冷却显示的是**剩余** tick = refresh_time − 已过；到 0 的那一帧还没进 legal()，"
+                     "下一帧才可种。以 legal() 为准）")
     if conveyor:
         lines.append("  （传送带：左→右排列，用掉一张后后面的卡整体前移，槽位号会变；"
                      "plant(card=\"名字\") 按名字种，不受影响）")
-    for packet in obs.get("packets") or []:
+    for packet in packets:
         index = int(packet["index"])
         seed = int(packet["type"]) if packet.get("type") is not None else -1
         if seed < 0:
