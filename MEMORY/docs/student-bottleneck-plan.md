@@ -2049,3 +2049,9 @@
   - 合计约 123 GB，真正不可少的约 32 GB（frames 加 shared-v2）。
   - 建议：segments 改压缩存储或在并入 shared-v2 后删除；cache 剪掉已并入的；tokens_v3 先测能否由 frames 重放回填，能的话就停写并删除。等用户决定 tokens_v3；改动交给 Codex（11-11 11:17 EST 额度恢复）。
 - 11-11 用户今晚有事，Mac 采集已冻结（hold）。
+- 11-11 用户同意 tokens_v3 的处理（先测能否回填，能就停写并删除），Codex 换号后可用。派 **task268**（dataslim，基于生产 b131933b，Codex）：
+  - tokens_v3 回填测试；
+  - segments 改压缩存储或并入 shared-v2 后不再保留，不能触发全量重建；
+  - cache 剪枝放进现有 `--prune` 路径；
+  - 存量就地迁移脚本，峰值额外占用不超过 2 GB，C 盘低于 20 GB 就停；
+  - 不部署。
