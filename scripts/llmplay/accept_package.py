@@ -35,10 +35,14 @@ def worker(mode: str, payload: dict) -> dict:
         return dict(layer=item.get("layer"), key=[item.get("task_id"), item.get("seed"),
                                                    item.get("future_seed")])
     if mode == "drill_start":
+        # carry 后 drill 可能已全部做完，队首换成别的层；那就直接从题库取 drill 验收。
+        catalog = iter(json.loads(Path("configs/llmplay_drills.json").read_text())["items"])
         while True:
             item = llmplay.next_task(track=None)["item"]
             if item.get("layer") != "drill":
-                raise RuntimeError("队首不是 drill：%s" % item.get("layer"))
+                entry = next(catalog)
+                item = dict(path=entry["archive"], knowledge=entry["knowledge"], horizon=entry["horizon"],
+                            future_seed=entry["future_seeds"][0], drill_id=entry["task_id"])
             try:
                 game = Game.load_archive(item["path"], strategy=item["knowledge"])
                 game.reseed(item["future_seed"])
