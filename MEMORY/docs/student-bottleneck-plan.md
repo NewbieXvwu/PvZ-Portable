@@ -2032,3 +2032,14 @@
 - 11-11 10:22 CST **r173 晋升**，10:24 激活，现任 r173。评估用时 1230 s，没有否决理由；留出关监测 L7 45/96、L9 51/96，两关都比 r171 的 35/96、41/96 回升。
 - 11-11 13:33 CST r174 否（`no_candidate_passed`），现任仍是 r173；留出关监测 L7 41/96、L9 50/96。
 - 11-11 C 盘余量 27 GB，从 11-10 的 30 GB 起每天少 1–2 GB。vhdx 194.8 GB，WSL 内部实际用 166 GB。已向用户提议：停一次 WSL，设成稀疏盘（`wsl --manage Ubuntu --set-sparse true`）后再压缩一次，生产停约 10 分钟；等用户批准。
+- 11-11 用户批准把 WSL 虚拟盘设成稀疏盘（“有风险我也认了”），先备份关键数据：
+  - HF `backup/20261111/`：state.tar 655 MB（curriculum_state 与 r171–r176 轮目录）、models.tar 6 MB（全部生产模型）、demos.tar 1.19 GB（人类 / LLM 示范与 cq task105）、gptimport.tar 3.52 GB（GPT 导入库）。训练帧约 100 GB 没有备份。稀疏化成功后，这份备份按“不囤积”规则择机删除。
+  - 16:36 写 stop_curr。queue 在组边界停下后还在等 r176 后台训练，于是手动结束看门狗、训练和 queue，再 fstrim。
+  - Windows 计划任务 PvZSparse（S4U，最高权限）：停保活 → `wsl --shutdown --force` → diskpart 压缩 → `--set-sparse true --allow-unsafe`。
+  - **踩坑**：在 S4U 会话里，`wsl.exe --shutdown` 和 `--manage` 都会卡住，VM 其实已经停了。杀掉卡住的 wsl.exe 后，WSLService 停在 StopPending，只能 taskkill wslservice.exe（服务会自动拉起）。另外 PvZWSLKeeper 被重新启用过，期间又拉起了 keeper 的 wsl。最后从 SSH 会话直接执行 `wsl --manage Ubuntu --set-sparse true --allow-unsafe` 才成功，`fsutil sparse queryflag` 确认已设为稀疏。
+  - 压缩只回收了 3 GB（185.7 → 182.6 GiB），fstrim 又回收约 2 GB。虚拟盘实际占用 180.7 GiB，ext4 已用 167 GiB，剩下的空闲块碎在虚拟盘的大块里，还不回来。C 盘 25.7 → 28 GB。今后在 WSL 里删文件，只要腾出整块就会还给 C 盘。
+  - 17:26 撤掉 stop_curr，用 systemd-run 启动 qc-watchdog，看门狗经 qc_launch 拉起生产；r177 从停下的组接着采，r176 训练重新开始。停产 16:36–17:29，约 53 分钟。
+- 11-11 **task267 结题**（DeepSeek，pkg238j 84d60ae6）：
+  - 修了 4 个问题：`on_board` 读 `body_health`；卡名从 `SeedType` 枚举生成，52 改叫 `leftpeater`；冷却显示剩余时间；drill 判据把 `Zombie::IsDeadOrDying()` 的阶段算作已解决，阶段从 C++ 源码解析，`drill_result` 和导入器共用同一个 `drill_start.judge()`。
+  - 238j 在 `~/Downloads/pvz-llmplay-238j/`，carry 与 238i 相同（11-11 00:53）；台式机 `accept_package.py` exit 0。
+  - **注意**：导入 238j 的交回之前，台式机导入器要先换成含新判据的代码（pkg238j），否则死亡动画期间结束的 drill 会出现“判据与存档不一致”。
