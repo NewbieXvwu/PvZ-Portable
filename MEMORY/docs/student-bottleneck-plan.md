@@ -2028,3 +2028,4 @@
   - 新报告的接口小问题（都不致命，GPT 已绕开）：`zombies()` 返回的 hp 全是 0（读错字段，应读 body_health）；`plant('repeater')` 报名字有歧义（7 与 52）；冷却显示的是已过时间，却标成剩余时间，到点后 `legal()` 晚 1 帧；死亡动画期间目标仍在场，drill 视界结束时可能误判失败。留给 Codex 恢复后修。
   - 台式机导入 import-1111 在跑（import238 引擎）。
 - 11-11 主控自己打 **238i** = 238h 代码 + carry 换成 11-11 交回（15,687 条；drill 2781 / 2781、scenario 598 / 600、resume 670 / 8457）。验收脚本原先假设队首一定是 drill，carry 后 drill 已经做完，于是改成从题库取 drill 验收（pkg238h 提交）。台式机 `accept_package.py` exit 0，包括回退链和三进程并发认领。包在 `~/Downloads/pvz-llmplay-238i/`。
+- 11-11 import-1111 完成，exit 0，2823 份全部复验通过（drill 2036 / resume 189 / scenario 598）。C 盘余量 28 GB（导入前 30 GB），在 30 GB 以下时不启动新的大于 1 GB 的操作。
