@@ -2030,3 +2030,5 @@
 - 11-11 主控自己打 **238i** = 238h 代码 + carry 换成 11-11 交回（15,687 条；drill 2781 / 2781、scenario 598 / 600、resume 670 / 8457）。验收脚本原先假设队首一定是 drill，carry 后 drill 已经做完，于是改成从题库取 drill 验收（pkg238h 提交）。台式机 `accept_package.py` exit 0，包括回退链和三进程并发认领。包在 `~/Downloads/pvz-llmplay-238i/`。
 - 11-11 import-1111 完成，exit 0，2823 份全部复验通过（drill 2036 / resume 189 / scenario 598）。C 盘余量 28 GB（导入前 30 GB），在 30 GB 以下时不启动新的大于 1 GB 的操作。
 - 11-11 10:22 CST **r173 晋升**，10:24 激活，现任 r173。评估用时 1230 s，没有否决理由；留出关监测 L7 45/96、L9 51/96，两关都比 r171 的 35/96、41/96 回升。
+- 11-11 13:33 CST r174 否（`no_candidate_passed`），现任仍是 r173；留出关监测 L7 41/96、L9 50/96。
+- 11-11 C 盘余量 27 GB，从 11-10 的 30 GB 起每天少 1–2 GB。vhdx 194.8 GB，WSL 内部实际用 166 GB。已向用户提议：停一次 WSL，设成稀疏盘（`wsl --manage Ubuntu --set-sparse true`）后再压缩一次，生产停约 10 分钟；等用户批准。
