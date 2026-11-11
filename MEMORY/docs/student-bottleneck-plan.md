@@ -2056,3 +2056,10 @@
   - 存量就地迁移脚本，峰值额外占用不超过 2 GB，C 盘低于 20 GB 就停；
   - 不部署。
 - 11-11 16:24 CST **r175 晋升**（16:28 激活；L7 39/96、L9 51/96）。18:51 **r176 晋升**（18:52 激活，现任 r176；评估 506 s；L7 46/96、L9 50/96）。r176 训练在稀疏化停机后重新开始，17:29 起步，约 1 小时 20 分钟训完。
+- 11-11 **task268 结题**（dataslim aab98068，已快进合入 pkg238）：
+  - tokens_v3 用 `pvz_research_data.backfill_tokens()` 由 frames 重放回填：50 局（五种地形，含 17 局示范 / 续走起点）共 40,297 帧，加上 5 个人造中途续走样本，十个稀疏数组逐位一致。顺手修了旧雾档案恢复时漏 `fog_observation` 的问题。生产启动去掉 `--obs-v3`。
+  - segments 改成 Deflate 1 级压缩，体积约为原来的 25.6%。shared-v2 索引不再依赖源文件的大小和 mtime，改按 ZIP 成员身份识别，压缩、迁移和源段缺失都不会触发重建，取批中位数 38.6 → 38.2 ms。
+  - cache 在每段发布后由 `--prune` 剪掉，存量用 `--prune-only` 清理。
+  - 预计回收 62–80 GB。
+  - 遗留：选中子集时现在复用物理记录，不再重建，所以 shared-v2 里被淘汰分段的记录会一直留着，以后需要按死记录比例压实。
+- 11-11 布 `autodeploy-dataslim`（台式机 `~/pvz-logs/deploy-dataslim/run.sh`）：下一次门禁结论后，C 盘不少于 22 GB 才部署。确认新 queue 不带 `--obs-v3` 后依次删 tokens_v3、跑 segments 迁移、跑 cache 存量剪枝（维护脚本在桌面完整检出 `.claude/worktrees/dataslim` 里运行，MemoryMax=6G），日志在同目录。
