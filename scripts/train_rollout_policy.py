@@ -749,8 +749,7 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
 def _member_header(archive, name):
     """One npz member's (shape, dtype) from its .npy header, without reading the data.
 
-    Segments are uncompressed np.savez archives, so sizing a big CSR array costs a header
-    parse, not a decompress (task61).
+    Only the member header is inflated for compressed segments, never the full array.
     """
     with archive.open(name if name.endswith(".npy") else name + ".npy") as handle:
         version = np.lib.format.read_magic(handle)
@@ -771,18 +770,41 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
     if data is None:
         return _read_segments(paths, data, row_observer, source_weight)
     _csr_decoder()
-    import fcntl
+    from pvz_training_pack import shared_lock, npz_members
     directory = Path(data) / '.merge' / 'shared-v2'
     directory.mkdir(parents=True, exist_ok=True)
-    with (directory.parent / 'shared.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
+    with shared_lock(data):
         marker = directory / 'index.json'
         index = json.loads(marker.read_text()) if marker.is_file() else dict(segments={}, arrays={})
-        signatures = [json.dumps((str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns))
-                      for path in paths]
-        # Pruning/replacement rebuilds through the same streaming writer. Unlink rather than
+        known = {json.loads(key)[0]: key for key in index['segments']}
+        signatures, changed, replaced = [], False, False
+        for path in paths:
+            name = str(path.resolve())
+            previous = known.get(name)
+            if previous is not None:
+                record = index['segments'][previous]
+                if not path.exists():
+                    signatures.append(previous)
+                    continue
+                stat = path.stat()
+                stamp = [stat.st_size, stat.st_mtime_ns]
+                if stamp == record.get('stamp', json.loads(previous)[1:]):
+                    signatures.append(previous)
+                    continue
+                if record.get('members') == npz_members(path):
+                    record['stamp'] = stamp
+                    signatures.append(previous)
+                    changed = True
+                    continue
+                replaced = True
+            stat = path.stat()
+            signatures.append(json.dumps((name, stat.st_size, stat.st_mtime_ns)))
+        # A selected subset or an absent ingested source reuses its physical records.
+        # Real content replacement rebuilds through the same streaming writer. Unlink rather than
         # truncate: already-running trainers retain their previous generation's mappings.
-        if not marker.is_file() or not set(index['segments']).issubset(signatures):
+        if not marker.is_file() or replaced:
+            if any(not path.is_file() for path in paths):
+                raise FileNotFoundError('shared-v2 content replacement needs the retained source segments')
             for previous in directory.iterdir():
                 previous.unlink()
             index = dict(segments={}, arrays={})
@@ -794,7 +816,6 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
             if path.stat().st_size != size:
                 with path.open('r+b') as handle:
                     handle.truncate(size)
-        changed = False
         for path, signature in zip(paths, signatures):
             if signature not in index['segments']:
                 _append_shared_segment(path, directory, index, signature)
@@ -826,7 +847,8 @@ def _append_shared_segment(path, directory, index, signature):
         sources = stored['source'].tolist()
         counts = np.bincount(stored['source_archive'], minlength=len(sources)).tolist()
         append('source_row', stored['source_row'])
-    record = dict(base=base, rows=rows, sources=sources, counts=counts, csr={})
+    from pvz_training_pack import npz_members
+    record = dict(base=base, rows=rows, sources=sources, counts=counts, csr={}, members=npz_members(path))
     for name, store in zip(('board', 'scalar'), part[:2]):
         descriptor = dict(shape=list(store.shape[1:]), dtype=store.dtype.str,
                           index_dtype=np.dtype(store.index_dtype).str)

@@ -90,15 +90,27 @@ def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fo
         return obs, prefix
     deck, task = archive_task(meta, frames, fog_observation=fog_observation)
     obs, _ = env.reset(deck=deck, task=task)
-    for index in range(1, int(decision)):
-        action = frames[index].get("action") or frames[index].get("input_action")
+    obs = replay_actions(env, obs, frames[:int(decision)])
+    return obs, frames[:int(decision)]
+
+
+def replay_actions(env, obs, frames, observer=None):
+    """Collection action timeline, shared by prefix restoration and token backfill."""
+    if observer is not None:
+        observer(obs)
+    for index, frame in enumerate(frames[1:], 1):
+        action = frame.get("action") or frame.get("input_action")
         if action is None:
-            delta = int(frames[index + 1]["tick"]) - int(frames[index]["tick"])
+            delta = int(frame["tick"]) - int(frames[index - 1]["tick"])
             action = dict(type="wait", ticks=max(1, delta))
         obs, _r, _d, _t, _info = env.step(action)
-        if int(obs["tick"]) != int(frames[index]["tick"]):
-            raise ValueError(f"prefix differs at frame {index}: {obs['tick']} != {frames[index]['tick']}")
-    return obs, frames[:int(decision)]
+        if frame.get('action_rejected'):
+            obs, _r, _d, _t, _info = env.step(dict(type='wait', ticks=60))
+        if int(obs["tick"]) != int(frame["tick"]):
+            raise ValueError(f"prefix differs at frame {index}: {obs['tick']} != {frame['tick']}")
+        if observer is not None:
+            observer(obs)
+    return obs
 
 
 def archive_task(meta, frames, *, fog_observation=None):
@@ -123,7 +135,9 @@ def archive_task(meta, frames, *, fog_observation=None):
         multiplier = float((meta.get("context") or {}).get("multiplier") or 1.0)
         return deck, TaskSpec(
             level=level, seed=seed, playthrough=2,
-            profile=profile_for_deck(deck), zombie_count_multiplier=multiplier)
+            profile=profile_for_deck(deck), zombie_count_multiplier=multiplier,
+            fog_observation=(fog_observation if fog_observation is not None else
+                             (meta.get('task') or {}).get('fog_observation')))
 
 
 def horizon_reached(obs, root_tick: int, horizon: int | None) -> bool:

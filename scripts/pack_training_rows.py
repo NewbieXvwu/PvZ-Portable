@@ -17,12 +17,12 @@ from __future__ import annotations
 
 import argparse
 import os
-import tempfile
 import hashlib
 import json
 import sys
 import time
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -43,7 +43,7 @@ from pvz_rollout_policy import (LAWN_COLS, PACKETS, features, identity_scalars, 
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,  # noqa: E402
                                   _episode_context, _member_array, _member_header, constant_plane)
 
-from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options,
+from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options, atomic_savez,
                                pack_path, segment_options, segment_path, training_rows, keep_archive)  # noqa: E402
 
 
@@ -333,23 +333,18 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
     return target
 
 
-def atomic_savez(target: Path, arrays: dict) -> None:
-    """Readers see a complete generation, including when two packers build the same label."""
-    target.parent.mkdir(parents=True, exist_ok=True)
-    fd, temporary = tempfile.mkstemp(dir=target.parent, suffix='.building')
-    try:
-        with os.fdopen(fd, 'wb') as handle:
-            np.savez(handle, **arrays)
-        os.replace(temporary, target)
-    finally:
-        Path(temporary).unlink(missing_ok=True)
-
-
 def _build_segment(job):
-    data, options, cache, read_cache, paths = job
+    data, options, cache, read_cache, prune_features, paths = job
     torch.set_num_threads(1)
     target = segment_path(data, options)
-    return pack_monolithic(data, options, cache, 1, read_cache, target, True, paths)
+    pack_monolithic(data, options, cache, 1, read_cache, target, True, paths)
+    if prune_features and cache is not None:
+        roots = [cache, *(p for p in cache.iterdir() if p.is_dir())]
+        for path in paths:
+            name = hashlib.sha256(str(path.resolve()).encode()).hexdigest() + '.npz'
+            for root in roots:
+                (root / name).unlink(missing_ok=True)
+    return target
 
 
 def pack_memory_limit(available: int, jobs: list[tuple]) -> int:
@@ -380,7 +375,28 @@ def segment_plane_shapes_valid(path: Path, rows: int) -> bool:
 
 def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
          read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False,
-         rebuild: bool = False, source_weights=None) -> Path:
+         rebuild: bool = False, source_weights=None, prune_features: bool = False) -> Path:
+    with cache_lock(cache_dir):
+        return _pack(data, options, cache_dir, precompute_workers, read_cache_dir, out, quiet,
+                     rebuild, source_weights, prune_features)
+
+
+@contextmanager
+def cache_lock(directory):
+    """A pack keeps cache paths alive until its workers have finished reading them."""
+    import fcntl
+    if directory is None:
+        yield
+        return
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / '.pack.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def _pack(data, options, cache_dir, precompute_workers, read_cache_dir, out, quiet,
+          rebuild, source_weights, prune_features):
     """Publish an index of immutable per-label segments; only missing segments are built.
 
     The whole archive catalog is scanned once. Parallelism is across labels, never a nested
@@ -412,7 +428,7 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
                     valid = (content_options(json.loads(str(stored['meta']))) == content_options(contract)
                              and segment_plane_shapes_valid(target, int(stored['rows'])))
             if not valid:
-                jobs.append((data, contract, cache_dir, read_cache_dir, group))
+                jobs.append((data, contract, cache_dir, read_cache_dir, prune_features, group))
     if not segments:
         raise ValueError('no archives retained for training')
     # Each label worker includes Python/torch and a label's compact rows; its peak grows with
@@ -471,6 +487,36 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
             path.unlink()
             removed.append(path)
     return removed
+
+
+def prune_cache(data: Path, keep: Path | None, cache_dir: Path, limit: int = 4096) -> dict:
+    """Remove only caches whose source archives are already in published segments.
+
+    All feature variants are eligible, including timer/zero-padding parents.
+    Legacy catalog work happens outside the cache lock, in the explicit --prune-only maintenance path.
+    """
+    removed = size = 0
+    covered = set()
+    if keep is None:
+        segments = (data / 'packs/segments').glob('*.npz')
+    else:
+        with np.load(keep, allow_pickle=False) as stored:
+            segments = [keep.parent / name for name in stored['segments'].tolist()]
+    for segment in segments:
+        with np.load(segment, allow_pickle=False) as stored:
+            covered.update(hashlib.sha256(str((data / str(source)).resolve()).encode()).hexdigest()
+                           for source in stored['source'])
+    # Cached keys use the resolved frame path, including the pipeline's source symlinks.
+    from itertools import islice
+    candidates = islice((p for p in cache_dir.rglob('*.npz') if p.stem in covered), limit)
+    while batch := list(islice(candidates, 256)):
+        with cache_lock(cache_dir):
+            for path in batch:
+                if path.exists():
+                    size += path.stat().st_size
+                    path.unlink()
+                    removed += 1
+    return dict(cache_pruned=removed, cache_bytes=size)
 
 
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
@@ -544,7 +590,7 @@ def assert_payload_equal(expected, actual, batch_size=64):
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True, help="frames root (seed_*/<label>_<arm>/ dirs)")
-    p.add_argument("--labels", required=True, help="comma separated <label> directory names")
+    p.add_argument("--labels", help="comma separated <label> directory names")
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2boss", "v2bungee", "v2sleep",
@@ -560,10 +606,20 @@ def main() -> None:
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--prune", action="store_true",
-                   help="delete the packs of a label subset this one supersedes")
+                   help="delete superseded packs and the caches of newly built segments")
+    p.add_argument('--prune-only', action='store_true', help='prune cache from published segments (or --out) without building')
+    p.add_argument('--prune-cache-limit', type=int, default=4096, help='max cache files removed per pass')
     p.add_argument("--source-weights", type=json.loads, default=None,
                    help="JSON list of active {source: weight} maps; drop rows every map weights 0")
     args = p.parse_args()
+    if args.prune_cache_limit < 1:
+        p.error('--prune-cache-limit must be positive')
+    cache_dir = args.cache_dir or (args.data / ".feature_cache")
+    if args.prune_only:
+        print(json.dumps(prune_cache(args.data, args.out, cache_dir, args.prune_cache_limit)), flush=True)
+        return
+    if args.labels is None:
+        p.error('--labels is required when building a pack')
     # Long label lists exceed Linux's 128 KiB single-argument limit; '@file' reads them from a file.
     for name in ('labels', 'label_weight'):
         value = getattr(args, name)
@@ -575,9 +631,8 @@ def main() -> None:
                            args.packet_head, args.context, label_weight,
                            sources=archive_fingerprint(args.data, set(args.labels.split(",")), args.llm_demo_import, results),
                            label_keep=args.label_keep, llm_demo_import=args.llm_demo_import, llm_demo_results=results)
-    cache_dir = args.cache_dir or (args.data / ".feature_cache")
     target = pack(args.data, options, cache_dir, args.precompute_workers, None, args.out,
-                  source_weights=args.source_weights)
+                  source_weights=args.source_weights, prune_features=args.prune)
     if args.prune:
         removed = prune(args.data, set(options["labels"]), target)
         print(json.dumps({"pruned": [str(path) for path in removed]}), flush=True)

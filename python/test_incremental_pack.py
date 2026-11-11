@@ -421,6 +421,88 @@ def test_shared_incremental_recovers_unpublished_append(tmp_path):
     assert_payload_equal(trainer.read_segments(paths), trainer.read_segments(paths, data))
 
 
+def test_shared_recompression_and_missing_source_reuse_legacy_payload(tmp_path):
+    from pvz_training_pack import npz_members
+    from slim_training_segments import prepare_index, migrate_segment
+    data = tmp_path / 'data'
+    fixture(data, ['a', 'b'])
+    index = pack(data, options(data, ['a', 'b'], cells=True, packet_head='identity'))
+    with np.load(index) as stored:
+        paths = [index.parent / name for name in stored['segments'].tolist()]
+    # Existing production segments/index have no compression-independent identity yet.
+    for path in paths:
+        with np.load(path) as stored:
+            arrays = {key: stored[key] for key in stored.files}
+        np.savez(path, **arrays)
+    oracle = trainer.read_segments(paths)
+    trainer.read_segments(paths, data)
+    directory = data / '.merge/shared-v2'
+    marker = directory / 'index.json'
+    legacy = json.loads(marker.read_text())
+    for record in legacy['segments'].values():
+        record.pop('members')
+    marker.write_text(json.dumps(legacy))
+    before = {p.name: (p.stat().st_ino, p.read_bytes()) for p in directory.glob('*.bin')}
+    identities = [npz_members(path) for path in paths]
+    prepare_index(data)
+    for path, identity in zip(paths, identities):
+        assert migrate_segment(path, data) > 0
+        assert npz_members(path) == identity
+        assert migrate_segment(path, data) == 0
+    with patch.object(trainer, 'read_pack', side_effect=AssertionError('ingested source reloaded')):
+        assert_payload_equal(oracle, trainer.read_segments(paths, data))
+        trainer.read_segments(paths[:1], data)
+        paths[0].unlink()
+        assert_payload_equal(oracle, trainer.read_segments(paths, data))
+    for name, (inode, content) in before.items():
+        assert (directory / name).stat().st_ino == inode
+        assert (directory / name).read_bytes() == content
+
+
+def test_prune_packed_cache_preserves_unpacked_and_repack(tmp_path):
+    from pack_training_rows import prune_cache
+    data, cache = tmp_path / 'data', tmp_path / 'cache'
+    fixture(data, ['a', 'b'])
+    settings = dict(obs='v2timer', cells=True, packet_head='identity')
+    index = pack(data, options(data, ['a'], **settings), cache)
+    oracle = trainer.read_pack(index)
+    unrelated = cache / 'v2timer' / ('f' * 64 + '.npz')
+    unrelated.write_bytes(b'unpacked archive')
+    assert prune_cache(data, index, cache, 1)['cache_pruned'] == 1
+    assert prune_cache(data, index, cache, 100)['cache_pruned'] > 0
+    assert list(cache.rglob('*.npz')) == [unrelated]
+    assert_payload_equal(oracle, trainer.read_pack(index))
+    # A deliberate rebuild can regenerate the deleted cache from the retained source frames.
+    pack(data, options(data, ['a'], **settings), cache, rebuild=True)
+    assert_payload_equal(oracle, trainer.read_pack(index))
+    pack(data, options(data, ['a'], **settings), cache, rebuild=True, prune_features=True)
+    assert list(cache.rglob('*.npz')) == [unrelated]
+
+
+def test_recompression_interrupt_before_publish_is_resumable(tmp_path):
+    import slim_training_segments as migration
+    data = tmp_path / 'data'
+    fixture(data, ['a'])
+    index = pack(data, options(data, ['a']))
+    with np.load(index) as stored:
+        path = index.parent / str(stored['segments'][0])
+    with np.load(path) as stored:
+        arrays = {key: stored[key] for key in stored.files}
+    np.savez(path, **arrays)
+    original = path.read_bytes()
+    replace = os.replace
+    def interrupt(source, target):
+        if Path(target) == path:
+            raise InterruptedError('before segment publication')
+        return replace(source, target)
+    with patch.object(migration.os, 'replace', side_effect=interrupt):
+        with pytest.raises(InterruptedError):
+            migration.migrate_segment(path, data)
+    assert path.read_bytes() == original
+    assert not path.with_suffix('.task268').exists()
+    assert migration.migrate_segment(path, data) > 0
+
+
 def test_pending_builds_empty_after_pack(tmp_path):
     """task59 遗留修正：pending_builds 复用 pack() 的同一套指纹函数，pack 建完即判已建。"""
     import curriculum_queue as queue

@@ -64,7 +64,7 @@ def test_dead_qc_uses_shared_launcher_and_archives_last_50(watchdog):
     result = run()
     assert result.returncode == 0, result.stderr
     assert len(new_sessions(root)) == 1
-    assert '--obs-v3' in new_sessions(root)[0] and '--native-games' in new_sessions(root)[0]
+    assert '--obs-v3' not in new_sessions(root)[0] and '--native-games' in new_sessions(root)[0]
     assert str(root / 'repo/cq/scripts/curriculum_queue.py') in new_sessions(root)[0]
     assert next(root.glob('qc_crash_*.out')).read_text().splitlines() == [f'line {i}' for i in range(30, 80)]
     assert 'qc_launch.py' in (root / 'qc_setup.log').read_text()

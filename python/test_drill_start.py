@@ -285,3 +285,13 @@ def test_mined_drill_ids_distinguish_seeds_with_the_same_archive_name(tmp_path, 
 def test_terminal_board_counts_as_horizon_reached():
     # A lost drill cannot advance time, so export must not demand the full horizon (GPT Pro 11-05).
     assert horizon_reached({'tick': 1000, 'terminal': True}, root_tick=900, horizon=1200)
+
+
+def test_legacy_archive_task_keeps_recorded_fog_observation():
+    from drill_start import archive_task
+    meta = dict(task=dict(seed=200013345, fog_observation='human_v2'),
+                context=dict(level=39, multiplier=.75))
+    frames = [dict(packets=[[i, kind] for i, kind in enumerate((9, 16, 8, 39, 4, 25))],
+                   scene=dict(level=39))]
+    _, task = archive_task(meta, frames)
+    assert task.fog_observation == 'human_v2'

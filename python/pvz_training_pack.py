@@ -11,6 +11,11 @@ import json
 import math
 import re
 from pathlib import Path
+from contextlib import contextmanager, nullcontext
+import os
+import tempfile
+import zipfile
+import shutil
 
 import sys
 
@@ -20,6 +25,47 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
 DEMO_LABEL = 'llm_demo_decisions'
 DEMO_SEGMENT_ARCHIVES = 64  # one GPT import builds its own small segments, never one giant one
+
+
+@contextmanager
+def shared_lock(data):
+    import fcntl
+    directory = Path(data) / '.merge'
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / 'shared.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def npz_members(path):
+    """ZIP directory identity survives recompression; no array reads."""
+    with zipfile.ZipFile(path) as archive:
+        return sorted([m.filename, m.CRC, m.file_size] for m in archive.infolist())
+
+
+def atomic_savez(target: Path, arrays=None, *, source=None) -> None:
+    """One level-1 NPZ writer for new packs and lossless, streaming recompression."""
+    import numpy as np
+    target = Path(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=f'.{target.name}.', suffix='.building')
+    try:
+        with os.fdopen(fd, 'wb') as handle, zipfile.ZipFile(
+                handle, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=1) as output:
+            if source is not None:
+                with zipfile.ZipFile(source) as archive:
+                    for member in archive.infolist():
+                        with archive.open(member) as inp, output.open(member.filename, 'w', force_zip64=True) as dest:
+                            shutil.copyfileobj(inp, dest, 1024**2)
+            else:
+                for name, value in arrays.items():
+                    with output.open(name + '.npy', 'w', force_zip64=True) as dest:
+                        np.lib.format.write_array(dest, np.asanyarray(value), allow_pickle=False)
+        # Coordinate publication with migration and shared-v2 ingestion only, not compression.
+        with shared_lock(target.parents[2]) if target.parent.name == 'segments' else nullcontext():
+            os.replace(temporary, target)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def archive_fingerprint(data: Path, labels, llm_demo_import=None, llm_demo_results=(1,)) -> str:

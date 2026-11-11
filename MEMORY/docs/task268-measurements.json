@@ -1,0 +1,1280 @@
+{
+  "compression": {
+    "raw": 106877805,
+    "compressed": 27374575,
+    "write_s": 1.0979611180018765,
+    "raw_read_s": 0.1631361059999108,
+    "compressed_read_s": 0.45072898500620795
+  },
+  "writes": {
+    "files": [
+      "c304a71b4dcc933b.npz",
+      "cc63c8f4d31a7f4a.npz",
+      "738a0d496993110c.npz",
+      "0f8216043d60a0b0.npz",
+      "98d098a0668738c0.npz",
+      "2cf1821c548a6c70.npz",
+      "4083fcc4e3f496c6.npz",
+      "d10e12caf5318b48.npz",
+      "64034c3c14848686.npz",
+      "51d65f3740a05190.npz",
+      "01a5150710a6620e.npz",
+      "52b63f38ac00632d.npz",
+      "7d1faa923a5e1221.npz",
+      "38f36e923a145ead.npz",
+      "4fcd08ba5e641ad2.npz",
+      "4223c87251499477.npz",
+      "88a8f1d2278a92a6.npz",
+      "9357bb5baba96f83.npz",
+      "49eba6c1c9ceae49.npz",
+      "604ea1c133762f14.npz",
+      "c82a6b6449389097.npz",
+      "250ff92ec5619448.npz",
+      "838094ad01b7061d.npz",
+      "353708884fdd8066.npz",
+      "505c9c6f80c89562.npz",
+      "0562d59acd4e04f1.npz",
+      "c41976a35b77fd6f.npz",
+      "83edf9bf4b798ca3.npz",
+      "664c6c892875448a.npz",
+      "80d8333d74124007.npz",
+      "c38d471e909bd2ae.npz",
+      "20baeea78cca89eb.npz"
+    ],
+    "raw_bytes": 106877805,
+    "new_bytes": 27374575,
+    "raw_write_s": 0.08991887699721701,
+    "new_write_s": 0.7373716800020702,
+    "raw_read_s": 0.09552660199824459,
+    "new_read_s": 0.3503532960003213
+  },
+  "cache": [
+    {
+      "terrain": 0,
+      "frames": 955,
+      "cache": {
+        "v2timer": {
+          "bytes": 114481,
+          "read_s": 0.03739196800052014
+        },
+        "cells": {
+          "bytes": 6041,
+          "read_s": 0.001024692000100913
+        },
+        "packets": {
+          "bytes": 6722,
+          "read_s": 0.0012770140001521213
+        },
+        "identity_scene": {
+          "bytes": 1309,
+          "read_s": 0.0004337880000093719
+        }
+      },
+      "rebuild_s": 1.4190881459999218
+    },
+    {
+      "terrain": 1,
+      "frames": 793,
+      "cache": {
+        "v2timer": {
+          "bytes": 61547,
+          "read_s": 0.01453118799963704
+        },
+        "cells": {
+          "bytes": 4701,
+          "read_s": 0.0008435780000581872
+        },
+        "packets": {
+          "bytes": 5233,
+          "read_s": 0.0012641510002140421
+        },
+        "identity_scene": {
+          "bytes": 1227,
+          "read_s": 0.0008204739997381694
+        }
+      },
+      "rebuild_s": 0.883543517000362
+    },
+    {
+      "terrain": 2,
+      "frames": 1246,
+      "cache": {
+        "v2timer": {
+          "bytes": 85929,
+          "read_s": 0.02072515200052294
+        },
+        "cells": {
+          "bytes": 8728,
+          "read_s": 0.0008568649991502753
+        },
+        "packets": {
+          "bytes": 9196,
+          "read_s": 0.0011532280004757922
+        },
+        "identity_scene": {
+          "bytes": 1458,
+          "read_s": 0.0009324769998784177
+        }
+      },
+      "rebuild_s": 1.670495528000174
+    },
+    {
+      "terrain": 3,
+      "frames": 899,
+      "cache": {
+        "v2timer": {
+          "bytes": 82301,
+          "read_s": 0.021701284000300802
+        },
+        "cells": {
+          "bytes": 8474,
+          "read_s": 0.0009411719993295264
+        },
+        "packets": {
+          "bytes": 5978,
+          "read_s": 0.0011468129996501375
+        },
+        "identity_scene": {
+          "bytes": 1280,
+          "read_s": 0.00055718000021443
+        }
+      },
+      "rebuild_s": 1.1522730560000127
+    },
+    {
+      "terrain": 4,
+      "frames": 1625,
+      "cache": {
+        "v2timer": {
+          "bytes": 149809,
+          "read_s": 0.03593467500013503
+        },
+        "cells": {
+          "bytes": 11414,
+          "read_s": 0.0016093799995360314
+        },
+        "packets": {
+          "bytes": 10361,
+          "read_s": 0.00154861700048059
+        },
+        "identity_scene": {
+          "bytes": 1643,
+          "read_s": 0.0008137439999700291
+        }
+      },
+      "rebuild_s": 2.117074345000219
+    }
+  ],
+  "storage": {
+    "rows": 180239,
+    "build_s": 1.415061589999823,
+    "migration_s": 1.0490682179997748,
+    "saved": 79503230,
+    "reuse_s": 0.02370803300073021,
+    "batch_before_s": 0.038579658499656944,
+    "batch_after_s": 0.03817266450005263,
+    "batches_bitwise": true,
+    "bins_unchanged": true,
+    "shared_bytes": 45916788
+  },
+  "backfill": [
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3330932/c67n14n10qm100_o912_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 793,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 134986,
+      "seconds": 4.254566253000121
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200037900/c110rd193l29m050_o258_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1246,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 223657,
+      "seconds": 3.7770538570002827
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2071181/c113p28p9km100_o1160_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1279,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 298737,
+      "seconds": 4.493286062000152
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_276000053/c84demoroof49doomm300s81018023ad7aea4260899s1250_o24_review1_o48_fast_search",
+      "terrain": 4,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1625,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 324341,
+      "seconds": 4.702170604999992
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_7810859/c65d6d7m250_o600_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 955,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 263360,
+      "seconds": 2.621018207999441
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200056427/c174rd193l34m050_o618_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 899,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 203293,
+      "seconds": 2.469854594000026
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200016460/c76rd193l46m075_o54_fast_search",
+      "terrain": 4,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 352,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 45361,
+      "seconds": 0.6903439170000638
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200023163/c93rd193l4m100_o102_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 695,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 87925,
+      "seconds": 1.4048036470003353
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_7810864/c75d6d7m250_o624_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 940,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 223995,
+      "seconds": 2.3616987839996
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200009098/c90rd193l28m050_o138_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1162,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 243974,
+      "seconds": 3.357128100999944
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014778/c99rd193l44m050_o174_fast_search",
+      "terrain": 4,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 268,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 28094,
+      "seconds": 0.5334828609993565
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200042798/c121rd193l38m100_o294_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 416,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 58852,
+      "seconds": 0.8670451519992639
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200006315/c94rd193l24m050_o168_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1526,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 302254,
+      "seconds": 4.750004805000572
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200044807/c113rd193l1m100_o246_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 645,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 75982,
+      "seconds": 1.157418079999843
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_5303166/c63p21p9km125_o48_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1101,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 232877,
+      "seconds": 2.840462742999989
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2281180/c146n19n10m100_o1160_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1582,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 356740,
+      "seconds": 3.4533171350003613
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_208000669_f200021926/c160gpt193l234d7679431a47s535_o144_fast_search",
+      "terrain": 2,
+      "kind": "demo",
+      "first_tick": 28320,
+      "frames": 517,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 151752,
+      "seconds": 2.3443161340001097
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200018574/c91rd193l9m075_o114_review1_o138_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1316,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 312238,
+      "seconds": 2.5788769659993704
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200017562/c95rd193l50m050_o144_fast_search",
+      "terrain": 4,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1204,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 207600,
+      "seconds": 2.5475697700003366
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3420196500_f200065882/c176userl29c08db8116248starts740_o336_fast_search",
+      "terrain": 2,
+      "kind": "demo",
+      "first_tick": 34393,
+      "frames": 366,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 149724,
+      "seconds": 33.88427122199937
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_79204614/c106fog79bl38bestm125_o498_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 829,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 164913,
+      "seconds": 3.3482805800003916
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200042328/c129rd193l43m050_o324_fast_search",
+      "terrain": 4,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1063,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 160493,
+      "seconds": 3.46634713200001
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_5342508/c121d8d7qm125_o486_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 937,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 217505,
+      "seconds": 3.3408271310008786
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_79300342/c165fog79bl36bestm150_o330_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 922,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 198317,
+      "seconds": 4.004162434999671
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2071134/c101p28p9km100_o1112_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1165,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 263516,
+      "seconds": 5.500716074999218
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2030521/c69p24p9km100_o512_fast_search",
+      "terrain": 2,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1858,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 447996,
+      "seconds": 9.676987466000355
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_5342339/c89d8d7qm125_o306_fast_search",
+      "terrain": 0,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 825,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 154045,
+      "seconds": 3.0829578670000046
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013345/c70rd193l39m075_o24_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 722,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 137961,
+      "seconds": 2.924780997999733
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_209000700_f200033412/c153gpt193l24331db3c57977s648_o120_fast_search",
+      "terrain": 2,
+      "kind": "demo",
+      "first_tick": 50910,
+      "frames": 694,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 176400,
+      "seconds": 6.069784481999704
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210002698/c134opening119l19scoreboardm100_o2688_b0_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1706,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 342347,
+      "seconds": 6.534630848999768
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210003064/c149opening119l19scoreboardm100_o3048_b1_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1810,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 382257,
+      "seconds": 7.12964734399975
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210602691/c133opening119l32magnetm100_o2676_b1_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1067,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 234667,
+      "seconds": 5.02706204200058
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200057451/c169rd193l11m150_o594_review1_o618_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 917,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 169156,
+      "seconds": 3.2477412739999636
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_81017009_f126000026/c81demoroof48doomm400s81017009add4060026737s1002_o24_fast_search",
+      "terrain": 4,
+      "kind": "demo",
+      "first_tick": 70160,
+      "frames": 171,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 70537,
+      "seconds": 5.225797068000247
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3331132/c113n14n10qm100_o1128_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1514,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 305810,
+      "seconds": 5.735572199999297
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210003362/c162opening119l19scoreboardm100_o3360_b0_fast_search",
+      "terrain": 1,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 1565,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 293056,
+      "seconds": 6.118886137000118
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_81011000_f200012333/c96gpt193l448f2a464ec1a6s1105_o24_fast_search",
+      "terrain": 4,
+      "kind": "demo",
+      "first_tick": 91845,
+      "frames": 370,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 97910,
+      "seconds": 6.0770431450000615
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_81016020_f111000025/c79demoroof48doomm300s81016020ab6dec4110c1cs849_o24_fast_search",
+      "terrain": 4,
+      "kind": "demo",
+      "first_tick": 66960,
+      "frames": 128,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 51466,
+      "seconds": 3.9317509860002247
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_81013023_f220000044/c75demoroof46doomm400s81013023ad1f6a0595c91s996_o24_fast_search",
+      "terrain": 4,
+      "kind": "demo",
+      "first_tick": 70320,
+      "frames": 63,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 12073,
+      "seconds": 4.403666447999967
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200010068/c80rd193l33m075_o78_fast_search",
+      "terrain": 3,
+      "kind": "normal",
+      "first_tick": 0,
+      "frames": 612,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 102965,
+      "seconds": 2.2312084269997285
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_20261051_f47000174/c93demoroof49doomm200s20261051s1529_o168_fast_search",
+      "terrain": 4,
+      "kind": "demo",
+      "first_tick": 84540,
+      "frames": 177,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 55069,
+      "seconds": 3.9706964069991955
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139137003_f200045839/c114gpt193l32c462d551b528s430_o0_fast_search",
+      "terrain": 3,
+      "kind": "demo",
+      "first_tick": 25700,
+      "frames": 528,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 245633,
+      "seconds": 3.665387431000454
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139018034_f53006411/c126drill235l32jack50dcaebds394_o6_fast_search",
+      "terrain": 3,
+      "kind": "demo",
+      "first_tick": 20880,
+      "frames": 26,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 8761,
+      "seconds": 0.6790820710002663
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_20261031_f53000033/c164drill235l31jack019c4d55s434_o30_fast_search",
+      "terrain": 3,
+      "kind": "demo",
+      "first_tick": 21018,
+      "frames": 24,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 11085,
+      "seconds": 0.8220812760000626
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1756126484_f47100306/c171userl1601f254aecad7starts742_o48_fast_search",
+      "terrain": 1,
+      "kind": "demo",
+      "first_tick": 30013,
+      "frames": 123,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 31069,
+      "seconds": 29.96097970199935
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1756126484_f47100282/c155userl1601f254aecad7starts818_o24_fast_search",
+      "terrain": 1,
+      "kind": "demo",
+      "first_tick": 33649,
+      "frames": 75,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 21594,
+      "seconds": 29.721364132999952
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139014039_f200006938/c95gpt193l18b40bbb299683s401_o24_fast_search",
+      "terrain": 1,
+      "kind": "demo",
+      "first_tick": 21570,
+      "frames": 348,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 119182,
+      "seconds": 2.1252332489993933
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139010005_f200015619/c65gpt193l68f1c3ebf546es491_o0_fast_search",
+      "terrain": 0,
+      "kind": "demo",
+      "first_tick": 34240,
+      "frames": 541,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 111021,
+      "seconds": 3.3167555060008453
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139009019_f200008207/c63gpt193l299594a875bc3s378_o0_fast_search",
+      "terrain": 0,
+      "kind": "demo",
+      "first_tick": 20640,
+      "frames": 286,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 132548,
+      "seconds": 1.974387860999741
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_139009019_f200008231/c95gpt193l299594a875bc3s324_o24_fast_search",
+      "terrain": 0,
+      "kind": "demo",
+      "first_tick": 17700,
+      "frames": 344,
+      "equal": {
+        "ids": true,
+        "counts": true,
+        "columns": true,
+        "values": true,
+        "offsets": true,
+        "feature_offsets": true,
+        "packet_index": true,
+        "cell_index": true,
+        "terrain": true,
+        "target_indices": true
+      },
+      "bytes": 150434,
+      "seconds": 2.1122775730000285
+    }
+  ],
+  "continuations": [
+    {
+      "terrain": 0,
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_7810859/c65d6d7m250_o600_fast_search",
+      "cut_frame": 64,
+      "start_tick": 3480,
+      "frames": 891,
+      "equal": true,
+      "seconds": 4.484534176999659
+    },
+    {
+      "terrain": 1,
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3330932/c67n14n10qm100_o912_fast_search",
+      "cut_frame": 64,
+      "start_tick": 3540,
+      "frames": 729,
+      "equal": true,
+      "seconds": 2.268098077999639
+    },
+    {
+      "terrain": 2,
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200037900/c110rd193l29m050_o258_fast_search",
+      "cut_frame": 64,
+      "start_tick": 3360,
+      "frames": 1182,
+      "equal": true,
+      "seconds": 4.557082714999524
+    },
+    {
+      "terrain": 3,
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200056427/c174rd193l34m050_o618_fast_search",
+      "cut_frame": 64,
+      "start_tick": 3420,
+      "frames": 835,
+      "equal": true,
+      "seconds": 3.1477532529997916
+    },
+    {
+      "terrain": 4,
+      "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_276000053/c84demoroof49doomm300s81018023ad7aea4260899s1250_o24_review1_o48_fast_search",
+      "cut_frame": 64,
+      "start_tick": 3600,
+      "frames": 1561,
+      "equal": true,
+      "seconds": 5.955466116000025
+    }
+  ],
+  "experiment_bytes_before_cleanup": 42739149
+}

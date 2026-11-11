@@ -52,7 +52,7 @@ def command(args):
            '--focus-manifest', str(worktree / 'configs/curriculum_focus.json')]
           if focus_share or l29_start_share else []),
         '--gpt-import-dir', str(imports / 'artifacts/task105/import'), '--gpt-archive-root', str(imports),
-        '--gpt-cold-rates', str(args.logs / 'teacher_rates.json'), '--obs-v3', '--native-games',
+        '--gpt-cold-rates', str(args.logs / 'teacher_rates.json'), '--native-games',
         '--resource-dir', str(Path.home() / '.cache/pvz-research-resources'),
         '--frames', str(root / 'artifacts/student/frames_v2'), '--out', str(root / 'artifacts/hard'),
         '--rollout-policy', str(root / 'artifacts/student/dw4i_s1/model.pt'),

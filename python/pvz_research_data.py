@@ -175,3 +175,53 @@ def capture_frame(observation, writer=None):
         writer.append(frame_tokens(frame, token_input='obs_v3'))
     frame.pop('v3', None)
     return frame
+
+
+def backfill_tokens(archive, env, target=None):
+    """Regenerate an optional attachment through the existing engine replay and token writer."""
+    from pvz_frame_store import frame_path, read_frames
+    from drill_start import archive_task, restore_prefix, replay_actions
+    archive = Path(archive)
+    path = frame_path(archive)
+    frames = read_frames(path)
+    meta = json.loads((archive / 'meta.json').read_text())
+    env.set_token_observation(False)
+    if meta.get('demo_archive'):
+        source = Path(meta['demo_archive'])
+        source_frames = read_frames(frame_path(source))
+        source_meta = json.loads((source / 'meta.json').read_text())
+        fog = (meta.get('environment_task') or meta.get('task') or {}).get('fog_observation')
+        obs, _ = restore_prefix(env, source, meta['demo_decision'], source_frames, source_meta,
+                                fog_observation=fog)
+        if '_f' in archive.parent.name:
+            env.reseed(int(archive.parent.name.rsplit('_f', 1)[1]))
+        env.set_token_observation(True)
+        obs = env.observe()
+    else:
+        deck, task = archive_task(meta, frames)
+        env.set_token_observation(True)
+        obs, _ = env.reset(deck=deck, task=task)
+    if obs['tick'] != frames[0]['tick']:
+        raise ValueError(f'{archive}: restored start tick differs')
+    writer = SparseTokenWriter(archive)
+    try:
+        replay_actions(env, obs, frames, lambda observation: capture_frame(observation, writer))
+        return writer.finish(target or archive / SIDECAR_NAME, source_frame=path)
+    except BaseException:
+        writer.abort()
+        raise
+
+
+if __name__ == '__main__':
+    import argparse
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    from pvz_event_env import EventWaitEnv
+    parser = argparse.ArgumentParser(description='按需重放一局并回填 tokens_v3.npz')
+    parser.add_argument('--archive', type=Path, required=True)
+    parser.add_argument('--out', type=Path)
+    parser.add_argument('--executable', type=Path, required=True)
+    parser.add_argument('--resource-dir', type=Path, default=Path.home()/'.cache/pvz-research-resources')
+    args = parser.parse_args()
+    with EventWaitEnv(args.resource_dir, executable=args.executable, headless=True) as env:
+        print(json.dumps(backfill_tokens(args.archive, env, args.out)))

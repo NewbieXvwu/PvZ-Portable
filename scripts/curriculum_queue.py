@@ -1460,10 +1460,12 @@ class TrainingPipeline:
         # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
         # （并发建造者 × 单建造者实测优先峰值），且只在打包进行时有值——_run 的 pack
         # 一结束（成败都算）就清零，训练/评估阶段只按训练估算（task61 追加）；
-        compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
         if self.last_train_peak:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
+            from pvz_training_pack import npz_members
+            compact_bytes = sum(member[2] for path in (self.directory / 'frames/packs/segments').glob('*.npz')
+                                for member in npz_members(path))
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
