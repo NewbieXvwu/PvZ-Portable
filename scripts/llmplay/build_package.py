@@ -152,6 +152,7 @@ def merge_carry(prior: dict, latest: dict) -> dict:
     from llmplay.delivery import _merge_entries
     result = dict(prior, **latest)
     result["archives"] = _merge_entries(prior.get("archives") or [], latest.get("archives") or [])
+    from pvz_env import sorted_deck
     reports = {}
     for document in (prior, latest):
         items = list(document.get("carried_diagnoses") or [])
@@ -165,7 +166,7 @@ def merge_carry(prior: dict, latest: dict) -> dict:
             if completed.get("diagnosis"):
                 items.append(dict(completed, cycle=document.get("cycle", 1)))
         for item in items:
-            key = (item["cycle"], item["task_id"], tuple(sorted(item.get("deck") or [])))
+            key = (item["cycle"], item["task_id"], tuple(sorted_deck(item.get("deck"))))
             reports[key] = item
     result["carried_diagnoses"] = list(reports.values())
     return result

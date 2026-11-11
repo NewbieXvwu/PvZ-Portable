@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts')]
 
 from deck_rules import RULE_VERSION, deck_violations, generate_deck, region_for_level  # noqa: E402
-from pvz_tasks import profile_for_deck, terrain_covered  # noqa: E402
+from pvz_tasks import profile_for_deck, sorted_deck, terrain_covered  # noqa: E402
 
 REGISTRY = ROOT / 'configs/random_deck_cells_v5.json'
 LEVELS = (7, 8, 12, 14, 24, 26, 33, 37)
@@ -65,7 +65,7 @@ def heldout_signatures(registry, panels):
         paths.append(gate_v6)
     tasks = [task for path in paths for task in json.loads(path.read_text())['tasks']]
     tasks += [task for task in registry['tasks'] if task['split'] == 'eval']
-    return {tuple(sorted(task['deck'])) for task in tasks if task.get('deck')}
+    return {tuple(sorted_deck(task['deck'])) for task in tasks if task.get('deck')}
 
 
 def load_deck_pool(registry, *, gpt_ledger=None, archive_root=ROOT, roof_candidates=None, heldout_panels=()):
@@ -73,7 +73,7 @@ def load_deck_pool(registry, *, gpt_ledger=None, archive_root=ROOT, roof_candida
     if gpt_ledger is None and roof_candidates is None:
         return []
     heldout = heldout_signatures(registry, heldout_panels)
-    seen = heldout | {tuple(sorted(task['deck'])) for task in registry['tasks']}
+    seen = heldout | {tuple(sorted_deck(task['deck'])) for task in registry['tasks']}
     candidates = []
     if gpt_ledger is not None:
         for row in json.loads(gpt_ledger.read_text())['archives']:
@@ -88,8 +88,8 @@ def load_deck_pool(registry, *, gpt_ledger=None, archive_root=ROOT, roof_candida
         candidates += [(entry['task'], 'task148')
                        for entry in json.loads(roof_candidates.read_text())['candidates']]
     tasks = []
-    for task, source in sorted(candidates, key=lambda item: (item[0]['level'], sorted(item[0]['deck']), item[1])):
-        level, deck = task['level'], tuple(sorted(task['deck']))
+    for task, source in sorted(candidates, key=lambda item: (item[0]['level'], sorted_deck(item[0]['deck']), item[1])):
+        level, deck = task['level'], tuple(sorted_deck(task['deck']))
         try:
             problems = deck_violations(level, deck, fixed_bank=True)
         except ValueError:  # 原生传送带与特殊关没有可供本课程复用的固定卡组。
@@ -105,7 +105,7 @@ def load_deck_pool(registry, *, gpt_ledger=None, archive_root=ROOT, roof_candida
                                        owned_upgrade_plants=list(profile.owned_upgrade_plants))))
     if not tasks:
         raise ValueError('no eligible external decks after terrain/rule/heldout filtering')
-    if {tuple(sorted(task['deck'])) for task in tasks} & heldout:
+    if {tuple(sorted_deck(task['deck'])) for task in tasks} & heldout:
         raise ValueError('external training decks overlap selection/gate holdouts')
     return tasks
 
@@ -118,7 +118,7 @@ def registered_signatures() -> set[tuple[int, ...]]:
         for task in document.get('tasks') or []:
             deck = task.get('deck')
             if isinstance(deck, list) and deck:
-                seen.add(tuple(sorted(deck)))
+                seen.add(tuple(sorted_deck(deck)))
     return seen
 
 
@@ -126,15 +126,15 @@ def load_frozen_pool(path, registry, heldout_panels):
     """Small reviewed task165 snapshot; never reread/replay the source archives at deployment."""
     tasks = json.loads(path.read_text())['tasks']
     heldout = heldout_signatures(registry, heldout_panels)
-    seen = {tuple(sorted(task['deck'])) for task in registry['tasks']}
+    seen = {tuple(sorted_deck(task['deck'])) for task in registry['tasks']}
     for task in tasks:
-        deck = tuple(sorted(task['deck']))
+        deck = tuple(sorted_deck(task['deck']))
         if deck in heldout or deck in seen:
             raise ValueError('frozen training deck duplicates a training/evaluation/heldout deck')
         if deck_violations(task['level'], deck, fixed_bank=True) or not terrain_covered(task['level'], deck):
             raise ValueError('frozen training deck violates terrain/v5 rules')
         seen.add(deck)
-    base_train = {tuple(sorted(task['deck'])) for task in registry['tasks'] if task['split']=='train'}
+    base_train = {tuple(sorted_deck(task['deck'])) for task in registry['tasks'] if task['split']=='train'}
     if base_train & heldout:
         raise ValueError('base random training decks overlap heldouts')
     return tasks
@@ -148,7 +148,7 @@ def generate_registry() -> dict:
                 while True:
                     length, draw_seed = rng.randint(7, 10), rng.getrandbits(32)
                     deck = generate_deck(level, length, draw_seed)
-                    signature = tuple(sorted(deck))
+                    signature = tuple(sorted_deck(deck))
                     if signature in seen:
                         continue
                     break
@@ -213,8 +213,8 @@ def check(registry: dict) -> None:
     fresh = generate_registry()
     assert json.dumps(fresh, sort_keys=True) == json.dumps(registry, sort_keys=True), \
         'registry is not reproducible from draw_seed 137'
-    train = [tuple(sorted(task['deck'])) for task in registry['tasks'] if task['split'] == 'train']
-    evaluation = [tuple(sorted(task['deck'])) for task in registry['tasks'] if task['split'] == 'eval']
+    train = [tuple(sorted_deck(task['deck'])) for task in registry['tasks'] if task['split'] == 'train']
+    evaluation = [tuple(sorted_deck(task['deck'])) for task in registry['tasks'] if task['split'] == 'eval']
     assert len(set(train)) == len(train) and len(set(evaluation)) == len(evaluation)
     assert not set(train) & set(evaluation), 'eval decks overlap training decks'
     for task in registry['tasks']:

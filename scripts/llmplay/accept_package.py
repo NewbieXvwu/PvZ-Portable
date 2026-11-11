@@ -35,10 +35,14 @@ def worker(mode: str, payload: dict) -> dict:
         return dict(layer=item.get("layer"), key=[item.get("task_id"), item.get("seed"),
                                                    item.get("future_seed")])
     if mode == "drill_start":
+        # carry 后 drill 可能已全部做完，队首换成别的层；那就直接从题库取 drill 验收。
+        catalog = iter(json.loads(Path("configs/llmplay_drills.json").read_text())["items"])
         while True:
             item = llmplay.next_task(track=None)["item"]
             if item.get("layer") != "drill":
-                raise RuntimeError("队首不是 drill：%s" % item.get("layer"))
+                entry = next(catalog)
+                item = dict(path=entry["archive"], knowledge=entry["knowledge"], horizon=entry["horizon"],
+                            future_seed=entry["future_seeds"][0], drill_id=entry["task_id"])
             try:
                 game = Game.load_archive(item["path"], strategy=item["knowledge"])
                 game.reseed(item["future_seed"])
@@ -78,11 +82,35 @@ def worker(mode: str, payload: dict) -> dict:
         catalog = json.loads(Path("configs/llmplay_resume.json").read_text())
         items = catalog["items"] if isinstance(catalog, dict) else catalog
         entry = items[0]
-        game = Game.load_archive(Path("resume") / entry["archive"])
+        game = Game.load_archive(Path("resume") / entry["archive"], strategy="验收回退前缀与导入")
         game.wait_until(game.tick + 300)
         tick = game.tick
+        child = game.rewind_resume(reason="验收：当前切点救不回，回退原前缀")
+        assert child is not None
+        child.wait(120)
+        archive = child.export_archive(llmplay.out_dir() / "rewind_accept")
+        meta = json.loads((archive / "meta.json").read_text())
+        child.close()
+        assert meta["resume"]["rewind_count"] == 1
+        assert meta["resume"]["original_resume_id"] == entry["id"]
+        assert meta["resume"]["cutoff_tick"] == entry["cutoff_tick"] // 2
+        records = [e for e in llmplay.progress()["archives"]
+                   if e.get("resume_id") in (entry["id"], meta["resume_id"])
+                   and not e.get("carried")]
+        return dict(tick=tick, archives=[str(llmplay.out_dir() / e["archive"]) for e in records],
+                    child=meta["resume_id"])
+    if mode == "imitater_export":
+        # task269: an Imitater pair must survive export -> record_archive -> derive.
+        from llmplay import decks
+        deck = [1, 33, 41, [48, 1], 39, 44, 37, 4, 17, 30]
+        game = Game("llmplay_decks_l47_m100", seed=decks.seed_at(47, 0), deck=deck,
+                    reason="模仿者复制向日葵；验收导出与进度重算", _gate=False)
+        game.observe()
+        path = game.export_archive(llmplay.out_dir() / "imitater_accept")
+        document = llmplay.progress()
         game.close()
-        return dict(tick=tick)
+        return dict(archive=str(path), deck=deck,
+                    victory_decks=document["levels"]["llmplay_decks_l47_m100"]["victory_decks"])
     if mode == "progress":
         document = llmplay.progress()
         return dict(archives=len(document.get("archives") or []))
@@ -156,7 +184,22 @@ def main() -> int:
     report["importer_verify"] = verified["result"]
 
     report["scenario"] = run(package, env, "scenario")["export"]
-    report["resume_tick"] = run(package, env, "resume")["tick"]
+    report["imitater_export"] = run(package, env, "imitater_export")
+    resumed = run(package, env, "resume")
+    report["resume_tick"] = resumed["tick"]
+    source = work / "rewind_source"
+    for archive in resumed["archives"]:
+        shutil.copytree(archive, source / Path(archive).name)
+    from import_llm_run import run as import_run
+    imported = import_run(source, work / "rewind_import", package / "configs/human_demo_tasks.json",
+                          package / "res", package / "build/pvz-portable", verify_workers=1,
+                          llm_demo_data=work / "rewind_demo")
+    assert len(imported["rows"]) == 2
+    assert all(row["verify"] == "通过" and row["grade"] == "loss" for row in imported["rows"])
+    child = next(row for row in imported["rows"] if row["resume_id"] == resumed["child"])
+    assert child["resume"]["rewind_chain"][0]["diagnosis"]
+    report["rewind_import"] = dict(child=child["resume_id"], cutoff_tick=child["resume"]["cutoff_tick"],
+                                 archives=len(imported["rows"]))
 
     before = run(package, env, "progress")["archives"]
     run(package, env, "export")

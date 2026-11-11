@@ -151,7 +151,12 @@ def horizon_reached(obs, root_tick: int, horizon: int | None) -> bool:
 
 
 def on_board(env, obs) -> dict[int, dict]:
-    """On-board zombies by id, from a privileged frame when the engine exposes one."""
+    """On-board zombies by id, from a privileged frame when the engine exposes one.
+
+    ``hp`` is the body health.  The full observation names it ``body_health``
+    (``health`` is the plant field); reading the wrong one silently reported 0.
+    ``phase`` is the ZombiePhase value, used by ``judge`` for death animations.
+    """
     frame = obs
     try:
         frame = env.privileged_state()
@@ -162,11 +167,18 @@ def on_board(env, obs) -> dict[int, dict]:
         if isinstance(z, dict):
             if not z.get("on_board"):
                 continue
-            out[int(z["id"])] = dict(id=int(z["id"]), row=int(z["row"]), type=int(z["type"]),
-                                     x=float(z["x"]), hp=int(z.get("health") or 0))
+            phase = z.get("phase")
+            body = int(z.get("body_health") or 0)
+            out[int(z["id"])] = dict(
+                id=int(z["id"]), row=int(z["row"]), type=int(z["type"]),
+                x=float(z["x"]), hp=body, body_health=body,
+                body_max_health=int(z.get("body_max_health") or 0),
+                helm_health=int(z.get("helm_health") or 0),
+                phase=None if phase is None else int(phase))
         elif z[5]:
             out[int(z[9])] = dict(id=int(z[9]), row=int(z[0]), type=int(z[1]),
-                                  x=float(z[2]), hp=int(z[4]))
+                                  x=float(z[2]), hp=int(z[4]), body_health=int(z[4]),
+                                  body_max_health=0, helm_health=0, phase=None)
     return out
 
 
@@ -199,7 +211,7 @@ def judge(env, obs, targets, mowers_start: int, mowers_left: int, *, horizon: in
             if not leaf.get('terminal'):
                 raise RuntimeError('reference continuation did not reach a terminal state')
             return dict(success=leaf.get('result') == 1,
-                        target_count=0, targets_alive=0, alive=[],
+                        target_count=0, targets_alive=0, alive=[], dying=[],
                         mower_used=max(0, mowers_start - mowers_left),
                         house_breach=leaf.get('result') == 2,
                         root_tick=int(root_tick), final_tick=int(obs['tick']),
@@ -215,12 +227,20 @@ def judge(env, obs, targets, mowers_start: int, mowers_left: int, *, horizon: in
                 env.load_rollout_net(actor_policy)
     alive = on_board(env, obs)
     target_ids = [int(target["id"]) for target in targets]
-    alive_targets = [target_id for target_id in target_ids if target_id in alive]
+    # Death animations keep the zombie on the board for a few hundred ticks.  C++
+    # Zombie::IsDeadOrDying() already defines which phases count as gone; resolve
+    # those names through the ZombiePhase enum instead of hardcoding numbers.
+    from pvz_constants import zombie_death_phases
+    death_phases = zombie_death_phases()
+    dying = [target_id for target_id in target_ids
+             if target_id in alive and alive[target_id].get("phase") in death_phases]
+    alive_targets = [target_id for target_id in target_ids
+                     if target_id in alive and target_id not in dying]
     mower_used = max(0, int(mowers_start) - int(mowers_left))
     house_breach = obs.get("result") == 2
     success = (not alive_targets and mower_used == 0 and not house_breach)
     return dict(success=bool(success), target_count=len(target_ids),
-                targets_alive=len(alive_targets), alive=alive_targets,
+                targets_alive=len(alive_targets), alive=alive_targets, dying=dying,
                 mower_used=mower_used, house_breach=bool(house_breach),
                 root_tick=int(root_tick), final_tick=int(obs.get("tick") or 0),
                 tick_delta=int(obs.get("tick") or 0) - int(root_tick),

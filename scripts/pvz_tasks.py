@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pvz_env import PlayerProfileContext, deck_card  # noqa: E402
+from pvz_env import PlayerProfileContext, deck_card, deck_cards, sorted_deck  # noqa: E402
 import pvz_constants  # noqa: E402
 
 DECK = (0, 1, 2, 3, 4, 5)
@@ -118,11 +118,7 @@ def terrain_covered(level: int, deck) -> bool:
     An Imitater slot covers terrain through its target: (48, 16) is a lily pad card.
     """
     background = _perturbation_background(level)
-    cards = set()
-    for card in deck:
-        seed_type, target = deck_card(card)
-        cards.add(target if seed_type == pvz_constants._seed_index('IMITATER') and target is not None
-                  else seed_type)
+    cards = deck_cards(deck)
     if background in ('BACKGROUND_3_POOL', 'BACKGROUND_4_FOG'):
         return LILY_PAD in cards or CATTAIL in cards
     if background in ('BACKGROUND_5_ROOF', 'BACKGROUND_6_BOSS'):
@@ -152,11 +148,11 @@ def random_deck_draws(task: dict, seed: int):
 def random_deck_covered(task: dict, deck) -> bool:
     """Only terrain coverage and held-out card-set exclusion; no strength judgement."""
     spec = task['deck_random']
-    excluded = {tuple(sorted(cards)) for cards in spec['excluded_decks']}
+    excluded = {tuple(sorted_deck(cards)) for cards in spec['excluded_decks']}
     background = _perturbation_background(task['level'])
     if background in ('BACKGROUND_3_POOL', 'BACKGROUND_4_FOG') and LILY_PAD not in deck:
         return False
-    return terrain_covered(task['level'], deck) and tuple(sorted(deck)) not in excluded
+    return terrain_covered(task['level'], deck) and tuple(sorted_deck(deck)) not in excluded
 
 
 def random_deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
@@ -225,11 +221,11 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
     replaceable = [slot for slot, card in enumerate(base) if card not in keep]
     if len(replaceable) < max(swaps):
         raise ValueError('not enough replaceable slots after keep_plants')
-    excluded = {tuple(sorted(deck)) for deck in spec.get('excluded_decks', [])}
+    excluded = {tuple(sorted_deck(deck)) for deck in spec.get('excluded_decks', [])}
     # task28: whole-deck OnStartButton warnings (no sun producer, pool without an aquatic plant,
     # roof without a flower pot, ...).  The list is produced by the engine query
     # PvZEnv.deck_warnings over every deck this perturbation can generate; nothing is re-derived here.
-    warned = {tuple(sorted(deck)) for deck in spec.get('engine_warned_decks', [])}
+    warned = {tuple(sorted_deck(deck)) for deck in spec.get('engine_warned_decks', [])}
     if spec.get('require_no_warnings') and 'engine_warned_decks' not in spec:
         raise ValueError('require_no_warnings needs the engine_warned_decks table')
     rng = random.Random(int(seed))
@@ -240,9 +236,9 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
         deck = list(base)
         for slot, plant in zip(slots, new):
             deck[slot] = plant
-        if not terrain_covered(task['level'], deck) or tuple(sorted(deck)) in excluded:
+        if not terrain_covered(task['level'], deck) or tuple(sorted_deck(deck)) in excluded:
             continue
-        if tuple(sorted(deck)) in warned:
+        if tuple(sorted_deck(deck)) in warned:
             continue
         if any(warnings.get(plant, 1) for plant in deck):
             continue

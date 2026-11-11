@@ -1,0 +1,116 @@
+# task266：238h 接回题回退切点
+
+238h 增加 `Game.rewind_resume(reason=..., to_tick=None)`，供 GPT 判断当前接回切点无法救回时使用。接口、导入和 Mac 打包已完成，代码提交 `6ce29a32` 已推送 `origin/pkg238h`。task266b 已补完**台式机包验收与已导入库统计**，并修正过时的派题顺序用例。本任务未部署。
+
+## 接口与派题
+
+保留原有 `rewind(tick)` 的局内重试语义。新接口先导出当前尝试：未结束的局按放弃记录，已败局保留原生败局结果，诊断记在 `resume.diagnosis`。然后从同一个原题存档截取更早的操作前缀，返回已经认领的子 `Game`，当前子代理可以直接继续操作。
+
+```python
+g = Game.load_archive(item["path"], resume_item=item.get("resume_item"),
+                      strategy="根据局面补经济，保住下一波")
+# GPT 判断当前切点无法救回时调用，诊断写清从哪一波开始、缺什么。
+g = g.rewind_resume(reason="第3波起只有2株向日葵，切点阳光0")
+# 也可指定 to_tick=6000，必须 0 <= to_tick < 当前切点。
+# g 为 None 时，该链已标记结构性待复核，继续领下一题。
+```
+
+默认切点为当前切点的整数一半，使可由 GPT 改动的经济决策区间向开局扩展。每条原题链最多生成三次回退子项，已经到 tick 0 或三次用尽后再次请求回退，会标记 `resume.structural=True` 并停止派发该链。结构性标记用于提醒主控检查卡组与倍率，未增加经济阈值或种植规则。
+
+子项采用稳定 id `<原题>__rewind1/2/3`。`resume.next` 保存下一子项的切点描述，`decks.resume_progress()` 从现有归档结论重建队列。子项优先于其它队列，发布前先用 task265 的统一 `hold()` 占位，返回子局时沿用同一认领、续期和释放机制。结论层 carry 可以恢复尚未完成的子项，也会排除已导出的子项。
+
+子项仍引用包内原前缀，`load_archive(..., resume_item=...)` 调用现有 `_truncate_ops()` 截断，跨切点的 wait 缩短到目标 tick。新切点帧只在实际开始操作时通过现有引擎重放生成。创建题目与 carry 均不额外重放，不增加另一套存档写入。
+
+`PROMPT.md` 第 4 节与 `examples/play.py` 已同步接口。回退次数、原题 id、每次前后切点以及 GPT 诊断保存在 `resume.rewind_chain`。进度新增 `resume.rewound`、`resume.structural` 和 `resume.structural_ids`，文字报告显示结构性待复核数量。
+
+## 导入
+
+统一导入器的结论行保留 `resume_id`、完整 `resume` 元数据和 `abandoned`。回退成功局继续使用现有 full / half 分档，失败和放弃保持 loss，只记录，不生成示范行。
+
+子项元数据增加 `resume.prefix_operations`。示范转换沿用 `pvz_llm_demo_rows.import_demo()`，按操作序号排除学生前缀，保留新切点之后的 GPT 动作，包括与切点同 tick 的合法种植。旧 resume 没有操作边界时继续使用原有 tick 切分。保存恢复同时保留子项身份与新根帧。
+
+## 现有数据统计
+
+task266b 已通过 `ssh newbiexvwu@100.120.155.85 wsl -d Ubuntu -e bash -s` 读取台式机指定库 `~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import`。`merged_progress.json` 有 16,599 个独立 SHA，旧索引未保存 resume 字段，因此只读对应的 `meta.json`，按 `resume_id` / `resume` / `workflow_layer` 识别接回记录，未读取帧或重放对局。元数据缺失 0，统计用时 16.7 秒。以下表格现为**已导入库口径**，数字与原 Mac 交回镜像一致。
+
+已导入库有 3,613 条独立 SHA 的 resume 存档，涉及 3,599 个题目 id，全部既有复验结果为通过。其中 3,366 条通关、241 条原生败局、6 条中途结束、0 条放弃，共 247 条未赢记录，占 6.84%，涉及 244 个题目 id。244 个 id 中有 3 个还存在另一次赢局记录。原生败局按 `outcome.result == 2` 计，中途结束为未通关且未达到原生败局的记录，放弃读取存档顶层或 outcome 的 `abandoned` 标志，三者互斥。地形调用现有 `pvz_constants.background_for_level()`，含第 35 关特例。
+
+| 地形 | 接回记录 | 原生败局 | 中途结束 | 放弃 |
+|---|---:|---:|---:|---:|
+| 夜间草地 | 2630 | 172 | 3 | 0 |
+| 白天泳池 | 877 | 63 | 3 | 0 |
+| 夜间雾池 | 106 | 6 | 0 | 0 |
+| 白天草地、屋顶 | 0 | 0 | 0 | 0 |
+| 合计 | 3613 | 241 | 6 | 0 |
+
+| 关卡 | 接回记录 | 原生败局 | 中途结束 | 放弃 |
+|---|---:|---:|---:|---:|
+| 11 | 389 | 17 | 1 | 0 |
+| 12 | 287 | 22 | 0 | 0 |
+| 13 | 277 | 6 | 2 | 0 |
+| 14 | 305 | 28 | 0 | 0 |
+| 16 | 483 | 21 | 0 | 0 |
+| 17 | 214 | 13 | 0 | 0 |
+| 18 | 348 | 27 | 0 | 0 |
+| 19 | 327 | 38 | 0 | 0 |
+| 21 | 120 | 0 | 0 | 0 |
+| 22 | 75 | 1 | 0 | 0 |
+| 23 | 76 | 3 | 0 | 0 |
+| 24 | 101 | 16 | 1 | 0 |
+| 26 | 97 | 9 | 0 | 0 |
+| 27 | 133 | 10 | 0 | 0 |
+| 28 | 105 | 0 | 0 | 0 |
+| 29 | 170 | 24 | 2 | 0 |
+| 31 | 13 | 0 | 0 | 0 |
+| 32 | 19 | 0 | 0 | 0 |
+| 33 | 3 | 1 | 0 | 0 |
+| 34 | 16 | 1 | 0 | 0 |
+| 36 | 15 | 2 | 0 | 0 |
+| 37 | 8 | 0 | 0 | 0 |
+| 38 | 32 | 2 | 0 | 0 |
+
+task266 逐份检查原 Mac 交回分卷的 42 个 `out/*.py`，经济相关失败笔记约 1–2 局。严格口径有 1 局明确诊断“失败原因是低经济期火力投入与近屋改路选择不足”：`out/root_resume_strategy_notes_20261109.py:45` 的 A94 L16 / seed100119593 / c6，切点 25482，起手 0 阳光、1 株成年阳光菇，最终 tick57590 败局。另有第 42 行 ROOT25，L18 / seed100121740 / c3，切点 25260，起手 0 阳光、1 株成年阳光菇，最终第19波败局，笔记归因为战术与资源分配失败。两条均未直接断言该局面理论上无法救回。
+
+观测卡片“阳光不够”、成功局暂时资金不足，以及 drill 的起始危险不计入这个数量。笔记只能给出明确归因的下限。244 个有未赢记录的题目 id 是已导入库里可尝试回退的候选规模，实际新增示范量取决于更早子项的通关结果，现有记录无法给出挽回率。
+
+## 测试与验收
+
+Mac 仅运行轻量定向单测，无对局或窗口：
+
+```bash
+ulimit -f 2000000
+timeout 300 uv run --python 3.12 --with pytest --with numpy --with py7zr \
+  python -m pytest python/test_llm_import_sha.py python/test_llmplay_decks.py \
+  -k 'task266 or task265' -q
+```
+
+7 项通过，覆盖子项生成、切点合法性、队首与同代理认领、保存恢复、上限与结构性标记、结论层 carry 去重，以及导入时前缀切分与 full / half / loss 分档。导入单测使用替身复验器，实际引擎复验留给台式机包验收。
+
+task266b 已修正旧 `test_decks_resume_items_dispatch_first_and_are_one_shot`，更名为 `test_decks_resume_items_follow_priority_native_and_are_one_shot`：先断言 task263 的重点原生关优先，再占住这些任务，断言普通 resume 顺序与完成后不再派发。原有 task263 用例继续覆盖 drill → r160 重点 resume → 重点原生关 → scenario → 普通 resume。以下定向测试 **2 项通过**：
+
+```bash
+ulimit -f 2000000
+timeout 300 uv run --no-project --python 3.12 --with pytest --with numpy --with py7zr \
+  python -m pytest python/test_llmplay_decks.py \
+  -k 'decks_resume_items_follow_priority_native or task263_focus_resume_and_native_tail' -q
+```
+
+task266b 在台式机对 HF 实际下载并解出的 238h 分卷运行一次 `accept_package.py`，**退出码 0**，包含真实回退链。启动前 `/mnt/c` 剩余 30 GB，在独立 `~/pvz-logs/task266/` 目录用 `systemd-run --user` 后台运行，命令加 `nice -n 19 ionice -c3`，内存上限 4 GB。下载解包至验收结束共约 100 秒。
+
+静态 x86-64 引擎、三进程不重复认领、drill 跨进程保存恢复及 scenario 导出均通过。drill 推进至 900 tick 后判失败，导入器复验同判失败。resume 原题 `r160_pool_user_l22_user_s100257507_c18840` 推进至 tick 19,140 后请求回退，子项 `__rewind1` 切点为 9,420。父子两份存档均由统一导入器真实复验通过、分档为 loss，子档完整保留诊断与回退链。连续两次导出前后均为 **15,598** 条记录。
+
+## 打包与文件位置
+
+`build_package.py --reuse-package` 复用 `~/Downloads/pvz-llmplay-238g/llmplay_pkg/`，原样使用其 carry、题库和静态引擎。carry 的 15,594 条记录内容与 238g 相同。`check_engine` 通过，静态引擎 SHA256 仍为 `1c3680f36aa5bd5fef97d035a97a1cdd9ca89fce2493a87f125c7bd507d29c07`。
+
+接口分卷已通过 HF `transfer/task266/` 上传并取回 Mac，远端两卷已在取用后删除。资源包直接从 238g 本地复制。目录：`~/Downloads/pvz-llmplay-238h/`。task266b 经 HF `transfer/task266b/` 将接口两卷和隔离验收所需源码送到台式机，取用后已删除远端。台式机使用已有资源，资源未上传 HF。实际验收通过，包内代码未改，Mac 交付包沿用下列文件。台式机独立验收目录已删除。未部署，未操作生产 `cq`、生产日志或 `~/pvz-mac-collect/hold`。
+
+| 文件 | 字节 | SHA256 |
+|---|---:|---|
+| `llmplay_pkg.7z.001` | 20000000 | `9a03108c90a5b8bf429c4e89400d5476b1580d3c4f0dc9b23e5a3f763000ee9d` |
+| `llmplay_pkg.7z.002` | 290768 | `cfb66ab5b5de7b63ac55b51c1657db0357dc6175412917ef47d290815c07d367` |
+| `llmplay_res.zip` | 34258402 | `0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e` |
+
+## 价值网建议
+
+建议将经过统一复验的失败局作为后续价值学习的候选负样本，保留真实终局结果与来源切点。一次 GPT 未救回只代表这次续局失败，不能直接把该切点标成必败。回退链能提供同源局面及不同后续结果，适合与老师搜索结果一起研究价值监督。训练划分应让同一原局的前缀和回退子项留在同一组。本任务未改训练。

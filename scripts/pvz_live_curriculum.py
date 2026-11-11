@@ -13,12 +13,13 @@ import random
 from import_llm_run import family_entry
 from make_random_deck_cells import LADDER, REGISTRY, heldout_signatures
 from pvz_tasks import terrain_covered
+from pvz_env import sorted_deck
 
 DEMO_LADDER = [90, 80, 70, 60, 50, 40, 30, 20, 10, 1]
 
 
 def signature(deck):
-    return tuple(sorted(deck))
+    return tuple(sorted_deck(deck))
 
 
 def group_id(level, deck):

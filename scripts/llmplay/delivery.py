@@ -11,6 +11,7 @@ import uuid
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
+from pvz_env import sorted_deck
 from pvz_frame_store import frame_path
 
 from . import budget
@@ -113,13 +114,13 @@ def progress() -> dict:
     return _derive(document["archives"], document["run_id"])
 
 
-def next_task(track=None, *, shard=None, shards=None) -> dict:
+def next_task(track=None, *, shard=None, shards=None, ttl=None) -> dict:
     """领下一项。track="C" 表示 C 轨专职子代理（C 优先，做完接主线）。"""
     if workflow.decks_mode() and (shard is not None or shards is not None):
         from .decks import configure_shard
         configure_shard(shard, shards)
     ensure_run_id()
-    return workflow.next_task(track=track)
+    return workflow.next_task(track=track, ttl=ttl)
 
 
 def check(task_id, deck, strategy="", seed=None) -> dict:
@@ -155,7 +156,7 @@ def diagnose(task_id, *, waves=None, missing="", note="", deck=None) -> Path:
                        waves=list(waves), missing=str(missing), note=str(note))
         suffix = ""
         if item["layer"] == "E":
-            payload.update(deck=sorted(item["deck"]), multiplier=item["multiplier"])
+            payload.update(deck=sorted_deck(item["deck"]), multiplier=item["multiplier"])
             suffix = "__" + workflow.deck_key(item["deck"])
         path = folder / (task_id + suffix + ".json")
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -452,7 +453,7 @@ def _restore_diagnoses(root, prior) -> None:
                        note=str(report.get("note") or ""))
         suffix = ""
         if "multiplier" in item:
-            payload.update(deck=sorted(item["deck"]), multiplier=item["multiplier"])
+            payload.update(deck=sorted_deck(item["deck"]), multiplier=item["multiplier"])
             suffix = "__" + workflow.deck_key(item["deck"])
         (folder / (task_id + suffix + ".json")).write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

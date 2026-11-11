@@ -111,10 +111,14 @@ def rows() -> list[dict]:
     health = {_normalize(seed): values.get("mPlantHealth")
               for seed, values in constants.plant_specials().items()}
     timers_by_seed = timers()
+    try:
+        from . import cards
+    except ImportError:          # 允许 `python scripts/llmplay/reference.py` 直接跑
+        import cards
     out = []
     for definition in constants.plant_defs():
         seed = _normalize(definition["seed"])
-        out.append(dict(type=int(definition["type"]), slug=str(definition["name"]).lower(),
+        out.append(dict(type=int(definition["type"]), slug=cards.slug(definition["type"]),
                         chinese=constants.PLANT_NAME.get(int(definition["type"]), ""),
                         cost=int(definition["cost"]), recharge=int(definition["recharge"]),
                         seconds=round(int(definition["recharge"]) / rate, 2),

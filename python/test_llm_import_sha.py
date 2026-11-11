@@ -21,6 +21,51 @@ def run_sha(*args, **kwargs):
 
 
 class ShaImportTest(unittest.TestCase):
+    def test_task266_rewind_import_slices_prefix_and_retains_chain(self):
+        from pvz_frame_store import write_frames
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name, won, wins, abandoned in [('full', True, 5, False),
+                    ('half', True, 4, False), ('loss', False, None, False),
+                    ('abandoned', True, 5, True)]:
+                meta = _meta(won=won, wins=wins, operations=3)
+                meta.update(resume_id='original__rewind1', abandoned=abandoned,
+                            resume=dict(original_resume_id='original', rewind_count=1,
+                                cutoff_tick=1, prefix_operations=1, diagnosis='第3波阳光不足',
+                                rewind_chain=[dict(parent_resume_id='original', from_tick=2,
+                                    cutoff_tick=1, rewind_count=1, diagnosis='第3波阳光不足')]))
+                archive = _write_archive(root / 'source', name, meta)
+                # 学生前缀在 operation=1 结束，GPT 可在同一个 tick 种植物。
+                frames = [dict(tick=tick, operation=operation, packets=[[0, 1]], action=action)
+                          for tick, operation, action in [
+                              (1, 1, None),
+                              (1, 2, dict(type='plant', packet=0, row=0, col=0)),
+                              (3, 3, dict(type='wait', ticks=2))]]
+                (archive / 'frames.jsonl').unlink()
+                write_frames(archive / 'frames.npz', frames, cache=False)
+                meta['frame_count'] = len(frames)
+                (archive / 'meta.json').write_text(json.dumps(meta))
+            manifest = root / 'tasks.json'
+            manifest.write_text('{"tasks": []}')
+            args = (root / 'source', root / 'dest', manifest, root, root / 'engine')
+            with patch('import_llm_run.verification_context', return_value={}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}):
+                result = run_sha(*args, llm_demo_data=root / 'demos')
+            by_name = {Path(row['source']).name: row for row in result['rows']}
+            self.assertEqual({name: row['grade'] for name, row in by_name.items()},
+                             dict(full='full', half='half', loss='loss', abandoned='loss'))
+            for name, row in by_name.items():
+                self.assertEqual(row['resume']['rewind_chain'][0]['diagnosis'], '第3波阳光不足')
+                demo = root / 'demos/.llm_demo_rows' / row['archive_sha256']
+                self.assertEqual(demo.exists(), name in ('full', 'half'))
+                if demo.exists():
+                    stored = next(demo.glob('seed_*/*/meta.json'))
+                    self.assertEqual(json.loads(stored.read_text())['training_rows'], [1, 2])
+            with patch('import_llm_run.verify_copy', side_effect=AssertionError('no repeat replay')):
+                repeated = run_sha(*args, llm_demo_data=root / 'demos')
+            self.assertTrue(all(row['verification_reused'] for row in repeated['rows']))
+            self.assertEqual(len(list((root / 'demos/.llm_demo_rows').iterdir())), 2)
+
     def test_cached_jsonl_receipt_survives_task32_inplace_npz_conversion(self):
         from pvz_frame_store import write_frames, read_frames
         with tempfile.TemporaryDirectory() as directory:

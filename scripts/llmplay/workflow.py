@@ -24,6 +24,8 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
+from pvz_env import deck_cards, sorted_deck
+
 from .game import ROOT, load_tasks, required_checkpoint
 from .runtime import output_path
 
@@ -131,11 +133,8 @@ def deck_key(deck) -> str:
 
 
 def card_diff(left, right) -> int:
-    def cards(deck):
-        return [tuple(int(v) for v in card) if isinstance(card, (list, tuple)) else int(card)
-                for card in deck or []]
-    left, right = cards(left), cards(right)
-    return max(len(set(left) - set(right)), len(set(right) - set(left)))
+    left, right = deck_cards(left), deck_cards(right)
+    return max(len(left - right), len(right - left))
 
 
 def _suppressed(entries) -> set:
@@ -166,7 +165,7 @@ def _decks(entries) -> dict:
     groups: dict = {}
     for entry in entries:
         key = deck_key(entry.get("deck"))
-        group = groups.setdefault(key, dict(deck=sorted(entry.get("deck") or []), winning=set(),
+        group = groups.setdefault(key, dict(deck=sorted_deck(entry.get("deck")), winning=set(),
                                             robust=set(), attempts=0, losses=0, abandoned=0,
                                             strategy="", reason="", review="", seeds={}))
         group["attempts"] += 1
@@ -240,7 +239,7 @@ def _challenge_detail(task_id, task, number, in_cycle, req, run_id, diagnosis):
             and report.get("waves") and str(report.get("missing") or "").strip()):
         report = None
     complete = wins >= int(req["C"]["wins"]) or (set(window) <= attempted and bool(report))
-    return dict(task_id=task_id, level=int(task["level"]), deck=sorted(task["deck"]),
+    return dict(task_id=task_id, level=int(task["level"]), deck=sorted_deck(task["deck"]),
                              window=window, wins=wins, attempted=sorted(attempted),
                              diagnosis=report, complete=complete)
 
@@ -260,7 +259,7 @@ def _cycle(number, entries, tasks, req, run_id=None, diagnosis=None) -> dict:
     for entry in entries:
         if entry["task_id"] in a_set and int(entry.get("cycle") or 1) < number:
             bucket = previous.setdefault(entry["task_id"], {})
-            bucket.setdefault(deck_key(entry.get("deck")), sorted(entry.get("deck") or []))
+            bucket.setdefault(deck_key(entry.get("deck")), sorted_deck(entry.get("deck")))
     previous = {task_id: list(bucket.values()) for task_id, bucket in previous.items()}
 
     # ---- A 探索
@@ -604,10 +603,7 @@ def _ordered(document) -> tuple:
     """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞（decks 模式为三轨优先序）。"""
     if document.get("mode") == "decks":
         from . import decks
-        # task238 六轨：必刷题 > 自出题 > 中盘接回 > 前沿倍率 > 传送带/Boss 支线 > 主线。
-        return (decks.drill_items(document) + decks.scenario_items(document)
-                + decks.resume_items(document) + decks.frontier_items(document)
-                + decks.native_items(document) + decks.items(document)), []
+        return decks.ordered_items(document), []
     return _main_items(document), _challenge_items(document)
 
 
@@ -849,7 +845,7 @@ def check(document, task_id, deck, strategy="", seed=None) -> dict:
         window = set(seeds_for(task_id, cycle, document.get("run_id"))[:int(req["C"]["seeds"])])
         if seed is None or int(seed) not in window:
             _refuse(document, "C 轨只能用本圈指定的那 5 个种子")
-        if sorted(deck or []) != sorted(task["deck"]):
+        if sorted_deck(deck) != sorted_deck(task["deck"]):
             _refuse(document, "C 层是指定卡组任务，不能换卡")
         return context
     if kind == "E":

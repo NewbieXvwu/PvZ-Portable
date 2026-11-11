@@ -226,6 +226,81 @@ def test_decks_restoring_claim_does_not_let_search_branch_release_parent(tmp_pat
     assert workflow._slot(task_id, primary.seed) not in workflow.held()
 
 
+@pytest.mark.parametrize('layer', ['resume', 'drill', 'scenario'])
+def test_task265_loaded_claim_renews_past_ttl_and_releases(tmp_path, monkeypatch, layer):
+    from llmplay import next_task
+    from pvz_frame_store import write_frames
+    clock = [1000.0]
+    monkeypatch.setattr(workflow, 'time', SimpleNamespace(time=lambda: clock[0]))
+    monkeypatch.setenv('LLMPLAY_CLAIM_HOLD', '10')
+    task_id = 'task265_' + layer
+    archive = tmp_path / layer
+    archive.mkdir()
+    base = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='经济', _gate=False)
+    block = dict(id=task_id, future_seed=101, prefix_operations=0)
+    meta = dict(task=dict(id=base.task_id if layer == 'resume' else task_id,
+                          level=1, seed=7, deck=D1),
+                environment_task=base._environment_task(), workflow_layer=layer,
+                outcome=dict(final_tick=0))
+    if layer == 'resume':
+        meta['resume_id'] = task_id
+    else:
+        meta[layer] = block
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    (archive / 'ticks.jsonl').write_text('')
+    write_frames(archive / 'frames.npz', [], cache=False)
+    item = dict(id=task_id, task_id=task_id, archive=str(archive), level=1,
+                terrain='day', seed=7, deck=D1, future_seeds=[101, 102])
+    with patch.object(decks, 'resume_catalog', return_value=[item] if layer == 'resume' else []), \
+            patch.object(decks, 'drill_catalog', return_value=[item] if layer == 'drill' else []), \
+            patch.object(decks, 'scenario_catalog', return_value=[item] if layer == 'scenario' else []), \
+            patch.object(decks, 'assigned_tasks', side_effect=lambda native=False, frontier=False:
+                         [] if native or frontier else decks.config()['order']), \
+            patch.object(decks, 'upgrade_target', return_value=0):
+        # 留住第一个未来，验证读第二个种子时不会续错题面默认值或原局 seed。
+        first = next_task(ttl=10)['item']
+        claimed = next_task(ttl=10)['item'] if layer != 'resume' else first
+        key = workflow._slot(claimed['task_id'], claimed['seed'])
+        token = workflow.held()[key]['token']
+        assert workflow.held()[key]['expires'] == 1010
+        game = Game.load_archive(claimed['path'])
+        game.env = SimpleNamespace(close=Mock())
+        game.obs = dict(wave=1, result=0)
+
+        def step(action):
+            game.tick += int(action.get('ticks') or 0)
+            return True
+
+        try:
+            with patch.object(game, '_step_raw', side_effect=step), \
+                    patch.object(game, '_note_events'), patch.object(game, '_maybe_frame'), \
+                    patch.object(game, '_persist_best'):
+                if layer != 'resume':
+                    assert not game._claimed
+                    game.reseed(claimed['future_seed'])
+                assert game._claimed == (claimed['task_id'], claimed['seed'])
+                for now in (1006, 1012):
+                    clock[0] = now
+                    game.wait(60)  # 同一波推进，不能依赖换波才续期。
+                assert workflow.held()[key]['token'] == token
+                other = next_task(ttl=10)['item']
+                assert (other['task_id'], other.get('seed')) != (claimed['task_id'], claimed['seed'])
+                saved = tmp_path / 'saved.json'
+                game.save(saved)
+                game.close()
+                assert key not in workflow.held()
+                restored = Game.load(saved)
+                assert restored._claimed == (claimed['task_id'], claimed['seed'])
+                restored.close()
+                child = Game.load_archive(claimed['path'], _internal=True)
+                child._hold_claim()
+                assert not child._claimed
+                child.close()
+        finally:
+            game.close()
+            base.close()
+
+
 def test_decks_metadata_only_carry_survives_out_zip_resume(tmp_path):
     source = tmp_path / 'carry.json'
     prior = workflow.derive([entry(1, D1)], 'carry-run')
@@ -312,17 +387,19 @@ def test_decks_frontier_rotates_registered_decks_on_fresh_seeds_first():
     assert frontier in doc['active_frontier']
     info = doc['frontier'][frontier]
     assert info['multiplier'] == 2.0 and info['wins'] == 0 and len(info['decks']) == 2
-    item = workflow.next_task(doc, claim=False)['item']
-    assert item['layer'] == 'frontier' and item['action'] == 'frontier_deck' and item['task_id'] == frontier
-    assert item['multiplier'] == 2.0 and item['deck'] == D1 and item['seed'] == decks.frontier_seed_at(frontier, 0)
-    workflow.check(doc, frontier, D1, seed=item['seed'])
-    with pytest.raises(ValueError, match='已登记的胜利卡组'):
-        workflow.check(doc, frontier, [0, 1, 2, 3, 4, 7], seed=item['seed'])
-    with pytest.raises(ValueError, match='新种子'):
-        workflow.check(doc, frontier, D1, seed=decks.seed_at(11, 0))
-    with pytest.raises(ValueError, match='前沿倍率优先'):
-        workflow.check(doc, decks.native_items(doc)[0]['task_id'], [],
-                       seed=decks.native_items(doc)[0]['seed'])
+    # task263 给 L30/40/45/50 的尾关原生项单独优先级；这里只验证普通 native 排在 frontier 后。
+    with patch.dict(decks.config(), native_targets={}):
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['layer'] == 'frontier' and item['action'] == 'frontier_deck' and item['task_id'] == frontier
+        assert item['multiplier'] == 2.0 and item['deck'] == D1 and item['seed'] == decks.frontier_seed_at(frontier, 0)
+        workflow.check(doc, frontier, D1, seed=item['seed'])
+        with pytest.raises(ValueError, match='已登记的胜利卡组'):
+            workflow.check(doc, frontier, [0, 1, 2, 3, 4, 7], seed=item['seed'])
+        with pytest.raises(ValueError, match='新种子'):
+            workflow.check(doc, frontier, D1, seed=decks.seed_at(11, 0))
+        with pytest.raises(ValueError, match='前沿倍率优先'):
+            workflow.check(doc, decks.native_items(doc)[0]['task_id'], [],
+                           seed=decks.native_items(doc)[0]['seed'])
     won = [dict(entry(11, D1, 100 + n, task_id=frontier), level=11,
                 seed=decks.frontier_seed_at(frontier, n), zombie_count_multiplier=2.0) for n in range(2)]
     doc = workflow.derive(entries + won, 'run')
@@ -600,7 +677,7 @@ def test_decks_roster_public_export_and_default_seed():
         llmplay.roster('not-a-task')
 
 
-def test_decks_resume_items_dispatch_first_and_are_one_shot():
+def test_decks_resume_items_follow_priority_native_and_are_one_shot():
     catalog = [dict(id='r86a_l17_s1', archive='r86a_l17_s1', level=17, terrain='night',
                     seed=1, deck=D1, multiplier=1.0, base_task_id='task101_l17_night_n10',
                     breach_tick=9000, cutoff_tick=4500, source_arm='r86a'),
@@ -609,9 +686,15 @@ def test_decks_resume_items_dispatch_first_and_are_one_shot():
                     breach_tick=12000, cutoff_tick=7500, source_arm='r86a')]
     with patch.object(decks, 'drill_catalog', return_value=[]), \
             patch.object(decks, 'scenario_catalog', return_value=[]), \
-            patch.object(decks, 'resume_catalog', return_value=catalog):
+            patch.object(decks, 'resume_catalog', return_value=catalog), \
+            patch.object(workflow, '_read_claims', return_value={}) as claims:
         doc = workflow.derive([], 'run')
         assert doc['resume']['total'] == 2 and doc['resume']['remaining'] == 2
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['layer'] == 'native' and str(item['level']) in decks.config()['native_targets']
+        claims.return_value = {workflow._slot(row['task_id'], row['seed']): {}
+                               for row in decks.native_items(doc)
+                               if str(row['level']) in decks.config()['native_targets']}
         item = workflow.next_task(doc, claim=False)['item']
         assert item['layer'] == 'resume' and item['task_id'] == 'r86a_l17_s1'
         assert item['action'] == 'resume_archive' and item['path'].endswith('resume/r86a_l17_s1')
@@ -621,6 +704,9 @@ def test_decks_resume_items_dispatch_first_and_are_one_shot():
                       task_id='task101_l17_night_n10')
         doc = workflow.derive([played], 'run')
         assert doc['resume']['played'] == 1 and doc['resume']['remaining'] == 1
+        claims.return_value.update({workflow._slot(row['task_id'], row['seed']): {}
+                                    for row in decks.native_items(doc)
+                                    if str(row['level']) in decks.config()['native_targets']})
         item = workflow.next_task(doc, claim=False)['item']
         assert item['task_id'] == 'r86a_l21_s2'
 
@@ -658,6 +744,39 @@ def test_decks_resume_fresh_priority_beats_terrain_order():
     # 先新鲜批次，再按地形（夜先于屋顶）；旧档即使地形更靠前也排在所有新鲜项之后。
     assert item['task_id'] == 'fresh_night'
     assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_night', 'fresh_roof', 'old_pool']
+
+
+def test_task263_focus_resume_and_native_tail_precede_remaining_scenarios():
+    drill = dict(task_id='drill263', archive='drill/drill263', level=39, terrain='fog',
+                 source_seed=7, deck=D1, targets=[dict(id=9)], future_seeds=[101], priority=0)
+    scenario = dict(task_id='scenario263', archive='scenario/scenario263', level=39,
+                    terrain='fog', source_seed=8, deck=D1, future_seeds=[201])
+    resumes = [dict(id=name, archive=name, level=22, terrain='pool', seed=seed, deck=D1,
+                    multiplier=0.5, source_arm=arm, priority=priority)
+               for name, seed, arm, priority in [('focus263', 301, 'r160', -1),
+                                                  ('old263', 302, 'r94', 0)]]
+    with patch.object(decks, 'drill_catalog', return_value=[drill]), \
+            patch.object(decks, 'scenario_catalog', return_value=[scenario]), \
+            patch.object(decks, 'resume_catalog', return_value=resumes):
+        doc = workflow.derive([native_entry(50, n) for n in range(17)], 'run')
+        boss = doc['native']['llmplay_decks_native_l50_m100']
+        assert boss['wins'] == 17 and boss['target'] == 32 and not boss['complete']
+        assert doc['native']['llmplay_decks_native_l10_m100']['target'] == 16
+        claimed = {}
+        for expected in ['drill263', 'focus263', 'llmplay_decks_native_l50_m100',
+                         'scenario263', 'old263']:
+            with patch.object(workflow, '_read_claims', return_value=claimed):
+                item = workflow.next_task(doc, claim=False)['item']
+                assert item['task_id'] == expected
+                ordered, _ = workflow._ordered(doc)
+                assert workflow._first_free(ordered, claimed)['task_id'] == expected
+                if item['layer'] == 'native':
+                    workflow.check(doc, item['task_id'], [], seed=item['seed'])
+            done = [item]
+            if item['layer'] == 'native':
+                done = [row for row in decks.ordered_items(doc)
+                        if row['layer'] == 'native' and row['level'] in [30, 40, 45, 50]]
+            claimed.update({workflow._slot(row['task_id'], row['seed']): {} for row in done})
 
 
 @contextmanager
@@ -896,3 +1015,216 @@ def test_task248_prefix_wait_uses_recorded_elapsed_time_and_matches_root(tmp_pat
             assert check_drill_prefix(target)['status'] == 'rejected'
     finally:
         g.close()
+
+
+@contextmanager
+def _task266_resume(tmp_path):
+    from pvz_frame_store import write_frames
+    archive = tmp_path / 'prefix'
+    archive.mkdir()
+    base = Game('llmplay_decks_l1_m100', seed=7, deck=D1, reason='经济', _gate=False)
+    item = dict(id='resume266', archive=str(archive), seed=7, level=1, deck=D1,
+                cutoff_tick=240, multiplier=1.0)
+    meta = dict(task=dict(id=base.task_id, level=1, seed=7, deck=D1),
+                environment_task=base._environment_task(), resume_id=item['id'],
+                resume=dict(cutoff_tick=240), workflow_layer='resume', outcome=dict(final_tick=240))
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    ops = [dict(action=dict(type='wait', ticks=240), tick=0, end_tick=240, ok=True)]
+    (archive / 'ticks.jsonl').write_text(json.dumps(ops[0]) + '\n')
+    write_frames(archive / 'frames.npz', [dict(tick=240, operation=1)], cache=False)
+
+    class Env:
+        episode = {}
+        def __init__(self, **kwargs): self.tick = 0
+        def begin_demo(self): pass
+        def set_lean_observation(self, value): pass
+        def close(self): pass
+        def observe(self):
+            return dict(tick=self.tick, wave=1, sun=50, result=0, terminal=False)
+        def reset(self, **kwargs):
+            self.tick = 0
+            return self.observe(), {}
+        def step(self, action):
+            self.tick += action.get('ticks', 0)
+            return self.observe(), 0, False, False, dict(events={}, ok=True)
+
+    with patch.object(decks, 'resume_catalog', return_value=[item]), \
+            patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch('llmplay.game.PvZEnv', Env), \
+            patch('llmplay.resources.app_data', return_value=tmp_path):
+        try:
+            yield item
+        finally:
+            base.close()
+
+
+def test_task266_rewind_child_claim_prefix_and_carry(tmp_path, monkeypatch):
+    with _task266_resume(tmp_path) as original:
+        item = workflow.next_task(delivery.progress(), claim=False)['resume']
+        game = Game.load_archive(item['path'], strategy='补经济')
+        child = None
+        try:
+            game.wait(60)
+            for invalid in (-1, 240, 300, 1.5):
+                with pytest.raises(ValueError, match='to_tick'):
+                    game.rewind_resume(reason='第3波缺经济', to_tick=invalid)
+            child = game.rewind_resume(reason='第3波缺经济', to_tick=95)
+            assert child.resume_id == 'resume266__rewind1'
+            assert child.tick == 95 and child.ops[-1]['end_tick'] == 95
+            assert child.ops[-1]['action']['ticks'] == 95
+            assert child._claimed == (child.resume_id, 7)
+            doc = delivery.progress()
+            queued = workflow.next_task(doc, claim=False)['resume']
+            # 占位期间其他子代理跳过子项。
+            assert queued is None
+            assert decks.ordered_items(doc)[0]['task_id'] == child.resume_id
+            assert doc['archives'][-1]['abandoned']
+            assert doc['resume']['rewound'] == 1
+            child._start()
+            assert child.tick == 95 and len(child.frames) == 1 and child.frames[0]['tick'] == 95
+            assert child.resume_source['prefix_operations'] == 1
+            child.wait(60)
+            saved = tmp_path / 'child.save'
+            child.save(saved)
+            child.close()
+            child = Game.load(saved)
+            child._start()
+            assert child.tick == 155 and child.frames[0]['tick'] == 95
+            child.close()
+            # 结论层 carry 不带旧存档，也能从包内原前缀重建子项。
+            prior = delivery.output_dir() / 'progress.json'
+            monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'carried'))
+            delivery.carry(prior)
+            again = delivery.next_task()['item']
+            assert again['task_id'] == 'resume266__rewind1'
+            restored = Game.load_archive(again['path'], resume_item=again['resume_item'], strategy='补经济')
+            try:
+                assert restored.tick == 95
+                restored.abandon(reason='第3波仍缺阳光')
+            finally:
+                restored.close()
+            latest = delivery.output_dir() / 'progress.json'
+            monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'carried-again'))
+            delivery.carry(latest)
+            assert delivery.next_task()['item']['task_id'] != again['task_id']
+        finally:
+            game.close()
+            if child:
+                child.close()
+
+
+@pytest.mark.parametrize('opening', [False, True])
+def test_task266_rewind_limit_structural_and_diagnostics(tmp_path, opening):
+    with _task266_resume(tmp_path) as item:
+        game = Game.load_archive(item['archive'], strategy='补经济')
+        try:
+            for number in range(1, 2 if opening else 4):
+                game = game.rewind_resume(reason='第%d波阳光不足' % number,
+                                          to_tick=0 if opening else None)
+                assert game.resume_source['rewind_count'] == number
+                assert game.tick == (0 if opening else 240 // (2 ** number))
+            last = game
+            assert game.rewind_resume(reason='开局仍救不回，检查卡组与倍率') is None
+            doc = delivery.progress()
+            assert doc['resume']['remaining'] == 0 and doc['resume']['structural'] == 1
+            assert doc['resume']['structural_ids'] == [item['id']]
+            record = doc['archives'][-1]['resume']
+            assert record['structural'] and record['original_resume_id'] == item['id']
+            assert len(record['rewind_chain']) == (1 if opening else 3)
+            assert record['diagnosis'] == '开局仍救不回，检查卡组与倍率'
+            last.close()
+        finally:
+            game.close()
+
+
+def test_task269_imitater_deck_export_derive_carry_and_import(tmp_path, monkeypatch):
+    """[48, target] must survive export -> derive -> carry -> importer as one pair."""
+    import import_llm_run
+    from pvz_frame_store import write_frames
+    deck = [1, 33, 41, [48, 1], 39, 44, 37, 4, 17, 30]
+    archive = tmp_path / 'imitater-win'
+    archive.mkdir()
+    meta = dict(schema='episode_archive_v2', schema_version=2,
+                task=dict(id='llmplay_decks_l47_m100', level=47, seed=decks.seed_at(47, 0),
+                          deck=deck, zombie_count_multiplier=1.0),
+                outcome=dict(result=1, won=True, final_tick=100, final_wave=40),
+                deck_reason='模仿者复制向日葵，屋顶花盆与投手覆盖地形',
+                workflow_layer='decks')
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    (archive / 'ticks.jsonl').write_text('')
+    write_frames(archive / 'frames.npz', [], cache=False)
+
+    delivery.record_archive(archive)
+    document = delivery.progress()
+    info = document['levels']['llmplay_decks_l47_m100']
+    assert info['victory_decks'] == 1
+    assert workflow.deck_key(deck) in info['winning_decks']
+    assert document['upgrades']['roof']['wins'] >= 1
+    assert document['coverage']['roof']['counts']['1'] == 1
+
+    parts = delivery.export_bundle()
+    root = delivery.output_dir()
+    carry_source = tmp_path / 'carry.json'
+    carry_source.write_text(json.dumps(delivery._read_progress(root)))
+
+    monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'carried'))
+    budget.reset_session(tmp_path / 'carried-budget.json')
+    delivery.carry(carry_source)
+    carried = delivery.progress()
+    assert carried['levels']['llmplay_decks_l47_m100']['victory_decks'] == 1
+
+    monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'resumed'))
+    budget.reset_session(tmp_path / 'resumed-budget.json')
+    with patch('llmplay.game.PvZEnv', side_effect=AssertionError('must not replay')):
+        delivery.resume(parts[0])
+    resumed = delivery.progress()
+    assert resumed['levels']['llmplay_decks_l47_m100']['victory_decks'] == 1
+
+    # The importer keeps the Imitater pair intact instead of flattening or hashing it.
+    assert import_llm_run._deck_cards(meta['task']['deck']) == deck
+    entry = import_llm_run.family_entry(meta['task']['id'], meta, None)
+    assert entry['deck'] == deck
+    assert archive in import_llm_run.discover(tmp_path)
+
+
+def test_task269_claimed_native_item_is_accepted_after_target_fills(tmp_path):
+    task_id = 'llmplay_decks_native_l50_m100'
+    before = [native_entry(50, n) for n in range(31)]
+    old = workflow.derive(before, 'run')
+    assert old['native'][task_id]['wins'] == 31 and old['native'][task_id]['target'] == 32
+    items = [row for row in decks.native_items(old) if row['task_id'] == task_id]
+    assert len(items) == 1  # one win left, so at most one outstanding claim
+    item = items[0]
+
+    after = workflow.derive([native_entry(50, n) for n in range(32)], 'run')
+    assert after['native'][task_id]['complete']
+    only_native = [(decks.native_items(after), 'native'), (decks.items(after), 'main')]
+    with patch.object(decks, 'queues', return_value=only_native):
+        with pytest.raises(ValueError, match='达到 32 胜'):
+            workflow.check(after, task_id, [], seed=item['seed'])
+
+    claims = {workflow._slot(task_id, item['seed']): dict(task_id=task_id, seed=item['seed'])}
+    with patch.object(decks, 'queues', return_value=only_native), \
+            patch.object(workflow, '_read_claims', return_value=claims):
+        assert workflow.check(after, task_id, [], seed=item['seed'])['workflow_layer'] == 'native'
+        assert not [row for row in decks.native_items(after) if row['task_id'] == task_id]
+
+    # An earlier queue becoming free must not revoke a slot that was already issued.
+    with patch.object(decks, 'drill_catalog', return_value=[dict(
+            task_id='earlier_drill', archive='drill/earlier', level=1, terrain='day',
+            seed=1, deck=D1, targets=[], future_seeds=[101])]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch.object(decks, 'resume_catalog', return_value=[]), \
+            patch.object(decks, 'assigned_tasks',
+                         side_effect=lambda native=False, frontier=False:
+                         [] if frontier else (decks.config()['native_order'] if native
+                                              else decks.config()['order'])), \
+            patch.object(decks, 'upgrade_target', return_value=0), \
+            patch.object(workflow, '_read_claims', return_value=claims):
+        blocked = workflow.derive(before, 'run')
+        assert workflow.next_task(blocked, claim=False)['item']['layer'] == 'drill'
+        assert workflow.check(blocked, task_id, [], seed=item['seed'])['workflow_layer'] == 'native'
+        with pytest.raises(ValueError, match='必刷题优先'):
+            workflow.check(blocked, 'llmplay_decks_l1_m100', D1,
+                           seed=blocked['levels']['llmplay_decks_l1_m100']['available_seeds'][0])

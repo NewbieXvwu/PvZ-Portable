@@ -378,6 +378,75 @@ class VisibleTimerTest(unittest.TestCase):
         self.assertNotIn('阳光不够', text)
 
 
+class Task267InterfaceTest(unittest.TestCase):
+    """GPT 11-10/11-11 报的四个接口问题：血量字段、重名卡、冷却方向、死亡动画判据。"""
+
+    def test_zombies_hp_reads_body_health(self):
+        from drill_start import on_board
+
+        class Env:
+            def privileged_state(self):
+                return {'zombies': [dict(id=9, on_board=True, row=2, type=16, x=120.0,
+                                         body_health=270, body_max_health=270,
+                                         helm_health=0, phase=0)]}
+
+        zombie = on_board(Env(), {})[9]
+        self.assertEqual(zombie['hp'], 270)
+        self.assertEqual(zombie['body_health'], 270)
+        self.assertEqual(zombie['body_max_health'], 270)
+        self.assertEqual(zombie['phase'], 0)
+
+    def test_repeater_and_leftpeater_are_distinct_cards(self):
+        from llmplay import cards
+        self.assertEqual(cards.resolve('repeater'), 7)
+        self.assertEqual(cards.resolve('leftpeater'), 52)
+        self.assertEqual(cards.resolve('doom_shroom'), 15)
+        names = list(cards.slugs().values())
+        self.assertEqual(len(names), len(set(names)))
+        owners = {}
+        for seed_type in cards.slugs():
+            for name in cards.aliases(seed_type):
+                owners.setdefault(name, set()).add(seed_type)
+        self.assertEqual({name: types for name, types in owners.items() if len(types) > 1}, {})
+
+    def test_cooldown_shows_remaining_ticks(self):
+        from types import SimpleNamespace
+        from llmplay import scene
+        game = SimpleNamespace(obs=dict(sun=200, packets=[dict(
+            index=0, type=17, cost=50, active=False, cooldown=1375, refresh_time=3000)]))
+        text = scene.cards(game)
+        self.assertIn('冷却剩 1625 tick', text)
+        self.assertNotIn('冷却剩 1375', text)
+        game.obs['packets'][0].update(cooldown=3000)
+        self.assertIn('下一帧可种', scene.cards(game))
+        self.assertEqual(scene.cards(SimpleNamespace(obs={})).strip(), '（没有卡槽）')
+
+    def test_dying_target_counts_as_resolved(self):
+        from drill_start import judge
+        import pvz_constants
+        dying = pvz_constants.zombie_phases()['PHASE_ZOMBIE_DYING']
+
+        class Env:
+            def __init__(self, zombies):
+                self.zombies = zombies
+
+            def privileged_state(self):
+                return {'zombies': self.zombies}
+
+        target = dict(id=7, on_board=True, row=2, type=23, x=300.0,
+                      body_health=0, body_max_health=3000, phase=0)
+        obs = {'tick': 35790, 'result': 0}
+        verdict = judge(Env([dict(target)]), obs, [{'id': 7}], 3, 3,
+                        horizon=900, root_tick=34890)
+        self.assertFalse(verdict['success'])
+        target['phase'] = dying
+        verdict = judge(Env([target]), obs, [{'id': 7}], 3, 3,
+                        horizon=900, root_tick=34890)
+        self.assertTrue(verdict['success'])
+        self.assertEqual(verdict['dying'], [7])
+        self.assertEqual(verdict['targets_alive'], 0)
+
+
 class ReferenceTableTest(unittest.TestCase):
     """静态参考表的数字必须来自源码解析，不是手抄。"""
 

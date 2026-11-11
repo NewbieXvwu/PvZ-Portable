@@ -4,6 +4,7 @@ from pathlib import Path
 
 from day_orig_tasks import day_original_tasks, is_day_original_source
 from make_day_panel import D7_DECK
+from pvz_tasks import sorted_deck
 
 
 HOLDOUT_DECKS = {
@@ -27,7 +28,7 @@ def day_identity_tasks():
                      split='heldout_deck',
                      holdout_semantics='unordered plant set excluded from every perturbation training family')
                for level, decks in HOLDOUT_DECKS.items() for index, deck in enumerate(decks, 1)]
-    excluded = sorted(tuple(sorted(task['deck'])) for task in heldout)
+    excluded = sorted(tuple(sorted_deck(task['deck'])) for task in heldout)
     tasks = []
     for level in HOLDOUT_DECKS:
         options = dict(protocol_version=4, ok=True, level=level, playthrough=2,

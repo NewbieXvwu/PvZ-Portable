@@ -1,4 +1,4 @@
-# LLM Play 任务书（task238：必刷题 + 自出题）
+# LLM Play 任务书（task267：238j）
 
 你拿到的是无窗口的《植物大战僵尸》1.2.0.1073 复刻引擎及 Python 接口。
 每局产物是一份真实操作序列存档：什么 tick、用什么卡、种在哪一格、注入了什么。
@@ -8,14 +8,11 @@
 **任何阶段都不交班、不请示、不盘点，完成一局就立即 `next_task()` 领下一项。**
 `progress()["complete"]` 永远是 `False`，这不是 bug。唯一停止条件是用户在对话里说停。
 
-三类项目按固定先后派发：
-
-1. **drill**：真实必刷题。从生产存档的危急残局起手，只考一个知识点，由模拟器判。
-2. **scenario**：GPT 自己出题。选真实中盘底局，注入**单一**威胁，自己解，模拟器判。
-3. **resume**：学生败局中盘接回。前两类清空之前不会派。
-
-drill 和 scenario 都排在 resume 前面；接口会按这个顺序返回 `item["layer"]`。
-队列里还有前沿倍率、传送带、主线时，它们排在这三类之后，不要插队。
+238j 按配置依次派发：回退子项 → 真实必刷题 drill → r160 八个重点格的同卡组败局 resume →
+L30/L40/L45/L50 原生整局 native → 剩余 scenario → 其余旧 resume → 前沿倍率 → 其余原生支线 → 主线。
+drill 从真实危急局面起手，scenario 从真实底局注入单一威胁，均由模拟器判分。
+重点 resume 保持原局卡组与倍率，native 由引擎发牌。按 `next_task()` 返回的项推进。
+最新交回进度已经放在包内 carry，首次导入自动接上。
 
 ## 1. 解包与输出目录
 
@@ -70,7 +67,9 @@ if item["layer"] == "drill":
   关闭该 `g`，直接 `next_task()` 换下一题，不需要推进或导出。这项检查只读已加载的棋盘。
 - `reason` / `strategy` 写一句“考的是什么、怎么应对”，例如
   “考小丑贴脸：先用窝瓜顶掉盒子，再补前排”。这是给训练和错题分析用的，不是判据。
-- 判据只看模拟器：目标僵尸 id 全部离场/死亡、没有割草机触发、没有僵尸进屋。
+- 判据只看模拟器：目标僵尸 id 全部离场、**或**进入引擎的死亡类阶段（DYING/BURNED/MOWERED，
+  以 C++ `Zombie::IsDeadOrDying()` 为准），且没有割草机触发、没有僵尸进屋。
+  死亡动画期间目标仍可能 `on_board=True`，这时已经算解决；不要为了等它消失而拖过视界。
   不要用“我觉得守住了”代替 `g.drill_result()`。
 - 失败也有价值：照样导出。导入时失败局只记录、不进示范行；成功局带 `meta["drill"]`，
   训练时按 drill 行加权。
@@ -109,6 +108,8 @@ if item["layer"] == "scenario":
   可以出不同知识点，但每局只留一个。
 - 注入操作是普通 operation（`spawn` / `set_sun` / `set_cooldown`），会写进 ticks，
   导入时按同一路径重放；它们本身不是示范动作，不会进训练行。
+- 冒险模式的巨人（23）和红眼巨人（32）只能注入第 1 行及以下，屋顶用 r1–r4。
+  `spawn()` 返回 `False` 表示该次注入被引擎拒绝，改用合法行，成功后再取 `last_spawn_id` 声明目标。
 - `reason` 写“考的是什么、怎么应对”；`declare_scenario` 的 `knowledge` 用同一个标签。
 - 同一道题至少再试一个不同 future seed（队列会给同底局的第二个种子）。
 
@@ -148,26 +149,52 @@ if item["layer"] == "scenario":
 
 ## 4. resume：学生败局中盘接回
 
-drill 与 scenario 清空后才派 `layer=="resume"`。存档已经重放到截断点，
+drill 后先派 r160 重点格的 `layer=="resume"`，其余旧接回排在 scenario 之后。存档已截到起点，
 `g.observe()` 就是学生当时的局面；卡组、倍率、种子照原局，不能再选卡。
 
 ```python
 item = llmplay.next_task()["item"]
 if item["layer"] == "resume":
-    g = Game.load_archive(item["path"], strategy="先补两列经济，再用窝瓜/樱桃顶住下一波")
+    g = Game.load_archive(item["path"], resume_item=item.get("resume_item"),
+                          strategy="根据局面补经济，保住下一波")
     print(g.observe())
     # ... 解题 ...
-    g.export_archive(llmplay.out_dir() / ("resume_" + item["task_id"]))
-    g.close()
+    # 判断当前切点已经救不回时，保存本次尝试并接着打更早的子局：
+    g = g.rewind_resume(reason="第3波起只有2株向日葵，切点阳光0")
+    # 不指定 to_tick 时默认退到当前切点的一半；目标必须早于切点且 >= 0。
+    # g 为 None 表示已到开局或三次回退用尽，已标为结构性待复核，此时领下一题。
+    if g is None:
+        item = llmplay.next_task()["item"]
+    else:
+        print(g.observe())                # 当前子代理继续解题
+        # ... 打到实际终局，再导出 ...
+        g.export_archive(llmplay.out_dir() / ("resume_" + g.resume_id))
+        g.close()
 ```
 
-本包 `carry/` 已经接上 226b 最新交回的进度（2026-11-04 18:20 HKT 那一份），
+本包 `carry/` 已经接上 2026-11-11 22:08:37 HKT 的最新交回进度，
 **不需要再附旧分卷**；`resume` 进度会从 carry 继续，不会重打已完成的条目。
 导出时 `strategy` 必填：写清从这个局面先补什么、靠什么顶哪一波。
+
+救不回时调用 `rewind_resume()`，诊断写一句“从哪一波开始走偏、缺什么”，可建议更早的
+`to_tick`。不要因如实记录失败就直接跳过。接口会自动导出本次失败或放弃记录，用原局
+前缀截出更早子项，放到队首并交给当前子代理继续。默认取开局与当前切点的中点，
+让经济决策的可修改区间每次向前扩展一半。每条链最多回退三次，开局仍救不回或次数
+用尽就标为结构性待复核，主控据此检查卡组与倍率。这里的经济诊断由你判断。
+
+回退子项赢局后，仅新切点之后的 GPT 操作进入示范行，分档沿用普通 resume。
+原题、回退次数、各次切点和诊断会随存档与进度一起保留。`rewind(tick)` 仍是局内重试，
+回退题目请用 `rewind_resume()`。跨进程重领子项时，照示例把 `item.get("resume_item")`
+传给 `load_archive()`；直接接住 `rewind_resume()` 返回的局则已完成认领。
 
 ## 5. 共用规则
 
 - 先 `observe()`，合法动作以 `g.legal()` 的引擎结果为准；不要背固定种植表。
+- `plant(card=...)` 可以传槽位号、英文卡名或中文名。英文名来自 C++ `SeedType` 枚举：
+  `repeater` 只指双发射手(7)，另一张 `leftpeater` 才是 52；`observe()` 的卡槽行会打印
+  该用的名字。以当前卡槽行为准，传送带换槽也不影响按名字种。
+- `observe()` 卡槽行的“冷却剩 N tick”是**剩余**时间 = `refresh_time − 已过`。
+  剩 0 的那一帧还不进 `legal()`，**下一帧才可种**；能不能种始终以 `legal()` 为准。
 - 卡组 6–10 张、不重复；泳池/雾必须带睡莲(16)，屋顶必须带花盆(33)。
   升级植物只能种在底座上（香蒲→睡莲、忧郁菇→大喷菇、玉米加农炮→玉米投手）。
 - 一局只做一件事：drill 解一道题；scenario 只注入一个威胁；resume 只救一个局面。
@@ -194,4 +221,4 @@ llmplay.roster(task_id, seed=...)  # 出怪表（drill/scenario 可跳过）
 
 `Game` 常用：`observe()`、`legal()`、`plant()`、`shovel()`、`spawn()`、`set_sun()`、
 `set_cooldown()`、`reseed()`、`zombies()`、`declare_scenario()`、`drill_result()`、
-`wait()`、`wait_until()`、`export_archive()`、`close()`。
+`wait()`、`wait_until()`、`rewind_resume()`、`export_archive()`、`close()`。

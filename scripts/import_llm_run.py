@@ -147,7 +147,7 @@ def grade(meta: dict) -> str:
     """task81d 的分档：full / half / loss。"""
     outcome = meta.get('outcome') or {}
     won = bool(outcome.get('won')) or int(outcome.get('result') or 0) == 1
-    if not won:
+    if not won or meta.get('abandoned') or outcome.get('abandoned'):
         return 'loss'
     checkpoint = ((meta.get('robustness') or {}).get('checkpoints') or {}).get(ROBUST_WAVE) or {}
     k = int(checkpoint.get('k') or (meta.get('robustness') or {}).get('k') or 0)
@@ -450,9 +450,9 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                     problems = problems + family_problems
                     verified = receipt['verified'] and not problems
                     block = short_horizon(meta)
+                    abandoned = bool(meta.get('abandoned') or meta['outcome'].get('abandoned'))
                     short_success = (bool((receipt.get('result') or {}).get('result'))
-                                     and not meta.get('abandoned') if block
-                                     else bool(meta['outcome'].get('won')))
+                                     if block else bool(meta['outcome'].get('won'))) and not abandoned
                     if (verified and short_success and llm_demo_data is not None
                             and str(meta.get('label_source', '')).startswith('llm_')):
                         from pvz_llm_demo_rows import import_demo
@@ -474,6 +474,8 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                                grade=('full' if verified and short_success else 'loss') if block else
                                (grade(meta) if verified else 'loss'),
                                robustness=robustness_text(meta), manual_patch=meta.get('manual_patch'),
+                               resume_id=meta.get('resume_id'), resume=meta.get('resume'),
+                               abandoned=abandoned,
                                new_family=sha not in previous, archive=relative if verified else '',
                                note=reason, verification_reused=cached)
                     if sha in seen:

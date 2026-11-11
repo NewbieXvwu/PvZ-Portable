@@ -58,7 +58,10 @@ def import_demo(data, source, sha, results=(1,), *, min_operation=0, skip_operat
     if not target.exists():
         frames = read_frames(frame_path(source))
         # task224：中盘接回存档的 frames 从截断点开始；截断点本身和学生前缀都不能变成示范行。
-        cutoff = (meta.get('resume') or {}).get('cutoff_tick')
+        resume = meta.get('resume') or {}
+        cutoff = resume.get('cutoff_tick')
+        prefix = resume.get('prefix_operations')
+        min_operation = max(int(min_operation), int(prefix or 0))
         blocked = {int(value) for value in skip_operations or ()}
         rows = []
         for index, frame in enumerate(frames):
@@ -68,7 +71,7 @@ def import_demo(data, source, sha, results=(1,), *, min_operation=0, skip_operat
                 continue
             if operation <= int(min_operation) or operation in blocked:
                 continue
-            if cutoff is not None and float(frame.get('tick') or 0) <= float(cutoff):
+            if prefix is None and cutoff is not None and float(frame.get('tick') or 0) <= float(cutoff):
                 continue
             if action['type'] == 'plant' and not any(
                     card[0] == action['packet'] and card[1] >= 0 for card in frames[index - 1]['packets']):

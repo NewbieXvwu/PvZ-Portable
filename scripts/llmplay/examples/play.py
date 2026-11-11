@@ -33,8 +33,14 @@ def main() -> int:
     if item["layer"] == "decks" and item["action"] != "resume" and (not args.deck or not args.reason):
         parser.error("扩卡组主线须提供--deck与--reason；传送带支线由引擎发牌")
     deck = [] if item["layer"] == "native" else [int(card) for card in (args.deck or "").split(",") if card]
-    game = (Game.load_archive(out_dir() / item["archive"]) if item["action"] == "resume" else
-            Game(task_id, seed=seed, deck=deck, reason=args.reason))
+    if item["action"] == "resume_archive":
+        game = Game.load_archive(item["path"], resume_item=item.get("resume_item"),
+                                 strategy=args.reason)
+        # 判断救不回时：game = game.rewind_resume(reason="第几波开始走偏、缺什么")
+        # 返回的子局已认领，继续 observe / 解题；None 表示已标记结构性待复核。
+    else:
+        game = (Game.load_archive(out_dir() / item["archive"]) if item["action"] == "resume" else
+                Game(task_id, seed=seed, deck=deck, reason=args.reason))
     with game:
         out = out_dir() / ("%s_seed%s" % (task_id, game.seed))
         print(game.observe())

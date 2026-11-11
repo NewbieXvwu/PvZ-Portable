@@ -200,6 +200,34 @@ def deck_entry(card):
     return seed_type if imitater_type is None else (seed_type, imitater_type)
 
 
+def deck_cards(deck) -> set[int]:
+    """Deck -> set of card seed types, the only card-set conversion.
+
+    An Imitater slot is card 48 and its copied card is counted separately, so
+    ``[48, 1]`` contributes both 48 and 1.  Callers must not call ``set(deck)``
+    directly: pairs are unhashable and this is the convention used by terrain
+    coverage, upgrade ownership and the blacklist.
+    """
+    cards = set()
+    for card in deck or []:
+        seed_type, target = deck_card(card)
+        cards.add(seed_type)
+        if target is not None:
+            cards.add(target)
+    return cards
+
+
+def deck_sort_key(card):
+    """Sortable key that keeps an Imitater pair as one slot."""
+    seed_type, target = deck_card(card)
+    return seed_type, -1 if target is None else target
+
+
+def sorted_deck(deck) -> list:
+    """Canonical, hashable sorted copy; never raises on mixed int / pair decks."""
+    return sorted((deck_entry(card) for card in deck or []), key=deck_sort_key)
+
+
 
 
 def _oom_score_engine() -> None:

@@ -1772,13 +1772,14 @@
     },
     "resume": {
       "catalog": "configs/llmplay_resume.json",
+      "priority_arm": "r160",
       "terrain_order": [
         "night",
         "pool",
         "day",
         "fog"
       ],
-      "note": "task220：从学生自己的败局中盘接回（首次破门前 45 秒），最高优先；每条只打一次，胜/负都记。"
+      "note": "task263：r160 八个重点格的同卡组败局先接回，卡组与倍率照原局，每条只打一次。"
     },
     "native_seed_base": 300000000,
     "drill": {
@@ -1786,6 +1787,17 @@
     },
     "scenario": {
       "catalog": "configs/llmplay_scenarios.json"
-    }
+    },
+    "queue_priority": {
+      "drill": 0,
+      "focus_resume": 1,
+      "tail_native": 2,
+      "scenario": 3,
+      "resume": 4,
+      "frontier": 5,
+      "native": 6,
+      "main": 7
+    },
+    "native_targets": {"30": 32, "40": 32, "45": 32, "50": 32}
   }
 }
