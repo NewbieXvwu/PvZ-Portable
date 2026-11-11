@@ -24,9 +24,8 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
-from pvz_env import deck_cards, sorted_deck
-
 from .game import ROOT, load_tasks, required_checkpoint
+from pvz_env import deck_cards, sorted_deck
 from .runtime import output_path
 
 LAYERS = ("A", "B", "C", "D", "E")
