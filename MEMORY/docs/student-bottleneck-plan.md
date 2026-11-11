@@ -2063,3 +2063,10 @@
   - 预计回收 62–80 GB。
   - 遗留：选中子集时现在复用物理记录，不再重建，所以 shared-v2 里被淘汰分段的记录会一直留着，以后需要按死记录比例压实。
 - 11-11 布 `autodeploy-dataslim`（台式机 `~/pvz-logs/deploy-dataslim/run.sh`）：下一次门禁结论后，C 盘不少于 22 GB 才部署。确认新 queue 不带 `--obs-v3` 后依次删 tokens_v3、跑 segments 迁移、跑 cache 存量剪枝（维护脚本在桌面完整检出 `.claude/worktrees/dataslim` 里运行，MemoryMax=6G），日志在同目录。
+- 11-11 21:45 CST r177 否（L7 54/96、L9 42/96），现任仍是 r176。随后 **autodeploy-dataslim 全部完成**：
+  - 21:45:54 部署 aab98068，exit 0，新 queue 不再带 `--obs-v3`；
+  - 21:45:59 删除 tokens_v3；
+  - 21:52 segments 迁移完成，用时 6 分 14 秒；
+  - 21:56 cache 存量剪枝完成，用时 4 分 12 秒。
+  - 结果：WSL 已用 167 → 92 GiB；frames_v2 53 → 23 GB，pipeline/frames 52 → 24 GB，cache 17.5 GB → 288 MB；**C 盘 27 → 72 GB**（稀疏盘把空间还回来了）。
+  - HF `backup/20261111/` 已删除（不囤积）。
