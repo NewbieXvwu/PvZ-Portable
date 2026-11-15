@@ -2086,3 +2086,9 @@
   - 合并了 pkg238j（drill_start 两边的改动都保留）。
   - **238k** 在 `~/Downloads/pvz-llmplay-238k/`，carry 15,953 条（11-11 22:08）；台式机 `accept_package.py` exit 0，其中包含 L47 模仿者卡组的真实导出。
   - 布 `autodeploy-238k`：下次门禁后部署 5fbe4e31，生产与导入器同时更新。Mac 删掉 238j 和已经并进 carry 的交回 zip。
+- 11-12 04:20 autodeploy-238k 部署 5fbe4e31，exit 0。11-12 到 11-13 门禁：r180、r182、r185、r186 晋升，r179、r181、r184、r187、r188 否（r183 被 r184 取代）。北极星（800 局）学生单跑 r180 25.1% → r185 32.1% → r186 31.5%（日 125/160、夜 17/176、泳池 90/160、雾 8/144、屋顶 12/160）；对照组 61%（屋顶 14/160）。
+- **11-13 04:35 → 11-15 23:45 CST 生产停摆约 67 小时**（用户暂停项目期间）：round 189 一开局就反复挑中 drill235 的几个题，每局都在 `drill_start.replay_actions` 报 `prefix differs`，而且总是正好多 60 tick。连续 3 组 0 局有效 → systemic 暂停 → 一局探针（别的题）成功 → 恢复 → 又挑中同一题，共循环约 1175 次。
+  - 根因：task268（aab98068）把 `replay_actions` 改成前缀恢复和 token 回填共用，新增了“`action_rejected` 帧补等 60 tick”。采集存档需要这一步，`frames_v2/human/demo_fog_*_snow_m200` 这类人类示范转换存档（没有 ticks.jsonl）不需要，所以重放时多出 60 tick。这几个题最后一次正常运行在 r171–177，都在 task268 部署之前。
+  - 11-15 主控扫描全部 87 个 drill 题（单进程，约 1 分钟）：8 题坏，全部来自上述 5 个人类存档。两次 stop_curr，用 `retire_cell` 退役这 8 题（state 备份 `curriculum_state.json.bak-1115*`），清空了 1.17 GB 的 qc.out。23:45 生产恢复出局。
+  - 派 **task270**（Codex，分支 fix270，基于 5fbe4e31）：按存档来源区分补等语义，只保留一份 replay_actions；队列改为“探针成功但同一格再次 0/N 就自动 retire_cell”，不再空转。修好后复扫，把这 8 题从 retired 取回。
+  - 教训：systemic 探针只能证明引擎能跑，不能证明下一个题能跑；单题确定性失败必须落到该题上，不能让整条线停下。
