@@ -2092,3 +2092,8 @@
   - 11-15 主控扫描全部 87 个 drill 题（单进程，约 1 分钟）：8 题坏，全部来自上述 5 个人类存档。两次 stop_curr，用 `retire_cell` 退役这 8 题（state 备份 `curriculum_state.json.bak-1115*`），清空了 1.17 GB 的 qc.out。23:45 生产恢复出局。
   - 派 **task270**（Codex，分支 fix270，基于 5fbe4e31）：按存档来源区分补等语义，只保留一份 replay_actions；队列改为“探针成功但同一格再次 0/N 就自动 retire_cell”，不再空转。修好后复扫，把这 8 题从 retired 取回。
   - 教训：systemic 探针只能证明引擎能跑，不能证明下一个题能跑；单题确定性失败必须落到该题上，不能让整条线停下。
+- 11-15 **task270 结题**（Codex，fix270 dd373cd6，已快进合入 pkg238）：
+  - `replay_actions` 只在拒绝帧没有 `operation` 编号时补等 60 tick：search_play 先补等再记帧，人类记录器先记帧，转成 npz 后 `operation` 编号仍保留，可据此区分。
+  - 队列：探针成功后，把连续 0 局有效的格标成 `zero_games_probe_passed`，这个标记跨重启保留；同一格再次 0/N 就 `retire_cell`，原因里附子进程 stderr 的最后一行；出现有效局后清除标记。
+  - 台式机复扫 drill 90/90 通过（含退役的 8 题）；task268 的 50 局 + 5 续走样本回填逐位一致。
+  - 11-16 00:21 CST 部署 dd373cd6，exit 0（第一次失败是台式机仓库没 fetch，未停生产）。部署后 `deploy-270` 再走一次 stop_curr，把 8 题从 retired 取回。
