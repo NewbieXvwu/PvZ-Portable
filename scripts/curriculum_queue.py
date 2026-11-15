@@ -2517,8 +2517,15 @@ def _run_group(args, state, item, round_index, per_worker):
     started = time.time()
     item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
+    last_error = ''
     try:
-        result = retry_io(subprocess.run)(command, cwd=ROOT)
+        with tempfile.TemporaryFile(mode='w+b') as stderr:
+            result = retry_io(subprocess.run)(command, cwd=ROOT, stderr=stderr)
+            stderr.seek(max(0, stderr.tell() - 4096))
+            tail = stderr.read().decode('utf-8', errors='replace').strip()
+            if tail:
+                print(tail, file=sys.stderr, flush=True)
+                last_error = ': ' + tail.splitlines()[-1]
     finally:
         item['collection_finished'] = time.time()
         if pipeline is not None:
@@ -2539,7 +2546,7 @@ def _run_group(args, state, item, round_index, per_worker):
     item['valid_games'] = sum(type(row.get('won')) is bool for row in rows)
     item['wins'] = wins
     if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
-        raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
+        raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}{last_error}')
     metrics = getattr(args, 'metrics', None)
     if metrics is not None:
         args.metrics_games += games
@@ -2555,7 +2562,7 @@ def _run_group(args, state, item, round_index, per_worker):
                        f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
                        f'rc={result.returncode} {seconds:.0f}s')
     if result.returncode != 0:
-        raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}')
+        raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}{last_error}')
     if item.get('review_of'):
         return  # Reviews feed training only; do not update ladder windows or probe counters.
     bucket = cell['windows'].setdefault(
@@ -2596,7 +2603,19 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
     health = getattr(args, 'game_health', None) or GameHealth(args)
     if state.get('zero_game_groups', 0) >= ZERO_GAME_GROUP_LIMIT:
         health.pause('consecutive groups produced zero valid games before restart')
+        if not health.wait():
+            return False
+        # Persist the suspects across replanning/restarts; a valid group clears its flag.
+        for group in reversed(state.get('completed_groups', [])):
+            if group.get('valid_games') != 0:
+                break
+            if group['base'] in state['cells']:
+                state['cells'][group['base']]['zero_games_probe_passed'] = True
+        state['zero_game_groups'] = 0
+        save_state(args.state, state)
     for item in plan:
+        if item['base'] not in state['cells']:
+            continue
         if not health.wait():
             return False
         pipeline_action(args, 'poll')
@@ -2619,14 +2638,20 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
                 state['cells'][item['base']]['last_round'] = round_index
             state['zero_game_groups'] = (state.get('zero_game_groups', 0) + 1
                                          if item.get('valid_games') == 0 else 0)
+            if (item.get('valid_games') == 0
+                    and state['cells'][item['base']].get('zero_games_probe_passed')):
+                reason = RuntimeError(f'zero valid games again after successful recovery probe '
+                                      f'(0/{item["games"]}): {item["error"]}')
+                change = retire_cell(state, item['base'], reason)
+                changes.append(change)
+                log_line(args.log, change)
+                state['zero_game_groups'] = 0
+        if item.get('valid_games', 0) > 0 and item['base'] in state['cells']:
+            state['cells'][item['base']].pop('zero_games_probe_passed', None)
         state.setdefault('completed_groups', []).append(dict(item))
         save_state(args.state, state)
         if state['zero_game_groups'] >= ZERO_GAME_GROUP_LIMIT:
             health.pause(f'{state["zero_game_groups"]} consecutive groups produced zero valid games')
-            if not health.wait():
-                return False
-            state['zero_game_groups'] = 0
-            save_state(args.state, state)
             return None
     state['round'] = round_index
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())

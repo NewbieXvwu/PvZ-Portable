@@ -95,7 +95,7 @@ def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fo
 
 
 def replay_actions(env, obs, frames, observer=None):
-    """Collection action timeline, shared by prefix restoration and token backfill."""
+    """Recorded action timeline, shared by prefix restoration and token backfill."""
     if observer is not None:
         observer(obs)
     for index, frame in enumerate(frames[1:], 1):
@@ -104,7 +104,9 @@ def replay_actions(env, obs, frames, observer=None):
             delta = int(frame["tick"]) - int(frames[index - 1]["tick"])
             action = dict(type="wait", ticks=max(1, delta))
         obs, _r, _d, _t, _info = env.step(action)
-        if frame.get('action_rejected'):
+        # Recorder's operation frames precede any further wait; search_play folds
+        # its rejection wait into the same frame. Operation numbers survive NPZ conversion.
+        if frame.get('action_rejected') and 'operation' not in frame:
             obs, _r, _d, _t, _info = env.step(dict(type='wait', ticks=60))
         if int(obs["tick"]) != int(frame["tick"]):
             raise ValueError(f"prefix differs at frame {index}: {obs['tick']} != {frame['tick']}")

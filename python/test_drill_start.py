@@ -25,6 +25,30 @@ VALUES = [1.0, 1.25, 1.5]
 NAMES = {}
 
 
+@pytest.mark.parametrize('operation_recording', [False, True])
+def test_replay_rejection_wait_matches_recorder(operation_recording):
+    from drill_start import replay_actions
+
+    class Env:
+        tick = 0
+
+        def step(self, action):
+            if action['type'] == 'wait':
+                self.tick += action['ticks']
+            return {'tick': self.tick}, 0, False, False, {}
+
+    rejected_tick = 0 if operation_recording else 60
+    frames = [dict(tick=0),
+              dict(tick=rejected_tick, action=dict(type='plant'), action_rejected=True),
+              dict(tick=rejected_tick + 30, action=None)]
+    if operation_recording:
+        for index, frame in enumerate(frames):
+            frame['operation'] = index
+    seen = []
+    replay_actions(Env(), {'tick': 0}, frames, lambda obs: seen.append(obs['tick']))
+    assert seen == [0, rejected_tick, rejected_tick + 30]
+
+
 def drill_cell(decision=364, level=31, horizon=1200):
     return dict(family='drill_start', level=level, mult_index=0, last_round=0, windows={},
                 ladder=[decision], task_id='drill235_l31_jack_test', archive='/archives/drill',

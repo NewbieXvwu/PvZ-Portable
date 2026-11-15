@@ -11,7 +11,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as q
-from test_curriculum_pipeline import prepared_selection_without_real_games
 
 
 def cell():
@@ -204,6 +203,47 @@ def test_systemic_zero_groups_pause_and_resume_same_round_with_fresh_seeds(tmp_p
     assert all(entry['last_round'] == 1 for entry in current['cells'].values())
     assert sum(call.args[1] == 'enqueue' for call in background.call_args_list) == 1
     assert 'round 1 done: 4 groups, 8 games' in arguments.log.read_text()
+
+
+def test_zero_game_cell_retires_after_probe_and_restart(tmp_path):
+    arguments, current = args(tmp_path), state()
+    health = q.GameHealth(arguments)
+    seen = []
+    diagnostic = 'ValueError: prefix differs at frame 7: 120 != 60'
+
+    def collect(command, **kwargs):
+        task = command[0]
+        seen.append(task)
+        if len(seen) <= 3 or task == 'bad':
+            kwargs['stderr'].write(('Traceback:\n' + diagnostic + '\n').encode())
+            kwargs['stderr'].flush()
+            return SimpleNamespace(returncode=1)
+        folder = arguments.out / 'c1good_2'
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / 'games.jsonl').write_text('{"won":false}\n' * 2)
+        return SimpleNamespace(returncode=0)
+
+    with patch.object(q, 'command_for', side_effect=lambda *p, **kw: [p[2]]), \
+         patch.object(q.subprocess, 'run', side_effect=collect), \
+         patch.object(q, 'mem_available_bytes', return_value=None), \
+         patch.object(health, 'probe', side_effect=[False, True]) as probe, \
+         patch.object(health.closed, 'wait', return_value=False):
+        assert q.run_round(arguments, current, plan() + plan()[:1], []) is None
+        assert 'retired_cells' not in current
+        assert q.run_round(arguments, current, plan()[1:], []) is True
+        assert probe.call_count == 2
+        current = json.loads(arguments.state.read_text())
+        assert current['cells']['bad']['zero_games_probe_passed']
+        assert 'zero_games_probe_passed' not in current['cells']['good']
+        q.GameHealth(arguments)  # A controller restart retains the successful-probe evidence.
+        assert q.run_round(arguments, current, plan()[:1] + plan(), []) is True
+    assert seen == ['bad', 'good', 'bad', 'good', 'bad', 'good']
+    assert set(current['retired_cells']) == {'bad'}
+    assert 'successful recovery probe (0/2)' in current['cell_errors']['bad']
+    assert diagnostic in current['cell_errors']['bad']
+    assert 'cell retired: bad:' in arguments.log.read_text()
+    assert current['zero_game_groups'] == 0
+    assert current['log'][-1]['changes']
 
 
 def test_systemic_pause_survives_restart_and_honors_stop(tmp_path):
