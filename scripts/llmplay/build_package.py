@@ -40,8 +40,6 @@ RESUME_PLAN = ROOT / "configs" / "llmplay_resume.json"
 # task220：中盘接回存档（meta.json + ticks.jsonl + 截断点那一帧）。二进制不进 git，
 # 从台式机取回到本机临时目录，打包时整目录复制进接口包。
 DEFAULT_RESUME_DIR = Path.home() / "pvz-logs" / "task220" / "resume"
-# task238：drill/ 与 scenario/ 的 npz 前缀存档，构建时从本机临时目录复制。
-DEFAULT_ASSET_DIR = Path.home() / "pvz-logs" / "task238" / "assets"
 DRILL_PLAN = ROOT / "configs" / "llmplay_drills.json"
 SCENARIO_PLAN = ROOT / "configs" / "llmplay_scenarios.json"
 
@@ -315,7 +313,8 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         source = resume_dir if resume_dir and Path(resume_dir).is_dir() else (
             fallback if fallback.is_dir() else None)
         archived = copy_resume(stage, source)
-        copy_assets(stage, asset_dir)
+        # 本机 ~/pvz-logs/task238/assets 可能比上一包旧（238l 曾因此少 24 道 drill），默认沿用上一包。
+        copy_assets(stage, asset_dir or previous)
         print(json.dumps(dict(resume_items=archived,
                               drill_items=len(list((stage / "drill").glob("*"))) if (stage / "drill").is_dir() else 0,
                               scenario_items=len(list((stage / "scenario").glob("*"))) if (stage / "scenario").is_dir() else 0)))
@@ -449,8 +448,8 @@ def main() -> int:
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--resume-dir", type=Path, default=DEFAULT_RESUME_DIR,
                         help="task220 中盘接回存档目录（默认 ~/pvz-logs/task220/resume）")
-    parser.add_argument("--asset-dir", type=Path, default=DEFAULT_ASSET_DIR,
-                        help="task238 drill/ 与 scenario/ 前缀存档目录")
+    parser.add_argument("--asset-dir", type=Path,
+                        help="task238 drill/ 与 scenario/ 前缀存档目录（重打包默认沿用上一包的）")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
