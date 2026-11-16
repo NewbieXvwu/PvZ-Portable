@@ -2116,3 +2116,4 @@
   - carry 16,369 条（截至 11-16 08:58:45 HKT）；resume 8457 / drill 927 / scenario 300。
   - 第一次打包少了 24 道 drill：重打包默认读 Mac 上 `~/pvz-logs/task238/assets`，里面只有 903 题，比 238k 包旧。台式机验收在 `drill238_fog_d87584cd/meta.json` 不存在处失败。已改成重打包默认沿用上一包的 drill/scenario 资产，删掉 `DEFAULT_ASSET_DIR`。
   - 重打后台式机 accept_package exit 0（含 L47 模仿者导出、回退导入）。包在 Mac `~/Downloads/pvz-llmplay-238l/`；238k 包和已导入的交回 zip 已删除。
+- 11-16 21:20 CST r195 否（L7 44/96、L9 32/96）。11-17 01:02 **r196 晋升**（现任 r196，留出关同样是 44/96、32/96）；r197 被 r198 取代。L9 从 39–46 降到 32，留出关只监测不否决，接下来几轮注意是否持续下滑。
