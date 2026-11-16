@@ -2107,3 +2107,12 @@
   - 进程池里只要一个 worker 出异常就会终止整组，所以“9/24”只说明一局出错，不说明 15 局都出错；
   - r178 与 r196 选中的不是同一份存档，以前的 24/24 不能证明这份前缀稳定。
   - 最后一个假设（败局终局后的重置路径）还没验证完，Codex 额度就用完了（11-16 11:19 EST 恢复）。全日志只出现过这一次，暂按偶发处理；再出现就重开。分支 fix271 没有改动。
+- 11-16 **GPT 交回** `LLMPlay_20261116_005845Z_out.zip`（单卷 31 MB，用 238k 打的）：
+  - 新增 416 份，全部是 resume，胜 365 局。回退 51 次（49 局回退 1 次、2 局回退 2 次），几乎都在回退后打赢；结构性 0。没有 interface_issues。
+  - 主要是夜间 task222：L12 90 胜 18 负、L17 135 胜 10 负、L18 52 胜 16 负、L19 54 胜 2 负、L14 19 胜，L11/L13 少量；屋顶 resume263 L47 用户卡组（含模仿者 `[48,1]`）9 胜 4 负。resume 进度 1269 / 8537。
+  - 台式机 import-1116（import238 引擎）exit 0，416 份全部复验通过。
+  - HF 上传：xet 卡在 47%，改用 `HF_HUB_DISABLE_XET=1` 加代理后成功。
+- 11-16 打 **238l**（分支 pkg238l = pkg238 dd373cd6 + PROMPT 版本号与 carry 时间 + build_package 修复，已快进到 pkg238）：
+  - carry 16,369 条（截至 11-16 08:58:45 HKT）；resume 8457 / drill 927 / scenario 300。
+  - 第一次打包少了 24 道 drill：重打包默认读 Mac 上 `~/pvz-logs/task238/assets`，里面只有 903 题，比 238k 包旧。台式机验收在 `drill238_fog_d87584cd/meta.json` 不存在处失败。已改成重打包默认沿用上一包的 drill/scenario 资产，删掉 `DEFAULT_ASSET_DIR`。
+  - 重打后台式机 accept_package exit 0（含 L47 模仿者导出、回退导入）。包在 Mac `~/Downloads/pvz-llmplay-238l/`；238k 包和已导入的交回 zip 已删除。
