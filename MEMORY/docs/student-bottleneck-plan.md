@@ -2126,3 +2126,4 @@
   - **坑**：`student activated/retained` 这一行只在采集的组边界写；采集停了之后，门禁结果只会出现在 `background round N evaluate done` 里。stop-at-gate 脚本按前者等，结果没等到，15:09 手动收尾：中止刚开始的 r202 训练和队列，`qc` 已退出，stop_curr 保留。
   - WSL 内存：`.wslconfig` 从 11-09 起就是 `autoMemoryReclaim=dropcache`，但它只在 CPU 空闲时生效，生产 24 小时运转时从不触发。训练进程映射着约 14 GB 训练数据，手动 drop_caches 也清不掉。停机后再 drop_caches，vmmemWSL 17.8 → 5.7 GB，Windows 可用 3.6 → 12.5 GB，GPU 4%。
   - 恢复方法：删掉 `~/pvz-logs/stop_curr`，看门狗会在约 2 分钟内拉起生产，从 round 203 接着跑。
+- 11-17 19:54 CST **r202 晋升**（现任 r202，L7 48/96、L9 41/96）：这一轮是停机时中止、重启后重新训练的那一轮。r199、r201 都没过门禁。
