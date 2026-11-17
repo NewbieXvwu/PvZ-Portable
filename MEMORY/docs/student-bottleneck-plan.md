@@ -2122,3 +2122,7 @@
   - 夜间 L12 54 胜 11 负、L17 15 胜 3 负、L19 19 胜 4 负；泳池 L29 66 胜 0 负、L22 35 胜 0 负，L21/24/26/27/28 共 36 胜 1 负。resume 进度 1513 / 8556。
   - 台式机 import-1117 exit 0，244 份全部复验通过。
 - 11-17 打 **238m**（pkg238m = e9ebabdd + PROMPT 版本号与 carry 时间，已快进到 pkg238）：carry 16,613 条（截至 11-17 07:01:15 HKT），drill 927 / scenario 300 / resume 8457。台式机 accept_package exit 0。包在 Mac `~/Downloads/pvz-llmplay-238m/`，238l 和已导入的交回已删除。
+- 11-17 用户要用台式机，要求在训练边界停：12:45 放 stop_curr，12:48 采集停在组边界（round 203 已完成的组都保留）。r201 门禁 14:51 否（L7 44/96、L9 44/96），现任仍是 r196。
+  - **坑**：`student activated/retained` 这一行只在采集的组边界写；采集停了之后，门禁结果只会出现在 `background round N evaluate done` 里。stop-at-gate 脚本按前者等，结果没等到，15:09 手动收尾：中止刚开始的 r202 训练和队列，`qc` 已退出，stop_curr 保留。
+  - WSL 内存：`.wslconfig` 从 11-09 起就是 `autoMemoryReclaim=dropcache`，但它只在 CPU 空闲时生效，生产 24 小时运转时从不触发。训练进程映射着约 14 GB 训练数据，手动 drop_caches 也清不掉。停机后再 drop_caches，vmmemWSL 17.8 → 5.7 GB，Windows 可用 3.6 → 12.5 GB，GPU 4%。
+  - 恢复方法：删掉 `~/pvz-logs/stop_curr`，看门狗会在约 2 分钟内拉起生产，从 round 203 接着跑。
