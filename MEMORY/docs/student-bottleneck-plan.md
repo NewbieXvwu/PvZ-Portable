@@ -2117,3 +2117,8 @@
   - 第一次打包少了 24 道 drill：重打包默认读 Mac 上 `~/pvz-logs/task238/assets`，里面只有 903 题，比 238k 包旧。台式机验收在 `drill238_fog_d87584cd/meta.json` 不存在处失败。已改成重打包默认沿用上一包的 drill/scenario 资产，删掉 `DEFAULT_ASSET_DIR`。
   - 重打后台式机 accept_package exit 0（含 L47 模仿者导出、回退导入）。包在 Mac `~/Downloads/pvz-llmplay-238l/`；238k 包和已导入的交回 zip 已删除。
 - 11-16 21:20 CST r195 否（L7 44/96、L9 32/96）。11-17 01:02 **r196 晋升**（现任 r196，留出关同样是 44/96、32/96）；r197 被 r198 取代。L9 从 39–46 降到 32，留出关只监测不否决，接下来几轮注意是否持续下滑。
+- 11-17 **GPT 交回** `LLMPlay_2026-11-16_23-01-15_out.zip`（23 MB，导出时间是 UTC，用 238l 打的）：
+  - 新增 244 份，全部是 resume，胜 225 局。回退 19 次，结构性 0，没有接口问题。
+  - 夜间 L12 54 胜 11 负、L17 15 胜 3 负、L19 19 胜 4 负；泳池 L29 66 胜 0 负、L22 35 胜 0 负，L21/24/26/27/28 共 36 胜 1 负。resume 进度 1513 / 8556。
+  - 台式机 import-1117 exit 0，244 份全部复验通过。
+- 11-17 打 **238m**（pkg238m = e9ebabdd + PROMPT 版本号与 carry 时间，已快进到 pkg238）：carry 16,613 条（截至 11-17 07:01:15 HKT），drill 927 / scenario 300 / resume 8457。台式机 accept_package exit 0。包在 Mac `~/Downloads/pvz-llmplay-238m/`，238l 和已导入的交回已删除。
