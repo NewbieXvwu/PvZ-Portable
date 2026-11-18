@@ -12,6 +12,7 @@ import argparse
 import contextlib
 import json
 import math
+import mmap
 import os
 import queue
 import zipfile
@@ -894,11 +895,16 @@ def _append_shared_segment(path, directory, index, signature):
 
 
 def _open_shared_segments(directory, index, signatures, data, row_observer, source_weight):
-    def mapped(name):
+    def mapped(name, random_access=False):
         descriptor = index['arrays'][name]
         shape, dtype = tuple(descriptor['shape']), np.dtype(descriptor['dtype'])
-        return (np.memmap(directory / f'{name}.bin', dtype=dtype, shape=shape, mode='r')
-                if np.prod(shape) else np.empty(shape, dtype))
+        if not np.prod(shape):
+            return np.empty(shape, dtype)
+        array = np.memmap(directory / f'{name}.bin', dtype=dtype, shape=shape, mode='r')
+        # Random epoch gathers must not pull WSL's 8 MiB read-ahead window per fault.
+        if random_access and hasattr(array._mmap, 'madvise'):
+            array._mmap.madvise(mmap.MADV_RANDOM)
+        return array
 
     chunks = []
     for signature in signatures:
@@ -938,7 +944,8 @@ def _open_shared_segments(directory, index, signatures, data, row_observer, sour
         store.shape = (total, *descriptor['shape'])
         store.row_order = csr_order
         store.blocks, store.block_offsets, store.raw_sizes, store.counts = (
-            mapped(name + '_' + field) for field in ('blocks', 'block_offsets', 'raw_sizes', 'counts'))
+            mapped(name + '_' + field, random_access=field == 'blocks')
+            for field in ('blocks', 'block_offsets', 'raw_sizes', 'counts'))
         store.indices = store.values = store.offsets = None
         lengths = mapped(name + '_plane_lengths')
         cells, values = mapped(name + '_plane_cells'), mapped(name + '_plane_values')
@@ -960,14 +967,14 @@ def _open_shared_segments(directory, index, signatures, data, row_observer, sour
         store.offsets = np.r_[0, np.cumsum(counts, dtype=np.int64)][order]
         store.counts = counts[order]
         for field in (('slots', 'values') if name == 'value' else ('entries',)):
-            setattr(store, field, mapped(name + '_' + field))
+            setattr(store, field, mapped(name + '_' + field, random_access=name == 'cand'))
         sparse.append(store)
     result = (*stores, *dense, mapped('seed')[order], *sparse)
     if 'aux' in index['arrays']:
         result = (*result, torch.from_numpy(mapped('aux')[order]))
     if 'packet_col0' in index['arrays']:
         packets = PacketStore(0, index['arrays']['packet_col0']['shape'][1])
-        packets.columns = [mapped(f'packet_col{component}') for component in range(4)]
+        packets.columns = [mapped(f'packet_col{component}', random_access=True) for component in range(4)]
         packets.packed_flags = True
         packets.row_order = order
         result = (*result, packets)
