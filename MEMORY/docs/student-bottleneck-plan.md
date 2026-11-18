@@ -2146,3 +2146,4 @@
   - 处理：给训练所在的 tmux scope 设 `systemctl --user set-property --runtime <scope> MemoryHigh=14G`（scope 名写在 `~/pvz-logs/trainer_cap_scope`），vmmemWSL 降到 11.9 GB，Windows 可用 8.2 GB。代价是训练读盘更多、更慢。
   - 恢复时：删 stop_curr，取消上限（`set-property --runtime <scope> MemoryHigh=infinity`；scope 随队列重启会消失）。stop_curr 在的时候，r212 门禁结果不会写成 `student activated/retained` 行，要等队列重启后才写，到那时 autodeploy-273 才会触发。
 - 11-18 23:58 CST 用户用完：取消 MemoryHigh 上限，删除 stop_curr。r212 的 B 臂在上限下 1.3 小时还没跑完 epoch 1，按旧代码还要约 4 小时，这期间采集也不能恢复。所以改为**立即手动部署 df9c4ab6**（分块打乱），放弃 r212 这一轮训练，同时停掉 autodeploy-273。deploy exit 0，队列重启，从 round 215 接着跑。
+- 11-19 **分块打乱见效**：r214 A 臂 epoch 1 用 1388 s（r212 旧代码 2463–3784 s，r208 最慢 5991 s），训练中读盘约 0（30 s 读 1 MB）。epoch 1 的 val_loss 3.480，与 r206 的 3.506、r196 的 3.493 同一量级，没有变差。
