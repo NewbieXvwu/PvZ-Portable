@@ -2141,3 +2141,7 @@
   - 批内任务族 KL 均值 0.045 → 0.158，不同任务族数约少 16%，学习效果交给门禁。
   - 附带改动：`epoch_rows` 改在 history_l7_keep 过滤之后计算，只在 keep < 1 时改变步数；生产配方没有设这个参数。
   - 布 **autodeploy-273**，下一次门禁后部署。部署后看 epoch 秒数，以及候选能否通过门禁。
+- 11-18 22:54 CST 用户要用台式机，只停采集：放 stop_curr，22:55 停在 round 215 的组边界，r212 继续训练。
+  - **发现**：停了采集，Windows 也拿不回内存。训练进程映射的数据会马上把空出的内存填成页缓存，vmmemWSL 19.9 → 16.4 GB，Windows 可用只有 1.6 GB。
+  - 处理：给训练所在的 tmux scope 设 `systemctl --user set-property --runtime <scope> MemoryHigh=14G`（scope 名写在 `~/pvz-logs/trainer_cap_scope`），vmmemWSL 降到 11.9 GB，Windows 可用 8.2 GB。代价是训练读盘更多、更慢。
+  - 恢复时：删 stop_curr，取消上限（`set-property --runtime <scope> MemoryHigh=infinity`；scope 随队列重启会消失）。stop_curr 在的时候，r212 门禁结果不会写成 `student activated/retained` 行，要等队列重启后才写，到那时 autodeploy-273 才会触发。
