@@ -190,7 +190,7 @@ def test_memory_forecast_counts_only_background_headroom():
             pipeline.close()
 
 
-def test_candidate_transition_keeps_collection_workers():
+def test_candidate_transition_reserves_training_file_cache():
     with tempfile.TemporaryDirectory() as folder:
         args, state = setup(Path(folder))
         peak, resident = 2652 * 1024 ** 2, 1096 * 1024 ** 2
@@ -210,6 +210,19 @@ def test_candidate_transition_keeps_collection_workers():
                                           pipeline.reservation()) == 16
                 pipeline.process = SimpleNamespace(pid=123)
                 assert pipeline.reservation() == peak - resident
+                pipeline.training_admission = True
+                assert queue.worker_count(22 * queue.GIB, queue.GIB, 16,
+                                          pipeline.reservation()) == 5
+                pipeline.process = None  # keep the cache between the two candidates
+                assert queue.worker_count(22 * queue.GIB, queue.GIB, 16,
+                                          pipeline.reservation()) == 4
+                pipeline.train_parallelism = 2
+                assert queue.worker_count(32 * queue.GIB, queue.GIB, 16,
+                                          pipeline.reservation()) == 11
+                pipeline.training_admission = False  # evaluation releases the cache budget
+                pipeline.train_parallelism = 1
+                assert queue.worker_count(22 * queue.GIB, queue.GIB, 16,
+                                          pipeline.reservation()) == 16
             pipeline.futures.clear()
         finally:
             pipeline.close()

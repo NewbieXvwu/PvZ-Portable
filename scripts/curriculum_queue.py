@@ -1214,6 +1214,7 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
+        self.last_train_data = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         self.eval_units = self.minimum_eval_units()  # task166: reserve before training finishes
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
@@ -1238,6 +1239,11 @@ class TrainingPipeline:
             if value:
                 try:
                     self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                except (ValueError, TypeError):
+                    pass
+            if not self.last_train_data and timing.get('train_data_bytes'):
+                try:
+                    self.last_train_data = int(timing['train_data_bytes'])
                 except (ValueError, TypeError):
                     pass
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
@@ -1534,6 +1540,10 @@ class TrainingPipeline:
                 processes = [self.process]
             anonymous = sum(_tree_anon_bytes(process.pid) for process in processes)
         peak = max(self.estimate_peak(), self.minimum_eval_units() * self.per_worker_bytes)
+        if self.training_admission:
+            # Soft corpus-sized cache budget for subsequent collector groups:
+            # MemAvailable includes reclaimable cache; both candidates share one copy.
+            peak += self.last_train_data
         return max(0, peak - anonymous)
 
     def _b_parent(self, before):
@@ -1963,6 +1973,7 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
+        self.last_train_data = report['train_data_bytes']
         from pvz_frame_store import frame_paths
         report['corpus_archives'] = sorted({str(path.parent.relative_to(Path(recipe['data'])))
             for path in frame_paths(Path(recipe['data'])) if path.parent.name in set(recipe['labels'])})
