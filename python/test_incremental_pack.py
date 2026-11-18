@@ -399,6 +399,49 @@ def test_shared_incremental_streaming_batches(tmp_path, change):
     assert actual[7].spread()[1].tobytes() == reference[7].spread()[1].tobytes()
 
 
+@pytest.mark.parametrize('shared', [False, True])
+def test_chunk_shuffle_covers_rows_reproducibly_and_preserves_payload(tmp_path, shared):
+    data = tmp_path / 'data'
+    fixture(data, ['a', 'b', 'c'])
+    packed = pack(data, options(data, ['a', 'b', 'c'], obs='v2', cells=True,
+                                aux_horizon=3, packet_head='identity'))
+    with np.load(packed) as stored:
+        paths = [packed.parent / name for name in stored['segments'].tolist()]
+    actual = trainer.read_segments(paths, data if shared else None)
+    source = trainer.BatchSource(*actual[:6], actual[-1], actual[8], actual[9])
+    # The weight identifies the original logical row, independently of physical order.
+    source.weight.copy_(torch.arange(1, len(actual[2]) + 1))
+    source.CHUNK_ROWS, source.WINDOW_CHUNKS = 32, 2
+    indices = np.arange(len(actual[2]), dtype=np.int32)
+    indices = indices[indices % 5 != 0]  # validation / excluded rows are never visited
+
+    def epoch(seed, check=False):
+        seen, sizes = [], []
+        loader = trainer.BatchPrefetcher(None, source.training_batches(indices, 17, seed), pin=False)
+        try:
+            for prepared in loader:
+                rows = prepared['weight'].numpy().astype(np.int64) - 1
+                seen.extend(rows.tolist())
+                sizes.append(len(rows))
+                if check:
+                    expected = source.prepare(rows)
+                    for name, store in (('board', source.boards), ('scalar', source.scalars)):
+                        left = store.materialize(prepared[name], 'cpu').numpy()
+                        right = store.materialize(expected[name], 'cpu').numpy()
+                        assert left.tobytes() == right.tobytes()
+                    for name in ('plant', 'packet', 'cell', 'weight', 'packet_info', 'cands', 'auxiliary'):
+                        assert prepared[name].numpy().tobytes() == expected[name].numpy().tobytes()
+        finally:
+            loader.close()
+        assert sorted(seen) == indices.tolist()
+        assert sizes[:-1] == [17] * (len(sizes) - 1)
+        return seen
+
+    first = epoch(273, check=True)
+    assert first == epoch(273)
+    assert first != epoch(274)
+
+
 def test_shared_incremental_recovers_unpublished_append(tmp_path):
     data = tmp_path / 'data'
     fixture(data, ['b'])

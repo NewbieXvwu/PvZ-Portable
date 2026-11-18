@@ -554,6 +554,30 @@ def _pack_flags(options: dict) -> str:
     return shlex.join(pack_flags(options))
 
 
+def _read_ranges(array, ranges):
+    """Copy contiguous payload spans once; random batches only touch the owned copy."""
+    output = np.empty((sum(hi - lo for lo, hi in ranges), *array.shape[1:]), array.dtype)
+    mapping = getattr(array, '_mmap', None)
+    stride = array.dtype.itemsize * int(np.prod(array.shape[1:]))
+
+    def advise(lo, hi, advice):
+        if mapping is not None and hasattr(mapping, 'madvise') and hi > lo:
+            start = (array.offset + lo * stride) // mmap.PAGESIZE * mmap.PAGESIZE
+            stop = min(array.offset + hi * stride, len(mapping))
+            mapping.madvise(advice, start, stop - start)
+
+    for lo, hi in ranges:
+        advise(lo, hi, mmap.MADV_SEQUENTIAL)
+        advise(lo, hi, mmap.MADV_WILLNEED)
+    position = 0
+    for lo, hi in ranges:
+        output[position:position + hi - lo] = array[lo:hi]
+        position += hi - lo
+        advise(lo, hi, mmap.MADV_DONTNEED)
+        advise(lo, hi, mmap.MADV_RANDOM)
+    return output
+
+
 class BatchSource:
     """One batch's rows, gathered on whichever thread calls prepare().
 
@@ -569,6 +593,100 @@ class BatchSource:
         self.decode_threads = decode_threads
         boards.warm()
         scalars.warm()
+
+    CHUNK_ROWS = 65536             # aligned to the 32-row CSR codec blocks
+    WINDOW_CHUNKS = 64             # ~4M rows; compressed payload, never dense boards
+
+    def _window(self, chunks):
+        """Own this window's payload and labels; reuse the original plane tables."""
+        rows = np.concatenate(chunks)
+        if self.boards.blocks is None or self.scalars.blocks is None:
+            return self, rows
+        stores = []
+        for original in (self.boards, self.scalars):
+            store = CompactBoards(original.shape[1:], original.dtype)
+            store.index_dtype = original.index_dtype
+            store.shape = (len(rows), *original.shape[1:])
+            physical = [part if original.row_order is None else original.row_order[part] for part in chunks]
+            spans = [(int(part[0]) // store.BLOCK_ROWS, int(part[-1]) // store.BLOCK_ROWS + 1)
+                     for part in physical]
+            byte_spans = [(int(original.block_offsets[lo]), int(original.block_offsets[hi])) for lo, hi in spans]
+            store.blocks = _read_ranges(original.blocks, byte_spans)
+            lengths = np.concatenate([np.diff(original.block_offsets[lo:hi + 1]) for lo, hi in spans])
+            store.block_offsets = np.r_[0, lengths.cumsum(dtype=np.int64)]
+            store.raw_sizes = np.concatenate([original.raw_sizes[lo:hi] for lo, hi in spans])
+            store.counts = np.concatenate([original.counts[lo * store.BLOCK_ROWS:hi * store.BLOCK_ROWS]
+                                           for lo, hi in spans])
+            bases = np.r_[0, np.cumsum([hi - lo for lo, hi in spans])] * store.BLOCK_ROWS
+            store.row_order = np.concatenate([part - lo * store.BLOCK_ROWS + base
+                                               for part, (lo, _), base in zip(physical, spans, bases)])
+            store.planes = original.planes
+            store._plane_cells, store._plane_values, store._plane_offsets = original._plane_tables()
+            store._plane_device = original._plane_device
+            store.plane_of = None if original.plane_of is None else original.plane_of[rows]
+            stores.append(store)
+        packets = self.packet_info
+        if isinstance(packets, PacketStore):
+            original = packets
+            packets = PacketStore(0, original.slots)
+            packets.packed_flags = original.packed_flags
+            physical = [part if original.row_order is None else original.row_order[part] for part in chunks]
+            spans = [(int(part[0]), int(part[-1]) + 1) for part in physical]
+            packets.columns = [_read_ranges(column, spans) for column in original.columns]
+            bases = np.r_[0, np.cumsum([hi - lo for lo, hi in spans])]
+            packets.row_order = np.concatenate([part - lo + base
+                                                for part, (lo, _), base in zip(physical, spans, bases)])
+        elif packets is not None:
+            packets = packets[rows]
+        cands = CandidateStore()
+        cands.counts = self.cands.counts[rows]
+        spans = [(int(self.cands.offsets[part].min()),
+                  int((self.cands.offsets[part] + self.cands.counts[part]).max())) for part in chunks]
+        cands.entries = _read_ranges(self.cands.entries, spans)
+        bases = np.r_[0, np.cumsum([hi - lo for lo, hi in spans])]
+        cands.offsets = np.concatenate([self.cands.offsets[part] - lo + base
+                                       for part, (lo, _), base in zip(chunks, spans, bases)])
+        window = BatchSource(*stores, self.plant[rows], self.packet[rows], self.cell[rows], self.weight[rows],
+                             packets, cands, None if self.auxiliary is None else self.auxiliary[rows],
+                             self.decode_threads)
+        return window, np.arange(len(rows))
+
+    def training_batches(self, indices, batch_size, seed, pin=False):
+        """Shuffle physical chunks, read a bounded window sequentially, then shuffle its rows."""
+        rng = np.random.default_rng(seed)
+        indices = np.asarray(indices)
+        physical = indices if self.boards.row_order is None else self.boards.row_order[indices]
+        order = np.argsort(physical)
+        ordered = indices[order]
+        groups = physical[order] // np.uint32(self.CHUNK_ROWS)
+        boundaries = np.r_[0, np.flatnonzero(groups[1:] != groups[:-1]) + 1, len(ordered)]
+        chunks = [ordered[lo:hi] for lo, hi in zip(boundaries[:-1], boundaries[1:]) if hi > lo]
+        del physical, order, groups
+        rng.shuffle(chunks)
+        pending = []
+        windows = -(-len(chunks) // self.WINDOW_CHUNKS)
+        for number in range(windows):
+            # Balance the last window too: 65 chunks become 32 + 33, not 64 + 1.
+            start, stop = number * len(chunks) // windows, (number + 1) * len(chunks) // windows
+            selected = pending + chunks[start:stop]
+            pending = []
+            if number + 1 < windows:
+                remainder = sum(map(len, selected)) % batch_size
+                # Carry a physical tail, so every nonfinal batch keeps its original size.
+                while remainder:
+                    tail = selected.pop()
+                    take = min(remainder, len(tail))
+                    pending.insert(0, tail[-take:])
+                    if take < len(tail):
+                        selected.append(tail[:-take])
+                    remainder -= take
+            if not selected:
+                continue
+            window, local_rows = self._window(selected)
+            permutation = rng.permutation(local_rows)
+            for offset in range(0, len(permutation), batch_size):
+                yield window.prepare(permutation[offset:offset + batch_size], pin)
+            del window
 
     def prepare(self, idx, pin=False) -> dict:
         """Everything batch_loss reads, still on the host."""
@@ -593,7 +711,7 @@ class BatchPrefetcher:
     would run the whole epoch ahead and hold every pinned copy in host memory.
     """
 
-    def __init__(self, source: BatchSource, batches, depth: int = 2, pin: bool = True):
+    def __init__(self, source: BatchSource | None, batches, depth: int = 2, pin: bool = True):
         self.source, self.batches, self.depth, self.pin = source, batches, depth, pin
         self.queue: queue.Queue = queue.Queue(maxsize=depth)
         self.stopped = threading.Event()
@@ -605,7 +723,7 @@ class BatchPrefetcher:
             for idx in self.batches:
                 if self.stopped.is_set():
                     return
-                prepared = self.source.prepare(idx, pin=self.pin)
+                prepared = self.source.prepare(idx, pin=self.pin) if self.source is not None else idx
                 while not self.stopped.is_set():
                     try:
                         self.queue.put(prepared, timeout=0.2)
@@ -617,6 +735,8 @@ class BatchPrefetcher:
         except BaseException as error:      # surfaced on the consumer thread, not swallowed
             self.queue.put(error)
         finally:
+            if hasattr(self.batches, 'close'):
+                self.batches.close()
             self.queue.put(None)
 
     def __iter__(self):
@@ -1439,11 +1559,11 @@ def main(*, step_observer=None) -> None:
     val_idx = torch.nonzero(is_val & (weight > 0)).squeeze(1).to(torch.int32)
     if not len(train_idx) or not len(val_idx):
         raise ValueError("recipe split must produce nonempty training and validation sets")
-    epoch_rows = len(train_idx)
     if private_weights is not None and history_keep < 1:
         train_idx = train_idx[weight[train_idx] > 0]
         if not len(train_idx):
             raise ValueError('no positive training rows after history_l7_keep')
+    epoch_rows = len(train_idx)
     steps = args.epochs * -(-epoch_rows // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:
@@ -1481,16 +1601,14 @@ def main(*, step_observer=None) -> None:
         epoch_started = time.perf_counter()
         metrics.update(phase="training")
         net.train()
-        perm = train_idx[torch.randperm(len(train_idx))]
-        if len(perm) < epoch_rows:
-            perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
         train_loss = train_bc_loss = train_distill_loss = 0.0
         # task164: the gather for batch i+1 runs on a worker thread and its copies are queued on the
         # side stream while batch i is still in flight, so the host-side part of the batch build no
         # longer competes with the kernel launches of the current one (measured 1.1-1.2x, see
         # MEMORY/docs/task164-training-throughput.md section 9).
-        loader = BatchPrefetcher(source, [perm[start:start + args.batch_size]
-                                          for start in range(0, len(perm), args.batch_size)],
+        loader = BatchPrefetcher(None, source.training_batches(
+                                     train_idx, args.batch_size, int(torch.randint(2**63 - 1, ()).item()),
+                                     pin=side_stream is not None),
                                  pin=side_stream is not None)
         iterator = iter(loader)
         prepared = next(iterator, None)
