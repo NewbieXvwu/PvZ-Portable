@@ -2156,3 +2156,4 @@
 - 11-20 r223 否（L7 57/96）、r224 否（L7 61/96）；13:19 CST **r226 门禁通过**（L7 51/96、L9 43/96），下一个组边界激活。Mac mem_guard 在 11-19 晚上因内存压力冻结过两次，每次几分钟后自动恢复。
 - 11-20 17:21 CST **r227 晋升**（现任 r227，L7 57/96、L9 37/96）。Mac 04:26 EST 拔电，power_watch 自动冻结了采集。
 - 11-20 18:42 CST 用户要用台式机：采集停在 round 230 的组边界，训练所在 scope 设 MemoryHigh=14G（scope 名写在 `~/pvz-logs/trainer_cap_scope`），Windows 可用 7.9 GB，vmmemWSL 12.5 GB。恢复步骤同 11-18。
+- 11-20 21:18 CST r229 门禁**通过**（L7 47/96、L9 35/96）。因为 stop_curr 在，队列训完就退出了，生产线目前完全停着；要等重启后才会激活 r229，写出 `student activated` 行。vmmemWSL 5.4 GB，Windows 可用 13.9 GB。
