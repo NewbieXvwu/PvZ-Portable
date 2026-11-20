@@ -741,9 +741,8 @@ def test_decks_resume_fresh_priority_beats_terrain_order():
             patch.object(decks, 'resume_catalog', return_value=catalog):
         doc = workflow.derive([], 'run')
         item = workflow.next_task(doc, claim=False)['item']
-    # 先新鲜批次，再按地形（夜先于屋顶）；旧档即使地形更靠前也排在所有新鲜项之后。
-    assert item['task_id'] == 'fresh_night'
-    assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_night', 'fresh_roof', 'old_pool']
+    assert item['task_id'] == 'fresh_roof'
+    assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_roof', 'fresh_night', 'old_pool']
 
 
 def test_task263_focus_resume_and_native_tail_precede_remaining_scenarios():
@@ -759,6 +758,11 @@ def test_task263_focus_resume_and_native_tail_precede_remaining_scenarios():
             patch.object(decks, 'scenario_catalog', return_value=[scenario]), \
             patch.object(decks, 'resume_catalog', return_value=resumes):
         doc = workflow.derive([native_entry(50, n) for n in range(17)], 'run')
+        # 只验证屋顶与找卡组优先层之后，原有各层的相对顺序。
+        doc['active_native'] = [key for key in doc['active_native']
+                                if doc['native'][key]['level'] != 45]
+        doc['active_tasks'] = [key for key in doc['active_tasks']
+                               if str(doc['levels'][key]['level']) not in decks.config()['deck_search_targets']]
         boss = doc['native']['llmplay_decks_native_l50_m100']
         assert boss['wins'] == 17 and boss['target'] == 32 and not boss['complete']
         assert doc['native']['llmplay_decks_native_l10_m100']['target'] == 16
@@ -777,6 +781,43 @@ def test_task263_focus_resume_and_native_tail_precede_remaining_scenarios():
                 done = [row for row in decks.ordered_items(doc)
                         if row['layer'] == 'native' and row['level'] in [30, 40, 45, 50]]
             claimed.update({workflow._slot(row['task_id'], row['seed']): {} for row in done})
+
+
+def test_task275_roof_and_deck_search_dispatch_before_remaining_queues():
+    resumes = [dict(id=f'old275_{n}', archive='old275', level=11, seed=n, deck=D1,
+                    multiplier=1.0, priority=0) for n in range(300)]
+    resumes += [dict(id=name, archive=name, level=level, seed=seed, deck=D1,
+                     multiplier=1.0, priority=1, **extra)
+                for name, level, seed, extra in [
+                    ('roof275', 49, 1001, {}),
+                    ('rewind275', 22, 1002, dict(rewind_count=1))]]
+    with patch.object(decks, 'resume_catalog', return_value=resumes):
+        doc = workflow.derive([entry(41, [1, 33, 34, 3, 4, 17])], 'run')
+        assert all(doc['levels'][decks.main_task(int(level))]['goal'] >= target
+                   for level, target in decks.config()['deck_search_targets'].items())
+        assert [row['task_id'] for row in decks.resume_items(doc)][:2] == ['rewind275', 'roof275']
+        claimed = {}
+        for priority in [-float('inf'), -3, -2, -1, 0]:
+            with patch.object(workflow, '_read_claims', return_value=claimed):
+                item = workflow.next_task(doc, claim=False)['item']
+                assert decks.dispatch_priority(item) == priority
+                ordered, _ = workflow._ordered(doc)
+                assert workflow._first_free(ordered, claimed)['task_id'] == item['task_id']
+                assert decks.view(doc)['item']['task_id'] == item['task_id']
+                if priority == -2:
+                    rows = [row for row in ordered if decks.dispatch_priority(row) == priority]
+                    assert {row['layer'] for row in rows} == {'native', 'frontier'}
+                    assert all(41 <= row['level'] <= 49 and row['multiplier'] == 1.0 for row in rows)
+                if priority == -1:
+                    rows = [row for row in ordered if decks.dispatch_priority(row) == priority]
+                    assert {row['level'] for row in rows} == {22, 23, 27, 29, 44, 47, 49}
+                    assert all(row['layer'] == 'decks' and row['multiplier'] == 1.0 for row in rows)
+                    assert {row['level'] for row in decks.items(doc)} - {row['level'] for row in rows}
+                done = [row for row in ordered if decks.dispatch_priority(row) == priority]
+            claimed.update({workflow._slot(row['task_id'], row['seed']): {} for row in done})
+            if priority == -2:
+                for row in done:
+                    doc[row['layer']][row['task_id']]['complete'] = True
 
 
 @contextmanager

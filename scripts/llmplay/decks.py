@@ -200,7 +200,9 @@ def resume_progress(document):
     def terrain(item):
         return item.get("terrain") or region(item["level"])
     # task226：priority 0 = 当前 v8 策略的新鲜败局，1 = 旧 r86–r89 存档；新鲜的先打。
-    items.sort(key=lambda item: (0 if item.get("rewind_count") else 1, int(item.get("priority", 1)),
+    items.sort(key=lambda item: (dispatch_priority(dict(item, layer="resume",
+                                  resume_item=item if item.get("rewind_count") else None)),
+                                 int(item.get("priority", 1)),
                                  rank.get(terrain(item), len(rank)),
                                  item.get("cutoff_tick", 0), item["id"]))
     counts = {}
@@ -518,7 +520,8 @@ def derive(entries, run_id=None):
                  if levels[key]["baseline_complete"] else 0 for key in active), default=0)
     stage = stage if covered and native_done else 0
     for info in levels.values():
-        info["goal"] = info["target"] + stage * cfg["growth_step"]
+        info["goal"] = max(info["target"] + stage * cfg["growth_step"],
+                           cfg.get("deck_search_targets", {}).get(str(info["level"]), 0))
     index, count = configure_shard()
     flat = {task_id: dict(item, active=task_id in active, complete=False, layer="decks")
             for task_id, item in levels.items()}
@@ -632,6 +635,13 @@ def dispatch_priority(item):
     name = "main" if item["layer"] == "decks" else item["layer"]
     default = ["drill", "scenario", "resume", "frontier", "native", "main"].index(name)
     priorities = config().get("queue_priority") or {}
+    if 41 <= int(item.get("level") or 0) <= 49:
+        if name == "resume":
+            return priorities["roof_resume"]
+        if name in ("native", "frontier") and item.get("multiplier", 1.0) == 1.0:
+            return priorities["roof_full"]
+    if name == "main" and str(item.get("level")) in config().get("deck_search_targets", {}):
+        return priorities["deck_search"]
     focus_arm = (config().get("resume") or {}).get("priority_arm")
     if name == "resume" and focus_arm and item.get("source_arm") == focus_arm:
         return priorities["focus_resume"]
@@ -648,7 +658,8 @@ def ordered_items(document):
 def view(document):
     claims = wf.held()
     groups = queues(document)
-    pools = {name: wf._first_free(candidates, claims) for candidates, name in groups}
+    pools = {name: wf._first_free(sorted(candidates, key=dispatch_priority), claims)
+             for candidates, name in groups}
     item = min((found for found in pools.values() if found), key=dispatch_priority, default=None)
     if item is None:
         item = wf._busy([row for candidates, _ in groups for row in candidates]) \
@@ -660,14 +671,15 @@ def view(document):
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
 
-def _earlier_block(document, name, *, level=None):
+def _earlier_block(document, name, *, level=None, multiplier=1.0):
     """与派题共用配置顺序，阻止跳过仍有空闲项的优先队列。"""
     claims = wf.held()
-    priority = dispatch_priority(dict(layer="decks" if name == "main" else name, level=level))
+    priority = dispatch_priority(dict(layer="decks" if name == "main" else name,
+                                      level=level, multiplier=multiplier))
     labels = {"drill": "真实必刷题", "scenario": "GPT 自出题", "resume": "学生败局中盘接回",
               "frontier": "前沿倍率", "native": "传送带/Boss 支线", "main": "主线"}
     for candidates, earlier in queues(document):
-        item = wf._first_free(candidates, claims)
+        item = wf._first_free(sorted(candidates, key=dispatch_priority), claims)
         if item is not None and dispatch_priority(item) < priority:
             raise ValueError("%s优先；请先领取本片%s项" % (labels[earlier], labels[earlier]))
     return None
@@ -689,7 +701,7 @@ def check(document, task_id, deck, strategy="", seed=None):
         info = document["frontier"][task_id]
         issued = _issued(task_id, seed)
         if not issued:
-            _earlier_block(document, "frontier")
+            _earlier_block(document, "frontier", level=info["level"], multiplier=info["multiplier"])
             if info["complete"]:
                 raise ValueError("本关前沿倍率已达标；请领取其余项")
             if seed is None or int(seed) not in info["available_seeds"]:
@@ -719,7 +731,7 @@ def check(document, task_id, deck, strategy="", seed=None):
     issued = _issued(task_id, seed)
     if not issued:
         if wf.deck_key(deck or []) not in info["decks"]:
-            _earlier_block(document, "main")
+            _earlier_block(document, "main", level=info["level"])
         if not any(item["task_id"] == task_id for item in items(document)):
             raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
         if seed is None or int(seed) not in info["available_seeds"]:

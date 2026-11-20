@@ -1788,7 +1788,11 @@
     "scenario": {
       "catalog": "configs/llmplay_scenarios.json"
     },
+    "deck_search_targets": {"22": 30, "23": 30, "27": 30, "29": 30, "44": 26, "47": 28, "49": 29},
     "queue_priority": {
+      "roof_resume": -3,
+      "roof_full": -2,
+      "deck_search": -1,
       "drill": 0,
       "focus_resume": 1,
       "tail_native": 2,
