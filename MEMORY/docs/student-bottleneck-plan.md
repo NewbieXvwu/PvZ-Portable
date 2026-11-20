@@ -2165,3 +2165,5 @@
 - 11-20 用户提醒：“标准卡组不适合夜间 / 雾”已在 10-30 task184、10-31 task208 确认，10-31 用户决定废弃标准卡组评测；北极星的 completion 列（deck_for_level）就是那套已废弃的指标，有意义的是 control 列。之前版本的 task274 在重做标准卡组老师评测，主控已停掉，**改版 task274**：只查屋顶瓶颈在老师还是学生，以及 control 停滞在各关的分布。
   - 派 **task275**（Codex，pkg238n）：打 238n 包，派题顺序改为回退子项 → 屋顶 L41–L49 resume → 屋顶 native / 前沿 → 为缺好卡组的关找胜利卡组（泳池 L22/23/27/29、屋顶 L44/47/49）→ 其余层。carry 同 238m，台式机验收。
   - 清理：台式机删除已导入的 6 个交回 zip（约 0.4 GB）；Mac 只剩 238m，等 238n 打好再删（238n 要复用它的 stage）。`llmplay-build` 是静态引擎的构建环境，保留。
+- 11-20 用户要求恢复中断的人工任务：继续录人类示范。原来录制用的 imitater / userpick 工作树已删，主控新建 `.claude/worktrees/record`（pkg238 df9c4ab6，detached），以 nice 20 编出 Mac 引擎 `build/pvz-portable`，无窗口冒烟通过。录制命令：`~/.local/share/mise/installs/python/3.14.6/bin/python3 .claude/worktrees/record/scripts/human_demo.py --resource-dir ~/.cache/pvz-research-resources record --level N`，存档落在 `record/artifacts/human_demo/raw/`。**record 工作树在导入完之前不要删。**
+  - 已有用户录像：L8/16/18/22/23/28/29×2/33/47/49。建议顺序：L44（老师 3/8，没有用户录像）→ L27（泳池，没有合格卡组）→ L46 → 再录 L47/L49（学生在用户卡组上 0/12）→ L38。
