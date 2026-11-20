@@ -2167,3 +2167,4 @@
   - 清理：台式机删除已导入的 6 个交回 zip（约 0.4 GB）；Mac 只剩 238m，等 238n 打好再删（238n 要复用它的 stage）。`llmplay-build` 是静态引擎的构建环境，保留。
 - 11-20 用户要求恢复中断的人工任务：继续录人类示范。原来录制用的 imitater / userpick 工作树已删，主控新建 `.claude/worktrees/record`（pkg238 df9c4ab6，detached），以 nice 20 编出 Mac 引擎 `build/pvz-portable`，无窗口冒烟通过。录制命令：`~/.local/share/mise/installs/python/3.14.6/bin/python3 .claude/worktrees/record/scripts/human_demo.py --resource-dir ~/.cache/pvz-research-resources record --level N`，存档落在 `record/artifacts/human_demo/raw/`。**record 工作树在导入完之前不要删。**
   - 已有用户录像：L8/16/18/22/23/28/29×2/33/47/49。建议顺序：L44（老师 3/8，没有用户录像）→ L27（泳池，没有合格卡组）→ L46 → 再录 L47/L49（学生在用户卡组上 0/12）→ L38。
+- 11-20 **task275 结题**（Codex，pkg238n 0f503c5a / 7222037c，已快进到 pkg238）：238n 的派题顺序集中在 `decks.dispatch_priority()`：回退子项 → 屋顶 L41–L49 resume → 屋顶 1.0 倍 native / 前沿 → L22/23/27/29/44/47/49 decks（各在 carry 基础上再找 3 套胜组）→ 原有层次。按 carry 领的前 20 项全是屋顶 resume（L41×7、L42×4、L43×1、L47×3、L49×5）。台式机验收 exit 0。包在 `~/Downloads/pvz-llmplay-238n/`；238m 已删。
